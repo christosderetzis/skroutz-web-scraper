@@ -16,7 +16,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 @Component
 @Slf4j
@@ -29,63 +29,20 @@ public class ProductsScraper {
     }
 
     public List<Product> scrapeProducts(String url) {
-        WebDriver webDriver = null;
-        try {
-            // Get a fresh WebDriver instance for each scraping operation
-            webDriver = applicationContext.getBean(WebDriver.class);
+        List<Product> result = executeWithWebDriver(webDriver -> {
             webDriver.get(url);
             List<WebElement> productElements = findProductElements(webDriver);
             return extractProducts(productElements);
-        } catch (Exception e) {
-            log.error("Error scraping products from {}: {}", url, e.getMessage(), e);
-        } finally {
-            // Clean up the WebDriver instance
-            if (webDriver != null) {
-                try {
-                    webDriver.quit();
-                } catch (Exception e) {
-                    log.warn("Error closing WebDriver: {}", e.getMessage());
-                }
-            }
-        }
-        return List.of();
+        }, url, "scraping products");
+        return result != null ? result : List.of();
     }
 
     public Integer getNumberOfPages(String url) {
-        WebDriver webDriver = null;
-        try {
-            // Get a fresh WebDriver instance for each scraping operation
-            webDriver = applicationContext.getBean(WebDriver.class);
+        Integer result = executeWithWebDriver(webDriver -> {
             webDriver.get(url);
-
-            // Find the pagination span that contains "1 from 11" text
-            WebElement paginationSpan = webDriver.findElement(By.cssSelector(".paginator button span"));
-            String paginationText = paginationSpan.getText();
-
-            // Extract the total number of pages from text like "1 from 11"
-            if (paginationText.contains("from")) {
-                List<String> parts = Arrays.stream(paginationText.split(" ")).toList();
-                if (parts.size() == 3) {
-                    String totalPagesText = parts.get(2);
-                    return Integer.parseInt(totalPagesText);
-                }
-            }
-            
-            log.warn("Could not parse pagination text: {}", paginationText);
-            return null;
-        } catch (Exception e) {
-            log.error("Error getting number of pages from {}: {}", url, e.getMessage(), e);
-        } finally {
-            // Clean up the WebDriver instance
-            if (webDriver != null) {
-                try {
-                    webDriver.quit();
-                } catch (Exception e) {
-                    log.warn("Error closing WebDriver: {}", e.getMessage());
-                }
-            }
-        }
-        return 0;
+            return parsePaginationInfo(webDriver);
+        }, url, "getting number of pages");
+        return result != null ? result : 0;
     }
 
     private List<WebElement> findProductElements(WebDriver webDriver) {
@@ -161,6 +118,50 @@ public class ProductsScraper {
         extractRating(productElement, product);
         
         return product;
+    }
+
+    private <T> T executeWithWebDriver(Function<WebDriver, T> operation, String url, String operationName) {
+        WebDriver webDriver = null;
+        try {
+            // Get a fresh WebDriver instance for each scraping operation
+            webDriver = applicationContext.getBean(WebDriver.class);
+            return operation.apply(webDriver);
+        } catch (Exception e) {
+            log.error("Error {} from {}: {}", operationName, url, e.getMessage(), e);
+            return null;
+        } finally {
+            // Clean up the WebDriver instance
+            if (webDriver != null) {
+                try {
+                    webDriver.quit();
+                } catch (Exception e) {
+                    log.warn("Error closing WebDriver: {}", e.getMessage());
+                }
+            }
+        }
+    }
+
+    private Integer parsePaginationInfo(WebDriver webDriver) {
+        try {
+            // Find the pagination span that contains "1 from 11" text
+            WebElement paginationSpan = webDriver.findElement(By.cssSelector(".paginator button span"));
+            String paginationText = paginationSpan.getText();
+
+            // Extract the total number of pages from text like "1 from 11"
+            if (paginationText.contains("from")) {
+                List<String> parts = Arrays.stream(paginationText.split(" ")).toList();
+                if (parts.size() == 3) {
+                    String totalPagesText = parts.get(2);
+                    return Integer.parseInt(totalPagesText);
+                }
+            }
+            
+            log.warn("Could not parse pagination text: {}", paginationText);
+            return null;
+        } catch (Exception e) {
+            log.warn("Could not extract pagination info: {}", e.getMessage());
+            return null;
+        }
     }
 
     private void extractUrlAndTitle(WebElement productElement, Product product) {
