@@ -129,17 +129,14 @@ public class ProductsScraper {
     private Integer parsePaginationInfo(WebDriver webDriver) {
         try {
             // Find the pagination span that contains "1 from 11" text
-            String cssSelector = ".paginator button span";
-            WebElement paginationSpan = webDriver.findElement(By.cssSelector(cssSelector));
+            WebElement paginationSpan = webDriver.findElement(By.cssSelector(ProductWebCssFields.PAGINATION_BUTTON));
             String paginationText = paginationSpan.getText();
 
             // Extract the total number of pages from text like "1 from 11"
             if (paginationText.split(" ").length == 3) {
                 List<String> parts = Arrays.stream(paginationText.split(" ")).toList();
-                if (parts.size() == 3) {
-                    String totalPagesText = parts.get(2);
-                    return Integer.parseInt(totalPagesText);
-                }
+                String totalPagesText = parts.get(2);
+                return Integer.parseInt(totalPagesText);
             }
             
             log.warn("Could not parse pagination text: {}", paginationText);

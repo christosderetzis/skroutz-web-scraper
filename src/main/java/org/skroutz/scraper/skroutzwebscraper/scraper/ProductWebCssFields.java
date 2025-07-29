@@ -16,4 +16,6 @@ public class ProductWebCssFields {
     
     public static final String RATING = "div.rating-wrapper span[data-testid='star-rating-value']";
 
+    public static final String PAGINATION_BUTTON = ".paginator button span";
+
 }
