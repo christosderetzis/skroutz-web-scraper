@@ -160,23 +160,30 @@ public class ProductsScraper {
     private void extractPrice(WebElement productElement, Product product) {
         try {
             WebElement priceSpan = productElement.findElement(By.cssSelector(ProductWebCssFields.PRICE_LINK));
-            String priceText = priceSpan.getText()
-                    .replaceAll("[^\\d,]", "")
-                    .trim();
-            
-            // Handle price ranges like "500,00 - 600,00" - take only the first value
-            if (priceText.contains("-")) {
-                priceText = priceText.split("-")[0].trim();
-            }
-            
-            // Clean up the price text for parsing
-            priceText = priceText.replace(".", "").replace(",", ".");
-            
+            String priceText = processPrice(priceSpan);
+
             product.setPrice(new BigDecimal(priceText));
         } catch (NoSuchElementException | NumberFormatException e) {
             log.debug("Could not extract price: {}", e.getMessage());
             product.setPrice(null);
         }
+    }
+
+    private static String processPrice(WebElement priceSpan) {
+        String priceText = priceSpan.getText()
+                .replace("from", "")
+                .replace("€", "")
+                .replace("από", "")
+                .trim();
+
+        // Handle price ranges like "500,00 - 600,00" - take only the first value
+        if (priceText.contains("-")) {
+            priceText = priceText.split("-")[0].trim();
+        }
+
+        // Clean up the price text for parsing
+        priceText = priceText.replace(".", "").replace(",", ".");
+        return priceText;
     }
 
     private void extractImageUrl(WebElement productElement, Product product) {
