@@ -51,22 +51,7 @@ public class ProductsScraper {
             WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(20));
             
             // Try different possible selectors for the listing container
-            WebElement olElement = null;
-            
-            try {
-                olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("ol.listing-list")));
-                log.info("Found ol.listing-list element");
-            } catch (Exception e) {
-                log.warn("ol.listing-list not found, trying fallback selector 'ol'");
-                try {
-                    olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("ol")));
-                    log.info("Found ol element");
-                } catch (Exception e2) {
-                    log.warn("ol not found, trying fallback selector '.listing-list'");
-                    olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".listing-list")));
-                    log.info("Found .listing-list element");
-                }
-            }
+            WebElement olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(ProductWebCssFields.LISTING_CONTAINER)));
             
             if (olElement == null) {
                 throw new RuntimeException("Could not find any listing container element");
@@ -144,11 +129,12 @@ public class ProductsScraper {
     private Integer parsePaginationInfo(WebDriver webDriver) {
         try {
             // Find the pagination span that contains "1 from 11" text
-            WebElement paginationSpan = webDriver.findElement(By.cssSelector(".paginator button span"));
+            String cssSelector = ".paginator button span";
+            WebElement paginationSpan = webDriver.findElement(By.cssSelector(cssSelector));
             String paginationText = paginationSpan.getText();
 
             // Extract the total number of pages from text like "1 from 11"
-            if (paginationText.contains("from")) {
+            if (paginationText.split(" ").length == 3) {
                 List<String> parts = Arrays.stream(paginationText.split(" ")).toList();
                 if (parts.size() == 3) {
                     String totalPagesText = parts.get(2);
@@ -166,7 +152,6 @@ public class ProductsScraper {
 
     private void extractUrlAndTitle(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting URL and title -------------------- ");
             WebElement aTag = productElement.findElement(By.cssSelector(ProductWebCssFields.PRODUCT_LINK));
             product.setUrl(aTag.getAttribute("href"));
             product.setTitle(aTag.getAttribute("title"));
@@ -177,11 +162,9 @@ public class ProductsScraper {
 
     private void extractPrice(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting price -------------------- ");
             WebElement priceSpan = productElement.findElement(By.cssSelector(ProductWebCssFields.PRICE_LINK));
             String priceText = priceSpan.getText()
-                    .replace("από", "")
-                    .replace("€", "")
+                    .replaceAll("[^\\d,]", "")
                     .trim();
             
             // Handle price ranges like "500,00 - 600,00" - take only the first value
@@ -201,7 +184,6 @@ public class ProductsScraper {
 
     private void extractImageUrl(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting image URL -------------------- ");
             WebElement img = productElement.findElement(By.cssSelector(ProductWebCssFields.IMAGE_CONTAINER));
             product.setImageUrl(img.getAttribute("src"));
         } catch (NoSuchElementException e) {
@@ -212,7 +194,6 @@ public class ProductsScraper {
 
     private void extractDescription(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting description -------------------- ");
             WebElement desc = productElement.findElement(By.cssSelector(ProductWebCssFields.DESCRIPTION));
             if (desc.isDisplayed()) {
                 product.setDescription(desc.getText());
@@ -227,7 +208,6 @@ public class ProductsScraper {
 
     private void extractRating(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting rating -------------------- ");
             WebElement ratingSpan = productElement.findElement(By.cssSelector(ProductWebCssFields.RATING));
             String ratingText = ratingSpan.getText().replace(",", ".");
             product.setRating(new BigDecimal(ratingText));
