@@ -27,7 +27,7 @@ spring:
 # Scraper Configuration
 scraper:
   headless: true
-  timeout: 1
+  timeout: 100
 
 # Swagger/OpenAPI Configuration
 springdoc:

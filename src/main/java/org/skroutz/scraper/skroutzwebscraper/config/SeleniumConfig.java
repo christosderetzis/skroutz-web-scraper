@@ -17,8 +17,8 @@ public class SeleniumConfig {
     @Value("${scraper.headless:true}")
     private boolean headless;
 
-    @Value("${scraper.timeout:30}")
-    private int timeoutSeconds;
+    @Value("${scraper.timeout:3000}")
+    private int timeoutMs;
 
     @Bean
     @Scope("prototype")
@@ -41,7 +41,7 @@ public class SeleniumConfig {
         options.setExperimentalOption("useAutomationExtension", false);
         
         WebDriver driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(java.time.Duration.ofSeconds(timeoutSeconds));
+        driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(timeoutMs));
         
         return driver;
     }

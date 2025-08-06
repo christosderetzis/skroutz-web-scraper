@@ -16,7 +16,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 @Component
 @Slf4j
@@ -29,104 +29,47 @@ public class ProductsScraper {
     }
 
     public List<Product> scrapeProducts(String url) {
-        WebDriver webDriver = null;
-        try {
-            // Get a fresh WebDriver instance for each scraping operation
-            webDriver = applicationContext.getBean(WebDriver.class);
+        List<Product> result = executeWithWebDriver(webDriver -> {
             webDriver.get(url);
             List<WebElement> productElements = findProductElements(webDriver);
             return extractProducts(productElements);
-        } catch (Exception e) {
-            log.error("Error scraping products from {}: {}", url, e.getMessage(), e);
-        } finally {
-            // Clean up the WebDriver instance
-            if (webDriver != null) {
-                try {
-                    webDriver.quit();
-                } catch (Exception e) {
-                    log.warn("Error closing WebDriver: {}", e.getMessage());
-                }
-            }
-        }
-        return List.of();
+        }, url, "scraping products");
+        return result != null ? result : List.of();
     }
 
     public Integer getNumberOfPages(String url) {
-        WebDriver webDriver = null;
-        try {
-            // Get a fresh WebDriver instance for each scraping operation
-            webDriver = applicationContext.getBean(WebDriver.class);
+        Integer result = executeWithWebDriver(webDriver -> {
             webDriver.get(url);
-
-            // Find the pagination span that contains "1 from 11" text
-            WebElement paginationSpan = webDriver.findElement(By.cssSelector(".paginator button span"));
-            String paginationText = paginationSpan.getText();
-
-            // Extract the total number of pages from text like "1 from 11"
-            if (paginationText.contains("from")) {
-                List<String> parts = Arrays.stream(paginationText.split(" ")).toList();
-                if (parts.size() == 3) {
-                    String totalPagesText = parts.get(2);
-                    return Integer.parseInt(totalPagesText);
-                }
-            }
-            
-            log.warn("Could not parse pagination text: {}", paginationText);
-            return null;
-        } catch (Exception e) {
-            log.error("Error getting number of pages from {}: {}", url, e.getMessage(), e);
-        } finally {
-            // Clean up the WebDriver instance
-            if (webDriver != null) {
-                try {
-                    webDriver.quit();
-                } catch (Exception e) {
-                    log.warn("Error closing WebDriver: {}", e.getMessage());
-                }
-            }
-        }
-        return 0;
+            return parsePaginationInfo(webDriver);
+        }, url, "getting number of pages");
+        return result != null ? result : 0;
     }
 
     private List<WebElement> findProductElements(WebDriver webDriver) {
         try {
             // Wait for page to fully load and for the listing container to be present
             WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(20));
-            
+
             // Try different possible selectors for the listing container
-            WebElement olElement = null;
-            
-            try {
-                olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("ol.listing-list")));
-                log.info("Found ol.listing-list element");
-            } catch (Exception e) {
-                log.warn("ol.listing-list not found, trying fallback selector 'ol'");
-                try {
-                    olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("ol")));
-                    log.info("Found ol element");
-                } catch (Exception e2) {
-                    log.warn("ol not found, trying fallback selector '.listing-list'");
-                    olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".listing-list")));
-                    log.info("Found .listing-list element");
-                }
-            }
-            
+            WebElement olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(ProductWebCssFields.LISTING_CONTAINER)));
+
             if (olElement == null) {
                 throw new RuntimeException("Could not find any listing container element");
             }
-            
+
             List<WebElement> filteredItems = olElement.findElements(By.xpath(ProductWebCssFields.PRODUCT_ITEM_XPATH));
-            log.info("Found {} product elements", filteredItems.size());
-            
+
             if (filteredItems.isEmpty()) {
                 log.warn("No products found on this page. Page might be empty or structure changed.");
                 // Log page source for debugging
                 log.debug("Page title: {}", webDriver.getTitle());
                 log.debug("Current URL: {}", webDriver.getCurrentUrl());
+            } else {
+                log.info("Successfully found {} product elements", filteredItems.size());
             }
-            
+
             return filteredItems;
-            
+
         } catch (Exception e) {
             log.error("Error finding product elements: {}", e.getMessage());
             log.debug("Page title: {}", webDriver.getTitle());
@@ -147,25 +90,66 @@ public class ProductsScraper {
                 log.error("Failed to parse product element: {}", e.getMessage());
             }
         }
-        
+
         return products;
     }
 
     private Product extractSingleProduct(WebElement productElement) {
         Product product = new Product();
-        
+
         extractUrlAndTitle(productElement, product);
         extractPrice(productElement, product);
         extractImageUrl(productElement, product);
         extractDescription(productElement, product);
         extractRating(productElement, product);
-        
+
         return product;
+    }
+
+    private <T> T executeWithWebDriver(Function<WebDriver, T> operation, String url, String operationName) {
+        WebDriver webDriver = null;
+        try {
+            // Get a fresh WebDriver instance for each scraping operation
+            webDriver = applicationContext.getBean(WebDriver.class);
+            return operation.apply(webDriver);
+        } catch (Exception e) {
+            log.error("Error {} from {}: {}", operationName, url, e.getMessage(), e);
+            return null;
+        } finally {
+            // Clean up the WebDriver instance
+            if (webDriver != null) {
+                try {
+                    webDriver.quit();
+                } catch (Exception e) {
+                    log.warn("Error closing WebDriver: {}", e.getMessage());
+                }
+            }
+        }
+    }
+
+    private Integer parsePaginationInfo(WebDriver webDriver) {
+        try {
+            // Find the pagination span that contains "1 from 11" text
+            WebElement paginationSpan = webDriver.findElement(By.cssSelector(ProductWebCssFields.PAGINATION_BUTTON));
+            String paginationText = paginationSpan.getText();
+
+            // Extract the total number of pages from text like "1 from 11"
+            if (paginationText.split(" ").length == 3) {
+                List<String> parts = Arrays.stream(paginationText.split(" ")).toList();
+                String totalPagesText = parts.get(2);
+                return Integer.parseInt(totalPagesText);
+            }
+
+            log.warn("Could not parse pagination text: {}", paginationText);
+            return null;
+        } catch (Exception e) {
+            log.warn("Could not extract pagination info: {}", e.getMessage());
+            return null;
+        }
     }
 
     private void extractUrlAndTitle(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting URL and title -------------------- ");
             WebElement aTag = productElement.findElement(By.cssSelector(ProductWebCssFields.PRODUCT_LINK));
             product.setUrl(aTag.getAttribute("href"));
             product.setTitle(aTag.getAttribute("title"));
@@ -176,21 +160,9 @@ public class ProductsScraper {
 
     private void extractPrice(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting price -------------------- ");
             WebElement priceSpan = productElement.findElement(By.cssSelector(ProductWebCssFields.PRICE_LINK));
-            String priceText = priceSpan.getText()
-                    .replace("από", "")
-                    .replace("€", "")
-                    .trim();
-            
-            // Handle price ranges like "500,00 - 600,00" - take only the first value
-            if (priceText.contains("-")) {
-                priceText = priceText.split("-")[0].trim();
-            }
-            
-            // Clean up the price text for parsing
-            priceText = priceText.replace(".", "").replace(",", ".");
-            
+            String priceText = processPrice(priceSpan);
+
             product.setPrice(new BigDecimal(priceText));
         } catch (NoSuchElementException | NumberFormatException e) {
             log.debug("Could not extract price: {}", e.getMessage());
@@ -198,9 +170,25 @@ public class ProductsScraper {
         }
     }
 
+    private static String processPrice(WebElement priceSpan) {
+        String priceText = priceSpan.getText()
+                .replace("from", "")
+                .replace("€", "")
+                .replace("από", "")
+                .trim();
+
+        // Handle price ranges like "500,00 - 600,00" - take only the first value
+        if (priceText.contains("-")) {
+            priceText = priceText.split("-")[0].trim();
+        }
+
+        // Clean up the price text for parsing
+        priceText = priceText.replace(".", "").replace(",", ".");
+        return priceText;
+    }
+
     private void extractImageUrl(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting image URL -------------------- ");
             WebElement img = productElement.findElement(By.cssSelector(ProductWebCssFields.IMAGE_CONTAINER));
             product.setImageUrl(img.getAttribute("src"));
         } catch (NoSuchElementException e) {
@@ -211,7 +199,6 @@ public class ProductsScraper {
 
     private void extractDescription(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting description -------------------- ");
             WebElement desc = productElement.findElement(By.cssSelector(ProductWebCssFields.DESCRIPTION));
             if (desc.isDisplayed()) {
                 product.setDescription(desc.getText());
@@ -226,7 +213,6 @@ public class ProductsScraper {
 
     private void extractRating(WebElement productElement, Product product) {
         try {
-            log.info(" -------------------- Extracting rating -------------------- ");
             WebElement ratingSpan = productElement.findElement(By.cssSelector(ProductWebCssFields.RATING));
             String ratingText = ratingSpan.getText().replace(",", ".");
             product.setRating(new BigDecimal(ratingText));
