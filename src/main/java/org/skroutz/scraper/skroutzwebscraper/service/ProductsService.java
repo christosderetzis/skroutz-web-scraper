@@ -1,5 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.service;
 
+import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
@@ -21,15 +22,15 @@ public class ProductsService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public List<Product> scrapeAndSaveProducts(String url) {
+    public void scrapeAndSaveProducts(String url) {
         log.info("Starting to scrape and save products from URL: {}", url);
-        
+
         try {
             List<Product> scrapedProducts = productsScraper.scrapeProducts(url);
             log.info("Scraped {} products from URL", scrapedProducts.size());
-            
+
             List<Product> savedProducts = new ArrayList<>();
-            
+
             for (Product product : scrapedProducts) {
                 try {
                     Product savedProduct = saveProductIfNotExists(product);
@@ -40,10 +41,9 @@ public class ProductsService {
                     log.error("Error saving product '{}': {}", product.getTitle(), e.getMessage());
                 }
             }
-            
+
             log.info("Successfully saved {} new products to database", savedProducts.size());
-            return savedProducts;
-            
+
         } catch (Exception e) {
             log.error("Error during scraping and saving process: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to scrape and save products", e);
@@ -68,9 +68,9 @@ public class ProductsService {
             log.warn("Skipping product with missing URL or title");
             return null;
         }
-        
+
         Optional<Product> existingProduct = productRepository.findByUrl(product.getUrl());
-        
+
         if (existingProduct.isPresent()) {
             log.debug("Product already exists with URL: {}", product.getUrl());
             return updateExistingProduct(existingProduct.get(), product);
@@ -83,33 +83,26 @@ public class ProductsService {
 
     private Product updateExistingProduct(Product existing, Product scraped) {
         boolean updated = false;
-        
-        if (scraped.getPrice() != null && !scraped.getPrice().equals(existing.getPrice())) {
-            existing.setPrice(scraped.getPrice());
-            updated = true;
-        }
-        
-        if (scraped.getRating() != null && !scraped.getRating().equals(existing.getRating())) {
-            existing.setRating(scraped.getRating());
-            updated = true;
-        }
-        
-        if (scraped.getImageUrl() != null && !scraped.getImageUrl().equals(existing.getImageUrl())) {
-            existing.setImageUrl(scraped.getImageUrl());
-            updated = true;
-        }
-        
-        if (scraped.getDescription() != null && !scraped.getDescription().equals(existing.getDescription())) {
-            existing.setDescription(scraped.getDescription());
-            updated = true;
-        }
-        
+
+        updated |= updateField(scraped.getPrice(), existing.getPrice(), existing::setPrice);
+        updated |= updateField(scraped.getRating(), existing.getRating(), existing::setRating);
+        updated |= updateField(scraped.getImageUrl(), existing.getImageUrl(), existing::setImageUrl);
+        updated |= updateField(scraped.getDescription(), existing.getDescription(), existing::setDescription);
+
         if (updated) {
             Product updatedProduct = productRepository.save(existing);
             log.debug("Updated existing product: {}", updatedProduct.getTitle());
             return updatedProduct;
         }
-        
+
         return existing;
+    }
+
+    private <T> boolean updateField(T newValue, T currentValue, Consumer<T> setter) {
+        if (newValue != null && !newValue.equals(currentValue)) {
+            setter.accept(newValue);
+            return true;
+        }
+        return false;
     }
 }

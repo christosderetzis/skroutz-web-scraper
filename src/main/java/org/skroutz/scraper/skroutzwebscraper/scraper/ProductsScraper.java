@@ -49,26 +49,27 @@ public class ProductsScraper {
         try {
             // Wait for page to fully load and for the listing container to be present
             WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(20));
-            
+
             // Try different possible selectors for the listing container
             WebElement olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(ProductWebCssFields.LISTING_CONTAINER)));
-            
+
             if (olElement == null) {
                 throw new RuntimeException("Could not find any listing container element");
             }
-            
+
             List<WebElement> filteredItems = olElement.findElements(By.xpath(ProductWebCssFields.PRODUCT_ITEM_XPATH));
-            log.info("Found {} product elements", filteredItems.size());
-            
+
             if (filteredItems.isEmpty()) {
                 log.warn("No products found on this page. Page might be empty or structure changed.");
                 // Log page source for debugging
                 log.debug("Page title: {}", webDriver.getTitle());
                 log.debug("Current URL: {}", webDriver.getCurrentUrl());
+            } else {
+                log.info("Successfully found {} product elements", filteredItems.size());
             }
-            
+
             return filteredItems;
-            
+
         } catch (Exception e) {
             log.error("Error finding product elements: {}", e.getMessage());
             log.debug("Page title: {}", webDriver.getTitle());
@@ -89,19 +90,19 @@ public class ProductsScraper {
                 log.error("Failed to parse product element: {}", e.getMessage());
             }
         }
-        
+
         return products;
     }
 
     private Product extractSingleProduct(WebElement productElement) {
         Product product = new Product();
-        
+
         extractUrlAndTitle(productElement, product);
         extractPrice(productElement, product);
         extractImageUrl(productElement, product);
         extractDescription(productElement, product);
         extractRating(productElement, product);
-        
+
         return product;
     }
 
@@ -138,7 +139,7 @@ public class ProductsScraper {
                 String totalPagesText = parts.get(2);
                 return Integer.parseInt(totalPagesText);
             }
-            
+
             log.warn("Could not parse pagination text: {}", paginationText);
             return null;
         } catch (Exception e) {

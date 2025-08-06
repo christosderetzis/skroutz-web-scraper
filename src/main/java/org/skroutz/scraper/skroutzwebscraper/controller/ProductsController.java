@@ -20,32 +20,40 @@ public class ProductsController {
     }
 
     @PostMapping("/scrape")
-    ResponseEntity<Void> scrapeProducts(@RequestBody ScraperRequestDto scraperRequestDto, @RequestParam Boolean multiple) {
-        // productsService.scrapeAndSaveProducts(scraperRequestDto.getUrl());
-        if (multiple) {
-            Integer pages = productsService.getNumberOfWebPages(scraperRequestDto.getUrl());
-            if (pages > 0) {
-                // first page does not have a page number in the URL
-                log.info("Scraping products from URL: {}", scraperRequestDto.getUrl());
-                productsService.scrapeAndSaveProducts(scraperRequestDto.getUrl());
-                // scrape subsequent
-                for (int i = 2; i <= pages; i++) {
-                    // check if the URL already contains a ? keyword
-                    // if it does, append &page=i, otherwise append ?page=i
-                    log.info("Scraping products from page {} of URL: {}", i, scraperRequestDto.getUrl());
+    ResponseEntity<Void> scrapeProducts(@RequestBody ScraperRequestDto scraperRequestDto,
+                                        @RequestParam boolean multiple) {
+        String baseUrl = scraperRequestDto.getUrl();
 
-                    String urlWithPage = scraperRequestDto.getUrl().contains("?")
-                        ? scraperRequestDto.getUrl() + "&page=" + i
-                        : scraperRequestDto.getUrl() + "?page=" + i;
-                    productsService.scrapeAndSaveProducts(urlWithPage);
-                }
-            } else {
-                log.warn("No pages found to scrape for URL: {}", scraperRequestDto.getUrl());
+        if (multiple) {
+            int totalPages = productsService.getNumberOfWebPages(baseUrl);
+            if (totalPages <= 0) {
+                log.warn("No pages found to scrape for URL: {}", baseUrl);
+                return ResponseEntity.ok().build();
             }
+
+            scrapeMultiplePages(baseUrl, totalPages);
         } else {
-            log.info("Scraping single page products from URL: {}", scraperRequestDto.getUrl());
-            productsService.scrapeAndSaveProducts(scraperRequestDto.getUrl());
+            log.info("Scraping single page products from URL: {}", baseUrl);
+            productsService.scrapeAndSaveProducts(baseUrl);
         }
+
         return ResponseEntity.ok().build();
+    }
+
+    private void scrapeMultiplePages(String baseUrl, int totalPages) {
+        for (int page = 1; page <= totalPages; page++) {
+            String urlToScrape = buildUrlWithPage(baseUrl, page);
+            log.info("Scraping products from page {} of URL: {}", page, urlToScrape);
+            productsService.scrapeAndSaveProducts(urlToScrape);
+        }
+    }
+
+    private String buildUrlWithPage(String baseUrl, int page) {
+        if (page == 1) {
+            return baseUrl;
+        }
+
+        String separator = baseUrl.contains("?") ? "&" : "?";
+        return baseUrl + separator + "page=" + page;
     }
 }
