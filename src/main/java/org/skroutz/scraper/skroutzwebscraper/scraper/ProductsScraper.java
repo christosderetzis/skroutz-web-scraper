@@ -20,12 +20,10 @@ import java.util.function.Function;
 
 @Component
 @Slf4j
-public class ProductsScraper {
-
-    private final ApplicationContext applicationContext;
+public class ProductsScraper extends AbstractScraper {
 
     public ProductsScraper(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+        super(applicationContext);
     }
 
     public List<Product> scrapeProducts(String url) {
@@ -104,27 +102,6 @@ public class ProductsScraper {
         extractRating(productElement, product);
 
         return product;
-    }
-
-    private <T> T executeWithWebDriver(Function<WebDriver, T> operation, String url, String operationName) {
-        WebDriver webDriver = null;
-        try {
-            // Get a fresh WebDriver instance for each scraping operation
-            webDriver = applicationContext.getBean(WebDriver.class);
-            return operation.apply(webDriver);
-        } catch (Exception e) {
-            log.error("Error {} from {}: {}", operationName, url, e.getMessage(), e);
-            return null;
-        } finally {
-            // Clean up the WebDriver instance
-            if (webDriver != null) {
-                try {
-                    webDriver.quit();
-                } catch (Exception e) {
-                    log.warn("Error closing WebDriver: {}", e.getMessage());
-                }
-            }
-        }
     }
 
     private Integer parsePaginationInfo(WebDriver webDriver) {

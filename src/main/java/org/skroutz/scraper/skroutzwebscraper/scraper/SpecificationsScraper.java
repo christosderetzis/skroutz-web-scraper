@@ -15,12 +15,10 @@ import java.util.function.Function;
 
 @Slf4j
 @Component
-public class SpecificationsScraper {
-
-    private final ApplicationContext applicationContext;
+public class SpecificationsScraper extends AbstractScraper {
 
     public SpecificationsScraper(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+        super(applicationContext);
     }
 
     public JsonNode screapeSpecifications(String url) {
@@ -53,26 +51,5 @@ public class SpecificationsScraper {
             rootNode.set(category, categoryNode);
         }
         return rootNode;
-    }
-
-    private <T> T executeWithWebDriver(Function<WebDriver, T> operation, String url, String operationName) {
-        WebDriver webDriver = null;
-        try {
-            // Get a fresh WebDriver instance for each scraping operation
-            webDriver = applicationContext.getBean(WebDriver.class);
-            return operation.apply(webDriver);
-        } catch (Exception e) {
-            log.error("Error {} from {}: {}", operationName, url, e.getMessage(), e);
-            return null;
-        } finally {
-            // Clean up the WebDriver instance
-            if (webDriver != null) {
-                try {
-                    webDriver.quit();
-                } catch (Exception e) {
-                    log.warn("Error closing WebDriver: {}", e.getMessage());
-                }
-            }
-        }
     }
 }
