@@ -13,7 +13,7 @@ public class ProductSpecificationsScheduler {
 
     private final ProductSpecificationsService productSpecificationsService;
 
-    @Scheduled(fixedRate = 7200000) // 2 hours = 7200000 milliseconds
+    @Scheduled(fixedRate = 2 * 60 * 60 * 1000)
     public void parseSpecifications() {
         log.info("Starting specifications parsing task...");
         productSpecificationsService.parseSpecifications();
