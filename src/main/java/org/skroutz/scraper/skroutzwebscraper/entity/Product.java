@@ -1,11 +1,14 @@
 package org.skroutz.scraper.skroutzwebscraper.entity;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,6 +41,13 @@ public class Product {
 
     @Column(name = "rating", precision = 3, scale = 2)
     private BigDecimal rating;
+
+    @Column(name = "specifications", columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode specifications;
+
+    @Column(name = "specifications_parsed")
+    private Boolean specificationsParsed;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

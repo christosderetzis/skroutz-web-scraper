@@ -8,6 +8,8 @@ CREATE TABLE scraper_schema.product (
     image_url VARCHAR(2048),
     description TEXT,
     rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5),
+    specifications JSONB,
+    specifications_parsed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
