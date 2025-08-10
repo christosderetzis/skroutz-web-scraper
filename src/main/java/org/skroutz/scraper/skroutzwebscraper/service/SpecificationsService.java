@@ -13,7 +13,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ProductSpecificationsService {
+public class SpecificationsService {
 
     private final ProductRepository productRepository;
     private final SpecificationsScraper specificationsScraper;

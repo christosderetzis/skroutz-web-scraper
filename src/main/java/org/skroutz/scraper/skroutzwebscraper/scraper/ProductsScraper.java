@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 
 @Component
 @Slf4j
@@ -52,7 +51,7 @@ public class ProductsScraper extends AbstractScraper {
             WebElement olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(ProductWebCssFields.LISTING_CONTAINER)));
 
             if (olElement == null) {
-                throw new RuntimeException("Could not find any listing container element");
+                return null;
             }
 
             List<WebElement> filteredItems = olElement.findElements(By.xpath(ProductWebCssFields.PRODUCT_ITEM_XPATH));

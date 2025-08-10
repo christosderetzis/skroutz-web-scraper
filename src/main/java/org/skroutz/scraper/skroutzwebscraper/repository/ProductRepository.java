@@ -16,4 +16,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByUrl(String url);
 
     List<Product> findAllBySpecificationsParsed(boolean specificationsParsed);
+
+    List<Product> findAllByReviewsParsed(boolean reviewsParsed);
 }

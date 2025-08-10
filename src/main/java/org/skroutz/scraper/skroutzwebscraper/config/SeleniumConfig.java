@@ -39,7 +39,10 @@ public class SeleniumConfig {
         options.addArguments("--start-maximized");
         options.setExperimentalOption("excludeSwitches", Arrays.asList("enable-automation"));
         options.setExperimentalOption("useAutomationExtension", false);
-        
+        options.addArguments("--disable-blink-features=AutomationControlled");
+        options.addArguments("user-data-dir=C:\\Users\\Christos\\AppData\\Local\\Google\\Chrome\\User Data\\Default");
+
+
         WebDriver driver = new ChromeDriver(options);
         driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(timeoutMs));
         

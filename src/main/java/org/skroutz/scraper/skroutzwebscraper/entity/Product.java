@@ -46,8 +46,11 @@ public class Product {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode specifications;
 
-    @Column(name = "specifications_parsed")
-    private Boolean specificationsParsed;
+    @Column(name = "specifications_parsed", nullable = false)
+    private Boolean specificationsParsed = false;
+
+    @Column(name = "reviews_parsed", nullable = false)
+    private Boolean reviewsParsed = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
