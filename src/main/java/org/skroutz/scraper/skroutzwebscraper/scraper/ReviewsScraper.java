@@ -73,8 +73,13 @@ public class ReviewsScraper extends AbstractScraper {
 
         // Grab all review items
         List<WebElement> reviewItems = webDriver.findElements(By.cssSelector("#sku_reviews_list .review-item"));
-        log.info("Found {} reviews", reviewItems.size());
-        return reviewItems;
+
+        List<WebElement> filteredReviews = reviewItems.stream()
+                .filter(item -> item.findElements(By.cssSelector(".merged-review-info")).isEmpty())
+                .toList();
+
+        log.info("Found {} reviews after filtering", filteredReviews.size());
+        return filteredReviews;
     }
 
     private List<Review> extractReviews(List<WebElement> reviewElements) {
@@ -146,21 +151,31 @@ public class ReviewsScraper extends AbstractScraper {
     private void extractReviewDate(WebElement reviewElement, Review review) {
         WebElement reviewDate = reviewElement.findElement(By.cssSelector(".permalink.js-review-permalink"));
         String dateText = reviewDate.getText();
-        String[] dateParts = dateText.split("/");
-        if (dateParts.length == 3) {
-            try {
-                int day = Integer.parseInt(dateParts[0]);
-                int month = Integer.parseInt(dateParts[1]);
-                int year = Integer.parseInt(dateParts[2]);
-                review.setReviewDate(LocalDate.of(year, month, day));
-            } catch (NumberFormatException e) {
-                log.warn("Failed to parse review date: {}", dateText);
+        // date format is like "23/09/2023" or "2025-09-23"
+        try {
+            if (dateText.contains("/")) {
+                String[] parts = dateText.split("/");
+                review.setReviewDate(LocalDate.of(
+                        Integer.parseInt(parts[2]), // year
+                        Integer.parseInt(parts[1]), // month
+                        Integer.parseInt(parts[0])  // day
+                ));
+            } else if (dateText.contains("-")) {
+                String[] parts = dateText.split("-");
+                review.setReviewDate(LocalDate.of(
+                        Integer.parseInt(parts[0]), // year
+                        Integer.parseInt(parts[1]), // month
+                        Integer.parseInt(parts[2])  // day
+                ));
+            } else {
+                log.warn("Unexpected date format: {}", dateText);
                 review.setReviewDate(null);
             }
-        } else {
-            log.warn("Unexpected date format: {}", dateText);
+        } catch (Exception e) {
+            log.warn("Failed to parse review date: {}", e.getMessage());
             review.setReviewDate(null);
         }
+
     }
 
     private void extractIsVerifiedPurchase(WebElement reviewElement, Review review) {
@@ -177,21 +192,27 @@ public class ReviewsScraper extends AbstractScraper {
         try {
             WebElement helpfulVotesElement = reviewElement.findElement(By.cssSelector(".helpfulness-message"));
             // message is like 1 out of 1 found this review helpful or 1 στους 1 χρήστης βρήκε αυτή την κριτική χρήσιμη
-            String votesText = helpfulVotesElement.getText();
-            String[] parts = votesText.split(" ");
-            if (parts.length >= 3) {
+            String helpfulText = helpfulVotesElement.getText();
+            String[] parts = helpfulText.split(" ");
+            if (helpfulText.contains("out of")) {
                 // Assuming the format is "1 out of 1" or "1 στους 1 χρήστης"
-                int helpfulVotes = Integer.parseInt(parts[0]);
-                int totalVotes = Integer.parseInt(parts[2]);
-                review.setHelpfulVotes(helpfulVotes);
-                review.setTotalVotes(totalVotes);
+                review.setHelpfulVotes(Integer.parseInt(parts[0]));
+                review.setTotalVotes(Integer.parseInt(parts[3]));
+            } else if (helpfulText.contains("χρήστης")) {
+                // Assuming the format is "1 στους 1 χρήστης βρήκε αυτή την κριτική χρήσιμη"
+                review.setHelpfulVotes(Integer.parseInt(parts[0]));
+                review.setTotalVotes(Integer.parseInt(parts[2]));
             } else {
-                log.warn("Unexpected format for helpful votes: {}", votesText);
+                log.warn("Unexpected helpful votes format: {}", helpfulText);
                 review.setHelpfulVotes(0);
                 review.setTotalVotes(0);
             }
         } catch (NoSuchElementException e) {
-            log.warn("No helpful votes found for this review, setting to 0");
+            log.warn("No helpful votes found for this review, setting helpfulVotes and totalVotes to 0");
+            review.setHelpfulVotes(0);
+            review.setTotalVotes(0);
+        } catch (NumberFormatException e) {
+            log.warn("Failed to parse helpful votes: {}", e.getMessage());
             review.setHelpfulVotes(0);
             review.setTotalVotes(0);
         }
