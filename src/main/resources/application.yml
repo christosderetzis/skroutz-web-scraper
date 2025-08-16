@@ -28,6 +28,7 @@ spring:
 scraper:
   headless: false
   timeout: 100
+  chromeUserDataDir: C:\\Users\\Christos\\AppData\\Local\\Google\\Chrome\\User Data\\Default
 
 # Swagger/OpenAPI Configuration
 springdoc:
