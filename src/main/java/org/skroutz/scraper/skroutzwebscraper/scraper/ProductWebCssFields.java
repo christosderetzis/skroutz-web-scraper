@@ -4,7 +4,7 @@ public class ProductWebCssFields {
 
     public static final String LISTING_CONTAINER = "ol";
     
-    public static final String PRODUCT_ITEM_XPATH = "li[contains(@class,'cf') and contains(@class,'card') and (contains(@class,'with-highlight-review') or contains(@class,'order-first') or string-length(normalize-space(@class))=7)]";
+    public static final String PRODUCT_ITEM_XPATH = "li[contains(@class,'cf') and contains(@class,'card')]";
     
     public static final String PRODUCT_LINK = "a.js-sku-link";
     

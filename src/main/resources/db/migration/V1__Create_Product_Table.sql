@@ -9,7 +9,8 @@ CREATE TABLE scraper_schema.product (
     description TEXT,
     rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5),
     specifications JSONB,
-    specifications_parsed BOOLEAN DEFAULT FALSE,
+    specifications_parsed BOOLEAN NOT NULL DEFAULT FALSE,
+    reviews_parsed BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

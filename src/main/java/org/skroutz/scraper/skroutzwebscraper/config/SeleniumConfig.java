@@ -20,6 +20,9 @@ public class SeleniumConfig {
     @Value("${scraper.timeout:3000}")
     private int timeoutMs;
 
+    @Value("${scraper.chromeUserDataDir}")
+    private String userDataDir;
+
     @Bean
     @Scope("prototype")
     public WebDriver webDriver() {
@@ -39,7 +42,10 @@ public class SeleniumConfig {
         options.addArguments("--start-maximized");
         options.setExperimentalOption("excludeSwitches", Arrays.asList("enable-automation"));
         options.setExperimentalOption("useAutomationExtension", false);
-        
+        options.addArguments("--disable-blink-features=AutomationControlled");
+        options.addArguments("user-data-dir=" + userDataDir);
+
+
         WebDriver driver = new ChromeDriver(options);
         driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(timeoutMs));
         
