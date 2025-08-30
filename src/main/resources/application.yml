@@ -1,3 +1,4 @@
+
 spring:
   application:
     name: skroutz-web-scraper
@@ -22,13 +23,14 @@ spring:
   # Flyway Configuration
   flyway:
     schemas: scraper_schema
-    default-schema: scraper_schema
 
 # Scraper Configuration
 scraper:
   headless: false
   timeout: 100
   chromeUserDataDir: C:\\Users\\Christos\\AppData\\Local\\Google\\Chrome\\User Data\\Default
+  selenium:
+    url: ""
 
 # Swagger/OpenAPI Configuration
 springdoc:
@@ -37,3 +39,5 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: method
+server:
+  port: 8082

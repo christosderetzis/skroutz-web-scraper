@@ -4,11 +4,14 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.util.Arrays;
 
 @Configuration
@@ -20,20 +23,21 @@ public class SeleniumConfig {
     @Value("${scraper.timeout:3000}")
     private int timeoutMs;
 
-    @Value("${scraper.chromeUserDataDir}")
+    @Value("${scraper.chromeUserDataDir:}")
     private String userDataDir;
+
+    @Value("${scraper.selenium.url:}")
+    private String seleniumUrl;
 
     @Bean
     @Scope("prototype")
     public WebDriver webDriver() {
-        WebDriverManager.chromedriver().setup();
-        
         ChromeOptions options = new ChromeOptions();
-        
+
         if (headless) {
-            options.addArguments("--headless");
+            options.addArguments("--headless=new");  // Use new headless mode
         }
-        
+
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--disable-gpu");
@@ -43,12 +47,29 @@ public class SeleniumConfig {
         options.setExperimentalOption("excludeSwitches", Arrays.asList("enable-automation"));
         options.setExperimentalOption("useAutomationExtension", false);
         options.addArguments("--disable-blink-features=AutomationControlled");
-        options.addArguments("user-data-dir=" + userDataDir);
 
+        if (!userDataDir.isBlank()) {
+            options.addArguments("user-data-dir=" + userDataDir);
+        }
 
-        WebDriver driver = new ChromeDriver(options);
+        WebDriver driver;
+
+        // Check if Selenium URL is provided (for remote WebDriver)
+        if (!seleniumUrl.isBlank()) {
+            try {
+                URI seleniumUri = URI.create(seleniumUrl);
+                driver = new RemoteWebDriver(seleniumUri.toURL(), options);
+            } catch (MalformedURLException e) {
+                throw new RuntimeException("Invalid Selenium URL: " + seleniumUrl, e);
+            }
+        } else {
+            // Use local ChromeDriver
+            WebDriverManager.chromedriver().setup();
+            driver = new ChromeDriver(options);
+        }
+
         driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(timeoutMs));
-        
+
         return driver;
     }
 }

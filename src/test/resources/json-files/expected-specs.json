@@ -1,0 +1,56 @@
+{
+  "Main Specifications": {
+    "Mobile Phone Type": "SmartPhone",
+    "Operating System": "iOS",
+    "SIM": "SIM + eSIM",
+    "Release Year": "2021",
+    "Colour": "Beige",
+    "Weight": "174 gr",
+    "Package Contents": "Charging Cable",
+    "Model": "iPhone 13"
+  },
+  "Processor & Memory": {
+    "Processor Model": "Apple A15 Bionic",
+    "Processor Power": "3.22 GHz",
+    "Processor Cores": "2+4",
+    "RAM": "4 GB",
+    "Capacity": "128 GB",
+    "Card Slot": "No"
+  },
+  "Display": {
+    "Size": "6.1 \"",
+    "Analysis": "2532 x 1170 pixels",
+    "Type": "Super Retina XDR OLED",
+    "Handling": "Touch screen",
+    "Definition": "Full HD"
+  },
+  "Camera": {
+    "Rear Camera": "Dual",
+    "Rear Camera Lenses": "Wide Angle 12MP, Ultra Wide Angle 12MP",
+    "Rear Camera Video Resolution": "1080p 240fps Slow Motion, 4K 60fps",
+    "Rear Camera Flash": "Yes",
+    "Selfie Camera Lenses": "Wide Angle 12MP"
+  },
+  "Network & Connectivity": {
+    "Network Connection": "5G",
+    "Connectivity": "Bluetooth, Lightning, Wi-Fi",
+    "NFC": "Yes"
+  },
+  "Battery": {
+    "Capacity": "3240 mAh",
+    "Removable": "No",
+    "Fast Charging": "Yes",
+    "Wireless Charging Qi": "Yes"
+  },
+  "Special Features": {
+    "Protection": "Dust Resistant, Water Resistant",
+    "Protection Certification": "IP68",
+    "Sensors": "Accelerometer, Face ID, Light Sensor, Proximity, Barometer, Gyroscope, Compass",
+    "Fingerprint": "Without"
+  },
+  "Dimensions": {
+    "Length": "146.7 mm",
+    "Width": "71.5 mm",
+    "Thickness": "7.65 mm"
+  }
+}

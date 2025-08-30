@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Products</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 2rem;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2rem;
+      font-weight: 600;
+      color: #222;
+    }
+
+    ol {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      /* Grid layout for cards */
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      background: #fff;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      transform: translateY(-3px);
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #fafafa;
+      padding: 0.5rem;
+    }
+
+    .card-content {
+      margin-top: 1rem;
+      flex: 1;
+    }
+
+    .card-content h2 {
+      font-size: 1.1rem;
+      margin: 0 0 0.5rem;
+      font-weight: 600;
+    }
+
+    .card-content h2 a {
+      text-decoration: none;
+      color: #0066cc;
+      transition: color 0.2s;
+    }
+
+    .card-content h2 a:hover {
+      color: #004999;
+    }
+
+    .price {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #008000;
+      margin-bottom: 0.5rem;
+    }
+
+    .specs {
+      font-size: 0.9rem;
+      color: #555;
+      margin: 0.5rem 0;
+    }
+
+    .rating-wrapper {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: #ff9800;
+      font-weight: 500;
+    }
+
+    /* Buttons inside cards */
+    .rc-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-right: 0.3rem;
+      font-size: 1.2rem;
+      color: #666;
+      transition: color 0.2s;
+    }
+
+    .rc-icon-btn:hover {
+      color: #e53935;
+    }
+
+    .add-to-cart-container {
+      display: flex;
+      align-items: center;
+      margin-top: 1rem;
+    }
+
+    .add-to-cart-container .button-success {
+      background: #0066cc;
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      color: #fff;
+      transition: background 0.2s;
+    }
+
+    .add-to-cart-container .button-success:hover {
+      background: #004999;
+    }
+
+    .add-to-cart-stepper {
+      margin-left: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .add-to-cart-stepper button {
+      border: 1px solid #ccc;
+      background: #fafafa;
+      border-radius: 4px;
+      padding: 0.2rem 0.6rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .add-to-cart-stepper button:hover {
+      background: #eee;
+    }
+
+    /* Pagination */
+    .paginator {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .paginator button {
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      background: #e0e0e0;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .paginator button:hover:not(:disabled) {
+      background: #ccc;
+    }
+
+    .paginator button.current {
+      background: #0066cc;
+      color: white;
+    }
+
+    .paginator button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+  </style>
+</head>
+<body>
+<h1>Product List</h1>
+<ol id="product-list"></ol>
+<div class="paginator" id="paginator"></div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  let currentPage = parseInt(urlParams.get("page")) || 1;
+  const productsPerPage = 4;
+
+  const allProducts = [
+    { // 1. All info
+      name: "Samsung Galaxy A54",
+      price: "299,99 €",
+      imageUrl: "https://cdn.shopflix.gr/products/SFA-10065519/images/530/1738147931_8806094891973.webp?imwidth=640",
+      description: "A great phone with a great camera.",
+      rating: "4.5"
+    },
+    { // 2. No price
+      name: "iPhone 15 Pro",
+      imageUrl: "https://cdn.shopflix.gr/products/SFA-12065500/images/530/sf_temp_images_2023_2023_10_09_1696857317_0195949021022.jpeg?imwidth=640",
+      description: "The latest iPhone.",
+      rating: "4.8"
+    },
+    { // 3. No image
+      name: "Xiaomi Redmi Note 12",
+      price: "150,00 €",
+      description: "A budget-friendly option.",
+      rating: "4.2"
+    },
+    { // 4. No description
+      name: "Google Pixel 8",
+      price: "799,00 €",
+      imageUrl: "https://cdn.shopflix.gr/products/SFA-16102510/images/530/1702556289_SF_16102510.jpeg?imwidth=640",
+      rating: "4.6"
+    },
+    { // 5. No rating
+      name: "OnePlus 11",
+      price: "650,00 €",
+      imageUrl: "https://cdn.shopflix.gr/products/SFA-08180133/images/530/9645230.jpg?imwidth=640",
+      description: "Flagship killer."
+    },
+    { // 6. Price range
+      name: "Sony Xperia 1 V",
+      price: "1.299,00 - 1.399,00 €",
+      imageUrl: "https://a.scdn.gr/images/sku_main_images/044182/44182101/large_20230628150019_sony_xperia_1_v_5g_12gb_256gb_black.jpeg",
+      description: "For photography enthusiasts.",
+      rating: "4.4"
+    },
+    { // 7. Price with 'from'
+      name: "Motorola Edge 40",
+      price: "from 399,99 €",
+      imageUrl: "https://a.scdn.gr/images/sku_main_images/043590/43590985/large_20230524150019_motorola_edge_40_5g_8gb_256gb_nebula_green.jpeg",
+      description: "Stylish and powerful.",
+      rating: "4.3"
+    },
+    { // 8. Minimal info
+      name: "Huawei P60 Pro"
+    },
+    { // 9
+        name: "Nokia G400",
+        price: "230€",
+        imageUrl: "https://a.scdn.gr/images/sku_main_images/039890/39890081/large_20220105113533_nokia_g400_5g.jpeg",
+        description: "A solid budget phone.",
+        rating: "3.9"
+    },
+    { // 10
+        name: "Realme GT Neo 5",
+        price: "450€",
+        imageUrl: "https://a.scdn.gr/images/sku_main_images/041589/41589003/large_20230228150019_realme_gt_neo_5_5g_16gb_256gb.jpeg",
+        description: "Fast charging.",
+        rating: "4.1"
+    },
+    { // 11
+        name: "Asus Zenfone 10",
+        price: "800€",
+        imageUrl: "https://a.scdn.gr/images/sku_main_images/044889/44889005/large_20230629150019_asus_zenfone_10_5g_8gb_128gb.jpeg",
+        description: "Compact and powerful.",
+        rating: "4.6"
+    },
+    { // 12
+        name: "Oppo Find X6 Pro",
+        price: "1200€",
+        imageUrl: "https://a.scdn.gr/images/sku_main_images/041889/41889005/large_20230321150019_oppo_find_x6_pro_5g_12gb_256gb.jpeg",
+        description: "Excellent camera system.",
+        rating: "4.8"
+    },
+    { // 13
+        name: "Vivo X90 Pro",
+        price: "1100€",
+        imageUrl: "https://a.scdn.gr/images/sku_main_images/041489/41489005/large_20230222150019_vivo_x90_pro_5g_12gb_256gb.jpeg",
+        description: "Zeiss optics.",
+        rating: "4.7"
+    },
+    { // 14
+        name: "Honor Magic5 Pro",
+        price: "950€",
+        imageUrl: "https://a.scdn.gr/images/sku_main_images/041789/41789005/large_20230306150019_honor_magic5_pro_5g_12gb_512gb.jpeg",
+        description: "Great all-rounder.",
+        rating: "4.7"
+    },
+    { // 15
+        name: "Nothing Phone (2)",
+        price: "650€",
+        imageUrl: "https://a.scdn.gr/images/sku_main_images/045289/45289005/large_20230711150019_nothing_phone_2_5g_12gb_256gb.jpeg",
+        description: "Unique design.",
+        rating: "4.5"
+    }
+  ];
+
+  const numPages = Math.ceil(allProducts.length / productsPerPage);
+
+  if (currentPage > numPages) {
+    currentPage = numPages;
+  }
+  if (currentPage < 1) {
+    currentPage = 1;
+  }
+
+  const productList = document.getElementById("product-list");
+  const paginator = document.getElementById("paginator");
+
+  function generateProducts() {
+    const start = (currentPage - 1) * productsPerPage;
+    const end = start + productsPerPage;
+    const products = allProducts.slice(start, end);
+
+    productList.innerHTML = "";
+
+    products.forEach((product, i) => {
+      const skuid = 60656110 + start + i;
+      const productUrl = `/s/${skuid}/${product.name.toLowerCase().replace(/\s+/g, '-')}.html`;
+
+      const priceHtml = product.price ? `
+        <div class="price react-component reviewable">
+          <div data-testid="normal-price-container">
+            <a class="js-sku-link sku-link" title="${product.name}" data-e2e-testid="sku-price-link" href="${productUrl}">${product.price}</a>
+          </div>
+        </div>
+      ` : '';
+
+      const imageHtml = product.imageUrl ? `
+        <a class="js-sku-link pic" title="${product.name}" data-testid="sku-pic-anchor" href="${productUrl}">
+          <div class="image-container">
+            <img alt="${product.name}" src="${product.imageUrl}" loading="lazy" title="${product.name}" data-testid="sku-pic-img">
+          </div>
+        </a>
+      ` : '';
+
+      const descriptionHtml = product.description ? `<p class="specs">${product.description}</p>` : '';
+
+      const ratingHtml = product.rating ? `
+        <div class="rating-wrapper">
+          <span data-testid="star-rating-value">${product.rating}</span>
+        </div>
+      ` : '';
+
+      productList.insertAdjacentHTML("beforeend", `
+        <li class="cf card ">
+          ${imageHtml}
+          <div class="card-content">
+            <h2><a class="js-sku-link" title="${product.name}" data-e2e-testid="sku-title-link" href="${productUrl}">${product.name}</a></h2>
+            ${priceHtml}
+            ${descriptionHtml}
+            ${ratingHtml}
+          </div>
+        </li>
+      `);
+    });
+  }
+
+  function generatePagination() {
+    paginator.innerHTML = "";
+    if (numPages > 1) {
+        const isLastPage = currentPage === numPages;
+        paginator.insertAdjacentHTML("beforeend", `
+          <div class="paginator">
+            <button class="paginator-button icon" ${isLastPage ? 'disabled' : `onclick="goToPage(${currentPage + 1})"`}>
+              <span>${currentPage} from ${numPages}</span>
+            </button>
+          </div>
+        `);
+    }
+  }
+
+  function goToPage(page) {
+    const url = new URL(window.location);
+    url.searchParams.set('page', page);
+    window.location.href = url.href;
+  }
+
+  generateProducts();
+  generatePagination();
+</script>
+</body>
+</html>
