@@ -5,7 +5,7 @@ spring:
   
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/skroutz_scraper
+    url: jdbc:postgresql://localhost:${DB_PORT:5432}/skroutz_scraper
     username: skroutz_user
     password: skroutz_password
     driver-class-name: org.postgresql.Driver
@@ -29,8 +29,6 @@ scraper:
   headless: false
   timeout: 100
   chromeUserDataDir: C:\\Users\\Christos\\AppData\\Local\\Google\\Chrome\\User Data\\Default
-  selenium:
-    url: ""
 
 # Swagger/OpenAPI Configuration
 springdoc:

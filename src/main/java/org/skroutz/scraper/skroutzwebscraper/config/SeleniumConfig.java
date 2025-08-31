@@ -52,21 +52,8 @@ public class SeleniumConfig {
             options.addArguments("user-data-dir=" + userDataDir);
         }
 
-        WebDriver driver;
-
-        // Check if Selenium URL is provided (for remote WebDriver)
-        if (!seleniumUrl.isBlank()) {
-            try {
-                URI seleniumUri = URI.create(seleniumUrl);
-                driver = new RemoteWebDriver(seleniumUri.toURL(), options);
-            } catch (MalformedURLException e) {
-                throw new RuntimeException("Invalid Selenium URL: " + seleniumUrl, e);
-            }
-        } else {
-            // Use local ChromeDriver
-            WebDriverManager.chromedriver().setup();
-            driver = new ChromeDriver(options);
-        }
+        WebDriverManager.chromedriver().setup();
+        WebDriver driver = new ChromeDriver(options);
 
         driver.manage().timeouts().implicitlyWait(java.time.Duration.ofMillis(timeoutMs));
 

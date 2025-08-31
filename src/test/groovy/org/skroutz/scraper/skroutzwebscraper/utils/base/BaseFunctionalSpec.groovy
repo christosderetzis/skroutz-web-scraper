@@ -2,9 +2,11 @@ package org.skroutz.scraper.skroutzwebscraper.utils.base
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
+import org.skroutz.scraper.skroutzwebscraper.SkroutzWebScraperApplication
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.utils.actor.WebActor
+import org.skroutz.scraper.skroutzwebscraper.utils.config.TestSeleniumConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -14,7 +16,13 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 @SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        classes = [SkroutzWebScraperApplication, TestSeleniumConfig],
+        properties = [
+                "spring.main.allow-bean-definition-overriding=true",
+                "DB_PORT=5434",
+        ]
+)
 abstract class BaseFunctionalSpec extends Specification {
 
     @LocalServerPort
@@ -44,12 +52,5 @@ abstract class BaseFunctionalSpec extends Specification {
     @PostConstruct
     void init() {
         webActor = new WebActor(port)
-    }
-
-    @DynamicPropertySource
-    static void setProperties(DynamicPropertyRegistry registry) {
-        registry.add("scraper.selenium.url", () -> "http://localhost:4444/wd/hub")
-        registry.add("scraper.chromeUserDataDir", () -> "")
-        registry.add("spring.datasource.url", () -> "jdbc:postgresql://localhost:5434/skroutz_scraper")
     }
 }
