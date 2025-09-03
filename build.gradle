@@ -29,10 +29,29 @@ java {
     }
 }
 
+sourceSets {
+    functionalTest {
+        groovy {
+            srcDirs "src/functionalTest/groovy"
+        }
+        java {
+            srcDirs "src/functionalTest/java"
+        }
+        resources {
+            srcDirs "src/functionalTest/resources"
+        }
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+    }
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+
+    functionalTestImplementation.extendsFrom(testImplementation)
+    functionalTestRuntimeOnly.extendsFrom(testRuntimeOnly)
 }
 
 repositories {
@@ -199,9 +218,20 @@ jacocoTestCoverageVerification {
     }
 }
 
+compileFunctionalTestGroovy {
+    groovyClasspath = configurations.testCompileClasspath
+}
+
+compileTestGroovy {
+    groovyClasspath = configurations.testCompileClasspath
+}
 
 tasks.named('test') {
     useJUnitPlatform()
 }
 
-dockerCompose.isRequiredBy(test)
+tasks.register('functionalTest', Test) {
+
+}
+
+dockerCompose.isRequiredBy(functionalTest)
