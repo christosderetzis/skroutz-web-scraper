@@ -43,7 +43,7 @@ public class ReviewsService {
                     log.warn("Product URL is empty or null for product: {}", product.getId());
                 }
             } catch (Exception e) {
-                log.error("Error parsing reviews for product '{}': {}", product.getId(), e.getMessage(), e);
+                log.error("Error parsing reviews for product {}: {}", product.getId(), e.getMessage(), e);
             }
         }
     }

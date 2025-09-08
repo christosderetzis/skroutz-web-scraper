@@ -25,7 +25,7 @@ public class ProductsController {
         String baseUrl = scraperRequestDto.getUrl();
 
         if (multiple) {
-            int totalPages = productsService.getNumberOfWebPages(baseUrl);
+            Integer totalPages = productsService.getNumberOfWebPages(baseUrl);
             if (totalPages <= 0) {
                 log.warn("No pages found to scrape for URL: {}", baseUrl);
                 return ResponseEntity.ok().build();

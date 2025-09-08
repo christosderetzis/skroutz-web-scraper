@@ -22,7 +22,7 @@ services:
     image: nginx:alpine
     container_name: mockserver
     volumes:
-      - ./src/test/resources/mock-html:/usr/share/nginx/html:ro
+      - ./src/functionalTest/resources/mock-html:/usr/share/nginx/html:ro
     networks:
       - test-network
     ports:

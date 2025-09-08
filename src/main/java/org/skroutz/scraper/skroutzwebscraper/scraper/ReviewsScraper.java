@@ -2,6 +2,7 @@ package org.skroutz.scraper.skroutzwebscraper.scraper;
 
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -26,7 +27,7 @@ public class ReviewsScraper extends AbstractScraper {
         return executeWithWebDriver(webDriver -> {
             webDriver.get(url + "#reviews");
             try {
-                Thread.sleep(5000);
+                Thread.sleep(10000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -37,23 +38,24 @@ public class ReviewsScraper extends AbstractScraper {
 
     private List<WebElement> findReviewElements(WebDriver webDriver) {
         WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(2));
-        JavascriptExecutor js = (JavascriptExecutor) webDriver;
-        // Scroll down to the reviews section
-        js.executeScript("document.querySelector('#reviews-container').scrollIntoView();");
+        Actions actions = new Actions(webDriver);
+
+        // Scroll to reviews section using Actions
+        WebElement reviewsContainer = webDriver.findElement(By.cssSelector("#reviews-container"));
+        actions.moveToElement(reviewsContainer).perform();
 
         int previousCount = webDriver.findElements(By.cssSelector("#sku_reviews_list .review-item")).size();
 
         while (true) {
             try {
-
                 WebElement loadMore = wait.until(ExpectedConditions.elementToBeClickable(
                         By.cssSelector(".load-more-reviews")));
 
-                // Scroll into view
-                js.executeScript("arguments[0].scrollIntoView({block: 'center'});", loadMore);
+                // Scroll into view with Actions
+                actions.moveToElement(loadMore).perform();
 
-                // Click using JS to avoid "intercepted click"
-                js.executeScript("arguments[0].click();", loadMore);
+                // Regular click
+                loadMore.click();
 
                 // Wait until review count increases
                 int finalPreviousCount = previousCount;
@@ -62,16 +64,15 @@ public class ReviewsScraper extends AbstractScraper {
                     return newCount > finalPreviousCount;
                 });
 
-                // Update count
                 previousCount = webDriver.findElements(By.cssSelector("#sku_reviews_list .review-item")).size();
 
             } catch (TimeoutException e) {
-                // No more reviews to load or button gone
+                // No more reviews to load
                 break;
             }
         }
 
-        // Grab all review items
+        // Collect all review items
         List<WebElement> reviewItems = webDriver.findElements(By.cssSelector("#sku_reviews_list .review-item"));
 
         List<WebElement> filteredReviews = reviewItems.stream()
@@ -118,7 +119,6 @@ public class ReviewsScraper extends AbstractScraper {
                 .map(WebElement::getText)
                 .toArray(String[]::new);
         if (cons.length == 0) {
-            log.warn("No cons found for this review, setting cons to null");
             cons = null;
         }
         review.setCons(cons);
@@ -130,7 +130,6 @@ public class ReviewsScraper extends AbstractScraper {
                 .map(WebElement::getText)
                 .toArray(String[]::new);
         if (neutrals.length == 0) {
-            log.warn("No neutrals found for this review, setting neutrals to null");
             neutrals = null;
         }
         review.setNeutral(neutrals);
@@ -142,7 +141,6 @@ public class ReviewsScraper extends AbstractScraper {
                 .map(WebElement::getText)
                 .toArray(String[]::new);
         if (pros.length == 0) {
-            log.warn("No pros found for this review, setting pros to null");
             pros = null;
         }
         review.setPros(pros);
@@ -175,7 +173,6 @@ public class ReviewsScraper extends AbstractScraper {
             log.warn("Failed to parse review date: {}", e.getMessage());
             review.setReviewDate(null);
         }
-
     }
 
     private void extractIsVerifiedPurchase(WebElement reviewElement, Review review) {
@@ -183,7 +180,6 @@ public class ReviewsScraper extends AbstractScraper {
             reviewElement.findElement(By.cssSelector(".verification-mark"));
             review.setIsVerifiedPurchase(true);
         } catch (NoSuchElementException e) {
-            log.warn("No verification mark found for this review, setting isVerifiedPurchase to false");
             review.setIsVerifiedPurchase(false);
         }
     }
@@ -208,7 +204,6 @@ public class ReviewsScraper extends AbstractScraper {
                 review.setTotalVotes(0);
             }
         } catch (NoSuchElementException e) {
-            log.warn("No helpful votes found for this review, setting helpfulVotes and totalVotes to 0");
             review.setHelpfulVotes(0);
             review.setTotalVotes(0);
         } catch (NumberFormatException e) {

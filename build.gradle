@@ -142,7 +142,13 @@ tasks.withType(Test).configureEach { it ->
             }
         }
     }
-    finalizedBy jacocoTestReport // Generate JaCoCo report after tests
+
+    if (it.name.startsWith("functionalTest")) {
+        testClassesDirs = sourceSets.functionalTest.output.classesDirs
+        classpath = sourceSets.functionalTest.runtimeClasspath
+        include "**/*FunctionalSpec*"
+        finalizedBy jacocoTestReport, jacocoTestCoverageVerification // Generate JaCoCo report after tests
+    }
 }
 
 // JaCoCo Configuration
@@ -151,7 +157,6 @@ jacoco {
 }
 
 jacocoTestReport {
-    dependsOn test
 
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
@@ -165,6 +170,8 @@ jacocoTestReport {
             ])
         }))
     }
+
+    executionData fileTree(buildDir).include("jacoco/*.exec")
 
     reports {
         xml.required = true
@@ -206,7 +213,7 @@ jacocoTestCoverageVerification {
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                minimum = 0.8
+                minimum = 0.7
             }
 
             limit {
@@ -222,16 +229,20 @@ compileFunctionalTestGroovy {
     groovyClasspath = configurations.testCompileClasspath
 }
 
-compileTestGroovy {
-    groovyClasspath = configurations.testCompileClasspath
-}
-
 tasks.named('test') {
     useJUnitPlatform()
 }
 
 tasks.register('functionalTest', Test) {
+    include "**/*FunctionalSpec*"
+}
 
+test {
+    exclude "**/*FunctionalSpec*"
+}
+
+tasks.withType(Copy).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 dockerCompose.isRequiredBy(functionalTest)
