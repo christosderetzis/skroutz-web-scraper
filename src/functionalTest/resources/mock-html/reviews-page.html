@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Reviews</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 2rem;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            color: #222;
+        }
+
+        #sku_reviews_list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .review-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .review-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .author {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2a4d9c;
+            text-decoration: none;
+        }
+
+        .verification-mark {
+            margin-left: 0.5rem;
+            background: #e6f7ec;
+            color: #2e7d32;
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+
+        .review-body {
+            margin: 0.8rem 0;
+            line-height: 1.5;
+            color: #444;
+        }
+
+        .pros, .cons, .so-so {
+            margin: 0.5rem 0;
+            padding: 0.4rem 0.6rem;
+            border-radius: 8px;
+            background: #fafafa;
+            display: flex;           /* inline style */
+            flex-wrap: wrap;         /* wrap if too long */
+            gap: 0.6rem;             /* spacing between items */
+            list-style: none;        /* remove default bullets */
+        }
+
+        .pros li, .cons li, .so-so li {
+            display: inline;         /* inline items */
+            font-size: 0.9rem;
+        }
+
+        .pros li::before {
+            content: "✔ ";
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .cons li::before {
+            content: "✘ ";
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .so-so li::before {
+            content: "➖ ";
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        .permalink {
+            display: inline-block;
+            margin-top: 0.6rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .helpfulness-message {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        /* Stars rating (from data-stars attr) */
+        .stars {
+            display: inline-block;
+            font-size: 1rem;
+            color: #ffb400;
+            margin-left: 0.4rem;
+        }
+
+        .load-more-reviews {
+            padding: 0.8rem 1.5rem;
+            margin: 2rem auto;
+            display: block;
+            cursor: pointer;
+            background: #2a4d9c;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .load-more-reviews:hover {
+            background: #1d3570;
+        }
+    </style>
+</head>
+<body>
+<h1>Product Reviews</h1>
+<div id="reviews-container">
+    <div id="sku_reviews_list"></div>
+    <button class="load-more-reviews">Load More Reviews</button>
+</div>
+
+<script>
+    const names = ["John Doe", "Maria Papadopoulou", "George K.", "Eleni M.", "Kostas P.", "Anna L.", "Dimitris T.", "Sophia G."];
+    const prosList = ["Fast processor", "Good battery", "Nice design", "Affordable", "Fast charging", "Bright screen"];
+    const consList = ["Too heavy", "Screen scratches easily", "Heats up sometimes", "Poor durability", "Weak camera"];
+    const neutralList = ["Average performance", "Decent build quality", "Standard features", "Nothing special", "Good for the price"];
+    const reviewTexts = [
+        "Great phone, amazing performance!",
+        "Battery lasts all day.",
+        "Decent phone for the price.",
+        "Not happy with the purchase.",
+        "Excellent value for money.",
+        "Screen cracked too easily.",
+        "Smooth performance and good sound quality."
+    ];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const MAX_REVIEWS = parseInt(urlParams.get("maxReviews")) || 10; // fallback 100
+    let currentReviews = 0;
+
+    function getRandomItem(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function getRandomSubset(arr, min = 0, max = 3) {
+        const count = Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffled = [...arr].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    }
+
+    function getRandomDate() {
+        const start = new Date(2023, 0, 1);
+        const end = new Date(2025, 7, 1);
+        const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return Math.random() > 0.3 ? `${day}/${month}/${year}` : `${year}-${month}-${day}`;
+    }
+
+    function randomHelpfulMessage(helpfulVotes, totalVotes) {
+        const greekWord = Math.random() < 0.5 ? "χρήστες" : "χρήστης";
+        return Math.random() > 0.5 ?
+            `${helpfulVotes} out of ${totalVotes} found this review helpful` :
+            `${helpfulVotes} στους ${totalVotes} ${greekWord} βρήκαν αυτή την κριτική χρήσιμη`;
+    }
+
+    function generateReview() {
+        const name = getRandomItem(names);
+        const stars = Math.floor(Math.random() * 5) + 1;
+        const reviewText = getRandomItem(reviewTexts);
+        const pros = getRandomSubset(prosList);
+        const cons = getRandomSubset(consList);
+        const neutrals = getRandomSubset(neutralList);
+        const date = getRandomDate();
+        const helpfulVotes = Math.floor(Math.random() * 5);
+        const totalVotes = helpfulVotes + Math.floor(Math.random() * 3);
+        const helpfulMessage = randomHelpfulMessage(helpfulVotes, totalVotes);
+
+        return `
+                <div class="review-item" data-stars="${stars}">
+                    <a class="author">${name}</a>
+                    ${Math.random() > 0.5 ? '<span class="verification-mark">Verified Purchase</span>' : ''}
+                    <div class="review-body">
+                        <p>${reviewText}</p>
+                    </div>
+                    <ul class="icon pros">
+                        ${pros.map(p => `<li>${p}</li>`).join("")}
+                    </ul>
+                    <ul class="icon cons">
+                        ${cons.map(c => `<li>${c}</li>`).join("")}
+                    </ul>
+                    <ul class="icon so-so">
+                        ${neutrals.map(n => `<li>${n}</li>`).join("")}
+                    </ul>
+                    <a class="permalink js-review-permalink">${date}</a>
+                    ${Math.random() < 0.8 ? `<div class="helpfulness-message">${helpfulMessage}</div>` : ''}
+                </div>
+            `;
+    }
+
+    const container = document.getElementById('sku_reviews_list');
+    const loadMoreBtn = document.querySelector('.load-more-reviews');
+
+    function loadReviews(count = 5) {
+        let reviewsHTML = "";
+        for (let i = 0; i < count && currentReviews < MAX_REVIEWS; i++) {
+            reviewsHTML += generateReview();
+            currentReviews++;
+        }
+        container.insertAdjacentHTML('beforeend', reviewsHTML);
+
+        if (currentReviews >= MAX_REVIEWS) {
+            loadMoreBtn.style.display = 'none'; // hide button when limit reached
+        }
+    }
+
+    loadMoreBtn.addEventListener('click', () => loadReviews(5));
+
+    // Load some reviews initially
+    loadReviews(3);
+</script>
+</body>
+</html>

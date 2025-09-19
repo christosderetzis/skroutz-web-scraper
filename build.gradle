@@ -1,5 +1,21 @@
+import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
+
+buildscript {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+    dependencies {
+        // Docker Compose testing
+        classpath 'com.bmuschko:gradle-docker-plugin:9.4.0'
+        classpath 'com.avast.gradle:gradle-docker-compose-plugin:0.17.12'
+    }
+}
+
 plugins {
     id 'java'
+    id 'groovy'
+    id 'jacoco'
     id 'org.springframework.boot' version '3.5.4'
     id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -13,10 +29,29 @@ java {
     }
 }
 
+sourceSets {
+    functionalTest {
+        groovy {
+            srcDirs "src/functionalTest/groovy"
+        }
+        java {
+            srcDirs "src/functionalTest/java"
+        }
+        resources {
+            srcDirs "src/functionalTest/resources"
+        }
+        compileClasspath += sourceSets.main.output + sourceSets.test.output
+        runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+    }
+}
+
 configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+
+    functionalTestImplementation.extendsFrom(testImplementation)
+    functionalTestRuntimeOnly.extendsFrom(testRuntimeOnly)
 }
 
 repositories {
@@ -26,6 +61,7 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-database-postgresql'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
@@ -35,9 +71,178 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.apache.groovy:groovy:4.0.21'
+    testImplementation "org.spockframework:spock-core:2.4-M6-groovy-4.0"
+    testImplementation "org.spockframework:spock-spring:2.4-M6-groovy-4.0"
+    testImplementation 'org.apache.groovy:groovy-json:4.0.21'
+    testImplementation("com.github.javafaker:javafaker:1.0.2") {
+        exclude group: 'org.yaml', module: 'snakeyaml'
+    }
+
+}
+
+apply plugin: 'docker-compose'
+apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
+
+def dockerComposeFilePath = "${rootProject.projectDir}/docker-compose-functional-tests.yml"
+
+dockerCompose {
+    if (DefaultNativePlatform.currentOperatingSystem.macOsX) {
+        executable = '/usr/local/bin/docker-compose'
+        dockerExecutable = '/usr/local/bin/docker'
+    }
+
+    useComposeFiles = [dockerComposeFilePath]
+
+    // Wait for database services to be ready
+    waitForTcpPorts = true
+
+    // Capture logs for debugging
+    captureContainersOutput = true
+
+    // Remove volumes after stopping (clean state for each test run)
+    removeVolumes = true
+
+    // Force recreation of containers to ensure clean state
+    forceRecreate = true
+}
+
+def coloredStatus = { def resultType ->
+    String ansiReset = "\u001B[0m"
+    String ansiGreen = "\u001B[32m"
+    String ansiRed = "\u001B[31m"
+    String ansiYellow = "\u001B[33m"
+    def status
+    switch (resultType) {
+        case TestResult.ResultType.SUCCESS:
+            status = "$ansiGreen $resultType $ansiReset"
+            break
+        case TestResult.ResultType.FAILURE:
+            status = "$ansiRed $resultType $ansiRed"
+            break
+        default:
+            // TestResult.ResultType.SKIPPED
+            status = "$ansiYellow $resultType $ansiReset"
+            break
+    }
+    return status
+}
+
+tasks.withType(Test).configureEach { it ->
+    useJUnitPlatform()
+    // Failfast on first failure by using -PfailFast='true'
+    failFast = project.hasProperty('failFast') && project.property('failFast') == 'true'
+    testLogging {
+        afterSuite { desc, result ->
+            if (desc.className) {
+                String className = desc.className.split('\\.')[-1]
+                String passedTests = "${result.successfulTestCount}/${result.testCount}"
+                def duration = result.endTime - result.startTime
+                logger.quiet "[${className}]: ${passedTests} passed - ${duration}ms \t [${coloredStatus(result.resultType)}]"
+            }
+        }
+    }
+
+    if (it.name.startsWith("functionalTest")) {
+        testClassesDirs = sourceSets.functionalTest.output.classesDirs
+        classpath = sourceSets.functionalTest.runtimeClasspath
+        include "**/*FunctionalSpec*"
+        finalizedBy jacocoTestReport, jacocoTestCoverageVerification // Generate JaCoCo report after tests
+    }
+}
+
+// JaCoCo Configuration
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+jacocoTestReport {
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/config/**',
+                    '**/entity/**',
+                    '**/repository/**',
+                    '**/dto/**',
+                    '**/SkroutzWebScraperApplication.class',
+                    '**/Abstract*'
+            ])
+        }))
+    }
+
+    executionData fileTree(buildDir).include("jacoco/*.exec")
+
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+    finalizedBy jacocoTestCoverageVerification
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: [
+                    '**/config/**',
+                    '**/entity/**',
+                    '**/repository/**',
+                    '**/dto/**',
+                    '**/SkroutzWebScraperApplication.class',
+                    '**/Abstract*',
+                    '**/ProductWebCssFields.class',
+            ])
+        }))
+    }
+
+    violationRules {
+        rule {
+            failOnViolation = true
+            enabled = true
+            element = 'CLASS'
+
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.8
+            }
+
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.7
+            }
+
+            limit {
+                counter = 'METHOD'
+                value = 'COVEREDRATIO'
+                minimum = 0.8
+            }
+        }
+    }
+}
+
+compileFunctionalTestGroovy {
+    groovyClasspath = configurations.testCompileClasspath
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.register('functionalTest', Test) {
+    include "**/*FunctionalSpec*"
+}
+
+test {
+    exclude "**/*FunctionalSpec*"
+}
+
+tasks.withType(Copy).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
+dockerCompose.isRequiredBy(functionalTest)

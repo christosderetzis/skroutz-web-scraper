@@ -1,10 +1,11 @@
+
 spring:
   application:
     name: skroutz-web-scraper
   
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5432/skroutz_scraper
+    url: jdbc:postgresql://localhost:${DB_PORT:5432}/skroutz_scraper
     username: skroutz_user
     password: skroutz_password
     driver-class-name: org.postgresql.Driver
@@ -22,7 +23,6 @@ spring:
   # Flyway Configuration
   flyway:
     schemas: scraper_schema
-    default-schema: scraper_schema
 
 # Scraper Configuration
 scraper:
@@ -37,3 +37,5 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     operations-sorter: method
+server:
+  port: 8082
