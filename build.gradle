@@ -178,12 +178,9 @@ jacocoTestReport {
         html.required = true
         csv.required = false
     }
-    finalizedBy jacocoTestCoverageVerification
 }
 
 jacocoTestCoverageVerification {
-    dependsOn jacocoTestReport
-
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
@@ -223,6 +220,8 @@ jacocoTestCoverageVerification {
             }
         }
     }
+
+    executionData fileTree(buildDir).include("jacoco/*.exec")
 }
 
 compileFunctionalTestGroovy {
