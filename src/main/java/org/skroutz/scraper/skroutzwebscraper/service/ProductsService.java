@@ -3,11 +3,15 @@ package org.skroutz.scraper.skroutzwebscraper.service;
 import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
+import org.skroutz.scraper.skroutzwebscraper.mapper.ProductMapper;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.scraper.ProductsScraper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +24,7 @@ public class ProductsService {
 
     private final ProductsScraper productsScraper;
     private final ProductRepository productRepository;
+    private final ProductMapper productMapper;
 
     @Transactional
     public void scrapeAndSaveProducts(String url) {
@@ -104,5 +109,11 @@ public class ProductsService {
             return true;
         }
         return false;
+    }
+
+    public ProductDetailsResponseDto getProductDetails(Long id) {
+        return productRepository.findById(id)
+                .map(productMapper::toProductResponseDto)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id: " + id));
     }
 }

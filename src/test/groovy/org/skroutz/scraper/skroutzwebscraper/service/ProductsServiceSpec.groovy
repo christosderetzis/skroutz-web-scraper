@@ -3,6 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.service
 import ch.qos.logback.classic.Level
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.mapper.ProductMapper
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.scraper.ProductsScraper
 import spock.lang.Subject
@@ -11,10 +12,11 @@ import spock.lang.Unroll
 class ProductsServiceSpec extends WithLoggingBaseSpec {
 
     ProductsScraper productsScraper = Mock(ProductsScraper)
+    ProductMapper productMapper = Mock(ProductMapper)
     ProductRepository productRepository = Mock(ProductRepository)
 
     @Subject
-    ProductsService service = new ProductsService(productsScraper, productRepository)
+    ProductsService service = new ProductsService(productsScraper, productRepository, productMapper)
 
     def "Happy path, should scrape and save products if products do not exist"() {
         given: "a URL to scrape"

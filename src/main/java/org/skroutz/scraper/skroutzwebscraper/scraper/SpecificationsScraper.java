@@ -24,6 +24,11 @@ public class SpecificationsScraper extends AbstractScraper {
     public JsonNode screapeSpecifications(String url) {
         return executeWithWebDriver(webDriver -> {
             webDriver.get(url);
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             return parseSpecifications(webDriver);
         }, url, "scraping specifications");
     }

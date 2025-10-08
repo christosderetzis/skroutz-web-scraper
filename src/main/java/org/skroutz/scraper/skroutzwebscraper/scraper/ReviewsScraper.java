@@ -7,7 +7,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.LocalDate;
-import java.util.Random;
 import org.skroutz.scraper.skroutzwebscraper.entity.Review;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -27,7 +26,7 @@ public class ReviewsScraper extends AbstractScraper {
         return executeWithWebDriver(webDriver -> {
             webDriver.get(url + "#reviews");
             try {
-                Thread.sleep(10000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

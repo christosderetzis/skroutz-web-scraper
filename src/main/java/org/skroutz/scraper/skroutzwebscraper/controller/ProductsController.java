@@ -1,9 +1,8 @@
 package org.skroutz.scraper.skroutzwebscraper.controller;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto;
-import org.skroutz.scraper.skroutzwebscraper.scraper.ProductsScraper;
 import org.skroutz.scraper.skroutzwebscraper.service.ProductsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +37,12 @@ public class ProductsController {
         }
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}")
+    ResponseEntity<ProductDetailsResponseDto> getProductDetails(@PathVariable Long id) {
+        ProductDetailsResponseDto productDetails = productsService.getProductDetails(id);
+        return ResponseEntity.ok(productDetails);
     }
 
     private void scrapeMultiplePages(String baseUrl, int totalPages) {
