@@ -29,4 +29,10 @@ class WebActor {
                 .bodyValue(requestDto)
                 .exchange()
     }
+
+    WebTestClient.ResponseSpec getProductById(Long id) {
+        return webTestClient.get()
+                .uri("/products/{id}", id)
+                .exchange()
+    }
 }
