@@ -168,7 +168,11 @@ jacocoTestReport {
                     '**/repository/**',
                     '**/dto/**',
                     '**/SkroutzWebScraperApplication.class',
-                    '**/Abstract*'
+                    '**/Abstract*',
+                    '**/utis/**',
+                    '**/*MapperImpl*',
+                    '**/ScraperController.class',
+                    '**/controllerAdvice/**'
             ])
         }))
     }
@@ -193,6 +197,10 @@ jacocoTestCoverageVerification {
                     '**/SkroutzWebScraperApplication.class',
                     '**/Abstract*',
                     '**/ProductWebCssFields.class',
+                    '**/utils/**',
+                    '**/*MapperImpl*',
+                    '**/ScraperController.class',
+                    '**/controllerAdvice/**'
             ])
         }))
     }

@@ -8,6 +8,5 @@ import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
-    @Mapping(source = "id", target = "id")
     ProductDetailsResponseDto toProductResponseDto(Product product);
 }

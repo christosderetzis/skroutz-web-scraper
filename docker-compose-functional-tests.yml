@@ -48,6 +48,7 @@ services:
     depends_on:
       mockserver:
         condition: service_healthy
+    platform: linux/amd64
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:4444/wd/hub/status" ]
       interval: 10s
