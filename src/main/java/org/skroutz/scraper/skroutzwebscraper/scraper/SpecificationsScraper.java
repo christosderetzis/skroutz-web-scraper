@@ -25,7 +25,7 @@ public class SpecificationsScraper extends AbstractScraper {
         return executeWithWebDriver(webDriver -> {
             webDriver.get(url);
             try {
-                Thread.sleep(2000);
+                Thread.sleep(6000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -46,7 +46,7 @@ public class SpecificationsScraper extends AbstractScraper {
             for (WebElement dl : dls) {
                 try {
                     String dt = dl.findElement(By.tagName("dt")).getText();
-                    String dd = dl.findElement(By.tagName("dd")).getText();
+                    String dd = dl.findElement(By.tagName("dd")).getText().replaceAll("\"", "");
                     categoryNode.put(dt, dd);
                 } catch (Exception e) {
                     // Skip malformed dl if any

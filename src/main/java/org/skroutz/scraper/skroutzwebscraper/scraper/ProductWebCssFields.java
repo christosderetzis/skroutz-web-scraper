@@ -18,6 +18,6 @@ public class ProductWebCssFields {
 
     public static final String PAGINATION_BUTTON = ".paginator button span";
 
-    public static final String SPECIFICATIONS = "div.spec-groups > div.spec-details";
+    public static final String SPECIFICATIONS = "#specs > div.specs-container.content.section > div.spec-groups > div.spec-details";
 
 }
