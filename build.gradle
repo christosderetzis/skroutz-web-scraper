@@ -115,9 +115,6 @@ dockerCompose {
     // Wait for database services to be ready
     waitForTcpPorts = true
 
-    // Capture logs for debugging
-    captureContainersOutput = true
-
     // Remove volumes after stopping (clean state for each test run)
     removeVolumes = true
 

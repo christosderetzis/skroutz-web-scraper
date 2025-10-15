@@ -6,6 +6,8 @@ import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.scheduled.SpecificationsScheduler
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.helpers.JsonFileReader
+import org.skyscreamer.jsonassert.JSONAssert
+import org.skyscreamer.jsonassert.JSONCompareMode
 import org.springframework.beans.factory.annotation.Autowired
 
 class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
@@ -32,7 +34,7 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             Product savedProduct = productRepository.findById(product.id).orElse(null)
             JsonNode expectedJsonNode = JsonFileReader.readJsonFromResource("expected-specs.json")
             with(savedProduct) {
-                specifications == expectedJsonNode
+                JSONAssert.assertEquals(expectedJsonNode.toString(), specifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
                 specificationsParsed == true
             }
     }
