@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  postgres:
+  postgres-functional:
     image: postgres:15
-    container_name: postgres
+    container_name: postgres-functional
     environment:
       POSTGRES_DB: skroutz_scraper
       POSTGRES_USER: skroutz_user

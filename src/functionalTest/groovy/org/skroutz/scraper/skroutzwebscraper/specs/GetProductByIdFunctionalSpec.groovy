@@ -4,6 +4,8 @@ import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.creators.ProductCreator
+import org.skyscreamer.jsonassert.JSONAssert
+import org.skyscreamer.jsonassert.JSONCompareMode
 
 class GetProductByIdFunctionalSpec extends BaseFunctionalSpec {
 
@@ -38,5 +40,17 @@ class GetProductByIdFunctionalSpec extends BaseFunctionalSpec {
 
         then: "the response status should be 404 Not Found"
             response.expectStatus().isNotFound()
+
+        and: "the response body should contain an error message"
+            String responseBody = response.expectBody(String).returnResult().getResponseBody()
+            String expectedResponseBody = """
+                {
+                    "status": 404,
+                    "method": "GET",
+                    "errors": ["Product not found with id: ${nonExistingProductId}"],
+                    "path": "/products/${nonExistingProductId}"
+                }
+                """
+            JSONAssert.assertEquals(expectedResponseBody, responseBody, JSONCompareMode.LENIENT)
     }
 }
