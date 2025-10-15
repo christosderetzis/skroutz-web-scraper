@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  postgres:
+  postgres-functional:
     image: postgres:15
-    container_name: postgres
+    container_name: postgres-functional
     environment:
       POSTGRES_DB: skroutz_scraper
       POSTGRES_USER: skroutz_user
@@ -48,6 +48,7 @@ services:
     depends_on:
       mockserver:
         condition: service_healthy
+    platform: linux/amd64
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:4444/wd/hub/status" ]
       interval: 10s
