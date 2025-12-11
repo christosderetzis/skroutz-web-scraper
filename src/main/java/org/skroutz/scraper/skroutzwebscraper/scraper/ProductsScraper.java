@@ -48,13 +48,13 @@ public class ProductsScraper extends AbstractScraper {
             WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(20));
 
             // Try different possible selectors for the listing container
-            WebElement olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(ProductWebCssFields.LISTING_CONTAINER)));
+            WebElement olElement = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(HtmlFields.LISTING_CONTAINER)));
 
             if (olElement == null) {
                 return null;
             }
 
-            List<WebElement> filteredItems = olElement.findElements(By.xpath(ProductWebCssFields.PRODUCT_ITEM_XPATH));
+            List<WebElement> filteredItems = olElement.findElements(By.xpath(HtmlFields.PRODUCT_ITEM_XPATH));
 
             if (filteredItems.isEmpty()) {
                 log.warn("No products found on this page. Page might be empty or structure changed.");
@@ -106,7 +106,7 @@ public class ProductsScraper extends AbstractScraper {
     private Integer parsePaginationInfo(WebDriver webDriver) {
         try {
             // Find the pagination span that contains "1 from 11" text
-            WebElement paginationSpan = webDriver.findElement(By.cssSelector(ProductWebCssFields.PAGINATION_BUTTON));
+            WebElement paginationSpan = webDriver.findElement(By.cssSelector(HtmlFields.PAGINATION_BUTTON));
             String paginationText = paginationSpan.getText();
 
             // Extract the total number of pages from text like "1 from 11"
@@ -126,7 +126,7 @@ public class ProductsScraper extends AbstractScraper {
 
     private void extractUrlAndTitle(WebElement productElement, Product product) {
         try {
-            WebElement aTag = productElement.findElement(By.cssSelector(ProductWebCssFields.PRODUCT_LINK));
+            WebElement aTag = productElement.findElement(By.cssSelector(HtmlFields.PRODUCT_LINK));
             product.setUrl(aTag.getAttribute("href"));
             product.setTitle(aTag.getAttribute("title"));
         } catch (NoSuchElementException e) {
@@ -136,7 +136,7 @@ public class ProductsScraper extends AbstractScraper {
 
     private void extractPrice(WebElement productElement, Product product) {
         try {
-            WebElement priceSpan = productElement.findElement(By.cssSelector(ProductWebCssFields.PRICE_LINK));
+            WebElement priceSpan = productElement.findElement(By.cssSelector(HtmlFields.PRICE_LINK));
             String priceText = processPrice(priceSpan);
 
             product.setPrice(new BigDecimal(priceText));
@@ -165,7 +165,7 @@ public class ProductsScraper extends AbstractScraper {
 
     private void extractImageUrl(WebElement productElement, Product product) {
         try {
-            WebElement img = productElement.findElement(By.cssSelector(ProductWebCssFields.IMAGE_CONTAINER));
+            WebElement img = productElement.findElement(By.cssSelector(HtmlFields.IMAGE_CONTAINER));
             product.setImageUrl(img.getAttribute("src"));
         } catch (NoSuchElementException e) {
             log.debug("Could not extract image URL: {}", e.getMessage());
@@ -175,7 +175,7 @@ public class ProductsScraper extends AbstractScraper {
 
     private void extractDescription(WebElement productElement, Product product) {
         try {
-            WebElement desc = productElement.findElement(By.cssSelector(ProductWebCssFields.DESCRIPTION));
+            WebElement desc = productElement.findElement(By.cssSelector(HtmlFields.DESCRIPTION));
             if (desc.isDisplayed()) {
                 product.setDescription(desc.getText());
             } else {
@@ -189,7 +189,7 @@ public class ProductsScraper extends AbstractScraper {
 
     private void extractRating(WebElement productElement, Product product) {
         try {
-            WebElement ratingSpan = productElement.findElement(By.cssSelector(ProductWebCssFields.RATING));
+            WebElement ratingSpan = productElement.findElement(By.cssSelector(HtmlFields.RATING));
             String ratingText = ratingSpan.getText().replace(",", ".");
             product.setRating(new BigDecimal(ratingText));
         } catch (NoSuchElementException | NumberFormatException e) {
