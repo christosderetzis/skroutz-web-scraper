@@ -263,7 +263,7 @@ public class ReviewsScraper extends AbstractScraper {
             if (helpfulText.contains("out of")) {
                 review.setHelpfulVotes(Integer.parseInt(parts[0]));
                 review.setTotalVotes(Integer.parseInt(parts[3]));
-            } else if (helpfulText.contains("χρήστης") || helpfulText.contains("στους")) {
+            } else if (helpfulText.contains("χρήστες") || helpfulText.contains("στους")) {
                 review.setHelpfulVotes(Integer.parseInt(parts[0]));
                 review.setTotalVotes(Integer.parseInt(parts[2]));
             } else {
