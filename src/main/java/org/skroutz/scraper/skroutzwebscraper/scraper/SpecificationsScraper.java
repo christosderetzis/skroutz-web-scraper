@@ -11,7 +11,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.function.Function;
 
 @Slf4j
 @Component
@@ -34,7 +33,7 @@ public class SpecificationsScraper extends AbstractScraper {
     }
 
     private JsonNode parseSpecifications(WebDriver webDriver) {
-        List<WebElement> specGroups = webDriver.findElements(By.cssSelector(ProductWebCssFields.SPECIFICATIONS));
+        List<WebElement> specGroups = webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS));
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
 

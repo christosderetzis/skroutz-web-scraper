@@ -46,7 +46,7 @@ class SpecificationsScraperSpec extends Specification {
             }
 
         and: "webdriver finds specification groups"
-            webDriver.findElements(By.cssSelector(ProductWebCssFields.SPECIFICATIONS)) >> specGroups
+            webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> specGroups
 
         when: "scraping specifications"
             JsonNode result = scraper.screapeSpecifications(url)
@@ -94,7 +94,7 @@ class SpecificationsScraperSpec extends Specification {
                 group
             }
 
-            webDriver.findElements(By.cssSelector(ProductWebCssFields.SPECIFICATIONS)) >> specGroups
+            webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> specGroups
 
         when: "scraping specifications"
             JsonNode result = scraper.screapeSpecifications(url)
@@ -140,7 +140,7 @@ class SpecificationsScraperSpec extends Specification {
             applicationContext.getBean(WebDriver.class) >> webDriver
 
         and: "webdriver finds no specification groups"
-            webDriver.findElements(By.cssSelector(ProductWebCssFields.SPECIFICATIONS)) >> []
+            webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> []
 
         when: "scraping specifications"
             JsonNode result = scraper.screapeSpecifications(url)

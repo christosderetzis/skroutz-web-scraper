@@ -18,7 +18,7 @@ class ProductsScraperSpec extends Specification {
     def "parsePaginationInfo returns #expected for pagination text '#paginationText'"() {
         given: "a WebDriver with a pagination span"
             WebDriver webDriver = Mock()
-            webDriver.findElement(By.cssSelector(ProductWebCssFields.PAGINATION_BUTTON)) >> Mock(WebElement) {
+            webDriver.findElement(By.cssSelector(HtmlFields.PAGINATION_BUTTON)) >> Mock(WebElement) {
                 getText() >> paginationText
             }
 
@@ -41,7 +41,7 @@ class ProductsScraperSpec extends Specification {
     def "parsePaginationInfo returns null when findElement throws"() {
         given: "a WebDriver that throws an exception"
             WebDriver webDriver = Mock()
-            webDriver.findElement(By.cssSelector(ProductWebCssFields.PAGINATION_BUTTON)) >> { throw new RuntimeException("not found") }
+            webDriver.findElement(By.cssSelector(HtmlFields.PAGINATION_BUTTON)) >> { throw new RuntimeException("not found") }
 
         when: "parsing pagination info"
             def result = productsScraper.parsePaginationInfo(webDriver)
@@ -53,7 +53,7 @@ class ProductsScraperSpec extends Specification {
     def "parsePaginationInfo returns null when totalPagesText is not a number"() {
         given: "a WebDriver with non-numeric total pages"
             WebDriver webDriver = Mock()
-            webDriver.findElement(By.cssSelector(ProductWebCssFields.PAGINATION_BUTTON)) >> Mock(WebElement) {
+            webDriver.findElement(By.cssSelector(HtmlFields.PAGINATION_BUTTON)) >> Mock(WebElement) {
                 getText() >> "1 from abc"
             }
 
@@ -68,7 +68,7 @@ class ProductsScraperSpec extends Specification {
         given: "a productElement with a valid aTag"
             Product product = new Product()
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.PRODUCT_LINK)) >> Mock(WebElement) {
+            productElement.findElement(By.cssSelector(HtmlFields.PRODUCT_LINK)) >> Mock(WebElement) {
                 getAttribute("href") >> "http://example.com"
                 getAttribute("title") >> "Example Product"
             }
@@ -85,7 +85,7 @@ class ProductsScraperSpec extends Specification {
         given: "a productElement without aTag"
             Product product = new Product()
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.PRODUCT_LINK)) >> { throw new NoSuchElementException("not found") }
+            productElement.findElement(By.cssSelector(HtmlFields.PRODUCT_LINK)) >> { throw new NoSuchElementException("not found") }
 
         when: "extracting url and title"
             productsScraper.extractUrlAndTitle(productElement, product)
@@ -103,7 +103,7 @@ class ProductsScraperSpec extends Specification {
                 getText() >> priceText
             }
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.PRICE_LINK)) >> priceSpan
+            productElement.findElement(By.cssSelector(HtmlFields.PRICE_LINK)) >> priceSpan
 
         when: "extracting price"
             productsScraper.extractPrice(productElement, product)
@@ -124,7 +124,7 @@ class ProductsScraperSpec extends Specification {
         given: "a productElement without priceSpan"
             Product product = new Product()
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.PRICE_LINK)) >> { throw new NoSuchElementException("not found") }
+            productElement.findElement(By.cssSelector(HtmlFields.PRICE_LINK)) >> { throw new NoSuchElementException("not found") }
 
         when: "extracting price"
             productsScraper.extractPrice(productElement, product)
@@ -140,7 +140,7 @@ class ProductsScraperSpec extends Specification {
                 getText() >> "not a price"
             }
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.PRICE_LINK)) >> priceSpan
+            productElement.findElement(By.cssSelector(HtmlFields.PRICE_LINK)) >> priceSpan
 
         when: "extracting price"
             productsScraper.extractPrice(productElement, product)
@@ -180,7 +180,7 @@ class ProductsScraperSpec extends Specification {
                 getAttribute("src") >> "http://example.com/image.jpg"
             }
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.IMAGE_CONTAINER)) >> img
+            productElement.findElement(By.cssSelector(HtmlFields.IMAGE_CONTAINER)) >> img
 
         when: "extracting image url"
             productsScraper.extractImageUrl(productElement, product)
@@ -193,7 +193,7 @@ class ProductsScraperSpec extends Specification {
         given: "a productElement without img"
             Product product = new Product()
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.IMAGE_CONTAINER)) >> { throw new NoSuchElementException("not found") }
+            productElement.findElement(By.cssSelector(HtmlFields.IMAGE_CONTAINER)) >> { throw new NoSuchElementException("not found") }
 
         when: "extracting image url"
             productsScraper.extractImageUrl(productElement, product)
@@ -210,7 +210,7 @@ class ProductsScraperSpec extends Specification {
                 getText() >> "Product description"
             }
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.DESCRIPTION)) >> desc
+            productElement.findElement(By.cssSelector(HtmlFields.DESCRIPTION)) >> desc
 
         when: "extracting description"
             productsScraper.extractDescription(productElement, product)
@@ -223,7 +223,7 @@ class ProductsScraperSpec extends Specification {
         given: "a productElement with a hidden desc"
             Product product = new Product()
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.DESCRIPTION)) >> Mock(WebElement) {
+            productElement.findElement(By.cssSelector(HtmlFields.DESCRIPTION)) >> Mock(WebElement) {
                 isDisplayed() >> false
             }
 
@@ -238,7 +238,7 @@ class ProductsScraperSpec extends Specification {
         given: "a productElement without desc"
             Product product = new Product()
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.DESCRIPTION)) >> { throw new NoSuchElementException("not found") }
+            productElement.findElement(By.cssSelector(HtmlFields.DESCRIPTION)) >> { throw new NoSuchElementException("not found") }
 
         when: "extracting description"
             productsScraper.extractDescription(productElement, product)
@@ -255,7 +255,7 @@ class ProductsScraperSpec extends Specification {
                 getText() >> ratingText
             }
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.RATING)) >> ratingSpan
+            productElement.findElement(By.cssSelector(HtmlFields.RATING)) >> ratingSpan
 
         when: "extracting rating"
             productsScraper.extractRating(productElement, product)
@@ -273,7 +273,7 @@ class ProductsScraperSpec extends Specification {
         given: "a productElement without ratingSpan"
             Product product = new Product()
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.RATING)) >> { throw new NoSuchElementException("not found") }
+            productElement.findElement(By.cssSelector(HtmlFields.RATING)) >> { throw new NoSuchElementException("not found") }
 
         when: "extracting rating"
             productsScraper.extractRating(productElement, product)
@@ -289,7 +289,7 @@ class ProductsScraperSpec extends Specification {
                 getText() >> "not a rating"
             }
             WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(ProductWebCssFields.RATING)) >> ratingSpan
+            productElement.findElement(By.cssSelector(HtmlFields.RATING)) >> ratingSpan
 
         when: "extracting rating"
             productsScraper.extractRating(productElement, product)
