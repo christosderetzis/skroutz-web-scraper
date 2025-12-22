@@ -5,8 +5,8 @@ import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
 import org.skroutz.scraper.skroutzwebscraper.service.ProductsService
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
 import org.springframework.http.MediaType
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.servlet.MockMvc
@@ -26,8 +26,7 @@ class ProductsControllerSpec extends Specification {
     @SpringBean
     ProductsService productsService = Mock(ProductsService)
 
-    @Autowired
-    ObjectMapper objectMapper
+    ObjectMapper objectMapper = new ObjectMapper()
 
     def "should scrape single page when multiple is false"() {
         given: "a scraper request for single page"
