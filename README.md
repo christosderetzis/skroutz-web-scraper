@@ -13,8 +13,8 @@ A Spring Boot application for scraping product information from Skroutz.gr using
 
 ## Technology Stack
 
-- **Java 21**: Modern Java development
-- **Spring Boot 3.5.4**: Application framework
+- **Java 25**: Modern Java development
+- **Spring Boot 4.0.1**: Application framework
 - **Spring Data JPA**: Database operations and entity management
 - **Selenium WebDriver**: Web scraping automation
 - **PostgreSQL**: Primary database
@@ -25,7 +25,7 @@ A Spring Boot application for scraping product information from Skroutz.gr using
 
 ## Prerequisites
 
-- Java 21
+- Java 25
 - Gradle
 - Docker and Docker Compose (for database)
 

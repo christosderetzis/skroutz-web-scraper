@@ -17,7 +17,6 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.logging.LogRecord;
 
 @Slf4j
 @Component
@@ -27,7 +26,7 @@ public class AccessLogFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, jakarta.servlet.ServletException {
-        ContentCachingRequestWrapper httpRequest = new ContentCachingRequestWrapper((HttpServletRequest) request);
+        ContentCachingRequestWrapper httpRequest = new ContentCachingRequestWrapper((HttpServletRequest) request, 1024 * 1024);
         CachedBodyHttpServletResponse httpResponse = new CachedBodyHttpServletResponse((HttpServletResponse) response);
 
         long startTime = System.currentTimeMillis();
