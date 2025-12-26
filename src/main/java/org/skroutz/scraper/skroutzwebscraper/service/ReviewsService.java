@@ -21,7 +21,7 @@ public class ReviewsService {
     private final ReviewsScraper reviewsScraper;
 
     public void parseReviews() {
-        List<Product> unparsedProducts = productRepository.findAllByReviewsParsed(false);
+        List<Product> unparsedProducts = productRepository.findAllByReviewsParsedAndRatingIsNotNull(false);
 
         for (Product product : unparsedProducts) {
             try {
