@@ -3,6 +3,8 @@ package org.skroutz.scraper.skroutzwebscraper.controller
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
 import org.skroutz.scraper.skroutzwebscraper.service.ProductsService
+import org.skroutz.scraper.skroutzwebscraper.service.ReviewsService
+import org.skroutz.scraper.skroutzwebscraper.service.SpecificationsService
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -17,14 +19,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest
-@ContextConfiguration(classes = [ProductsController])
-class ProductsControllerSpec extends Specification {
+@ContextConfiguration(classes = [ScraperController])
+class ScraperControllerSpec extends Specification {
 
     @Autowired
     MockMvc mockMvc
 
     @SpringBean
     ProductsService productsService = Mock(ProductsService)
+
+    @SpringBean
+    ReviewsService reviewsService = Mock(ReviewsService)
+
+    @SpringBean
+    SpecificationsService specificationsService = Mock(SpecificationsService)
 
     ObjectMapper objectMapper = new ObjectMapper()
 
@@ -34,7 +42,7 @@ class ProductsControllerSpec extends Specification {
         def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=false"
-        def result = mockMvc.perform(post("/products/scrape")
+        def result = mockMvc.perform(post("/scraper/products")
                 .param("multiple", "false")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -50,7 +58,7 @@ class ProductsControllerSpec extends Specification {
         def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
 
         when: "performing POST request with multiple=true"
-        def result = mockMvc.perform(post("/products/scrape")
+        def result = mockMvc.perform(post("/scraper/products")
                 .param("multiple", "true")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(scraperRequestDto)))
@@ -69,7 +77,7 @@ class ProductsControllerSpec extends Specification {
         def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
-        def result = mockMvc.perform(post("/products/scrape")
+        def result = mockMvc.perform(post("/scraper/products")
                 .param("multiple", "true")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -88,7 +96,7 @@ class ProductsControllerSpec extends Specification {
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
-            def result = mockMvc.perform(post("/products/scrape")
+            def result = mockMvc.perform(post("/scraper/products")
                     .param("multiple", "true")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody))
@@ -105,7 +113,7 @@ class ProductsControllerSpec extends Specification {
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
-            def result = mockMvc.perform(post("/products/scrape")
+            def result = mockMvc.perform(post("/scraper/products")
                     .param("multiple", "true")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody))
@@ -122,7 +130,7 @@ class ProductsControllerSpec extends Specification {
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
-            def result = mockMvc.perform(post("/products/scrape")
+            def result = mockMvc.perform(post("/scraper/products")
                     .param("multiple", "true")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody))
@@ -139,7 +147,7 @@ class ProductsControllerSpec extends Specification {
         def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
-        def result = mockMvc.perform(post("/products/scrape")
+        def result = mockMvc.perform(post("/scraper/products")
                 .param("multiple", "true")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
