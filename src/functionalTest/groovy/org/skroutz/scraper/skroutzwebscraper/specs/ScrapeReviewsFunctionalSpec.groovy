@@ -16,6 +16,7 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
     def "Scrape reviews, happy path"() {
         given:
             def maxReviews = 10
+            def expectedInitialReviews = 3  // Mock HTML initially loads 3 reviews
             Product product = ProductCreator.createRandomProduct().tap {
                 url = "http://mockserver/reviews-page.html?maxReviews=${maxReviews}"
             }
@@ -30,9 +31,9 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
                 reviewsParsed == true
             }
 
-        and:
+        and: "Only initially visible reviews are scraped (no button clicking)"
             List<Review> reviews = reviewRepository.findAll()
-            assert reviews.size() == maxReviews
+            assert reviews.size() == expectedInitialReviews
             assert reviews.every { it.productId == savedProduct.id }
     }
 

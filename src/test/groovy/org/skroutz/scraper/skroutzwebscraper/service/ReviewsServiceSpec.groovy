@@ -32,7 +32,7 @@ class ReviewsServiceSpec extends WithLoggingBaseSpec {
             reviewsService.parseReviews()
 
         then: "product is fetched from repository"
-            1 * productRepository.findAllByReviewsParsed(false) >> [product]
+            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product]
             1 * reviewsScraper.scrapeReviews(product.url) >> reviews
             1 * productRepository.save({ it.reviewsParsed == true })
             1 * reviewRepository.saveAll({ it.size() == 2 && it[0].reviewerName == "John Doe" && it[1].reviewerName == "Jane Smith" })
@@ -50,7 +50,7 @@ class ReviewsServiceSpec extends WithLoggingBaseSpec {
             reviewsService.parseReviews()
 
         then: "product is fetched from repository"
-            1 * productRepository.findAllByReviewsParsed(false) >> [product]
+            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product]
             0 * _
 
         and: "Logging messages are printed"
@@ -65,7 +65,7 @@ class ReviewsServiceSpec extends WithLoggingBaseSpec {
             reviewsService.parseReviews()
 
         then: "product is fetched from repository"
-            1 * productRepository.findAllByReviewsParsed(false) >> [product]
+            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product]
             1 * reviewsScraper.scrapeReviews(product.url) >> { throw new RuntimeException("Scraping error") }
             0 * _
 

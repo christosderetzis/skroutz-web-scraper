@@ -38,6 +38,10 @@ public class SeleniumConfig {
             options.addArguments("--headless=new");  // Use new headless mode
         }
 
+        // Incognito mode
+        options.addArguments("--incognito");
+
+        // Anti-detection and browser settings
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--disable-gpu");

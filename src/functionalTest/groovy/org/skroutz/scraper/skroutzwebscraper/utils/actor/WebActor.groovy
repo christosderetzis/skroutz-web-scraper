@@ -22,7 +22,7 @@ class WebActor {
     WebTestClient.ResponseSpec scrapeProducts(ScraperRequestDto requestDto, Boolean multiple = false) {
         return webTestClient.post()
                 .uri(uriBuilder -> {
-                    uriBuilder.path("/products/scrape")
+                    uriBuilder.path("/scraper/products")
                             .queryParamIfPresent("multiple", Optional.ofNullable(multiple))
                             .build()
                 })

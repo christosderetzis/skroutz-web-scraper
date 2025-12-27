@@ -30,7 +30,7 @@ public class ReviewsScraper extends AbstractScraper {
 
     public List<Review> scrapeReviews(String url) {
         return executeWithWebDriver(webDriver -> {
-            webDriver.get(url + "#reviews");
+            webDriver.get(url);
 
             // Wait for reviews container to be present
             WebDriverWait wait = new WebDriverWait(webDriver, WAIT_TIMEOUT);
@@ -49,38 +49,9 @@ public class ReviewsScraper extends AbstractScraper {
         WebElement reviewsContainer = webDriver.findElement(By.cssSelector(REVIEWS_CONTAINER));
         js.executeScript("arguments[0].scrollIntoView({behavior: 'instant', block: 'center'});", reviewsContainer);
 
-        sleep(300);
-
         WebElement reviewsList = webDriver.findElement(By.cssSelector(REVIEWS_LIST));
-        int previousCount = 0;
 
-        while (true) {
-            int currentCount = reviewsList.findElements(By.cssSelector(REVIEW_ITEM)).size();
-            log.debug("Current review count: {}", currentCount);
-
-            if (currentCount == previousCount) {
-                log.debug("Review count stabilized at {} - stopping", currentCount);
-                break;
-            }
-
-            previousCount = currentCount;
-
-            // Try to find the load more button
-            WebElement loadMore = findLoadMoreButton(webDriver);
-            if (loadMore == null) {
-                log.debug("No 'load more' button found - all reviews loaded");
-                break;
-            }
-
-            // scroll to and click the load more button
-            js.executeScript("arguments[0].scrollIntoView({behavior: 'instant', block: 'center'});", loadMore);
-            sleep(100);
-
-            // click the button via JavaScript to avoid interception issues
-            js.executeScript("arguments[0].click();", loadMore);
-            sleep(500);
-        }
-
+        // Extract only currently visible reviews without clicking "load more"
         @SuppressWarnings("unchecked")
         List<WebElement> filteredReviews = (List<WebElement>) js.executeScript(
                 """
@@ -91,26 +62,8 @@ public class ReviewsScraper extends AbstractScraper {
                 reviewsList
         );
 
-        log.info("Found {} reviews after filtering", filteredReviews.size());
+        log.info("Found {} reviews (currently visible)", filteredReviews.size());
         return filteredReviews;
-    }
-
-    private WebElement findLoadMoreButton(WebDriver webDriver) {
-        try {
-            WebElement loadMore = webDriver.findElement(By.cssSelector(LOAD_MORE_REVIEWS));
-            return loadMore.isDisplayed() ? loadMore : null;
-        } catch (NoSuchElementException e) {
-            return null;
-        }
-    }
-
-    private void sleep(int milliseconds) {
-        try {
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Sleep interrupted", e);
-        }
     }
 
     private List<Review> extractReviews(List<WebElement> reviewElements) {
