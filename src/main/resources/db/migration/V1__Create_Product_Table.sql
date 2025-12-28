@@ -11,6 +11,7 @@ CREATE TABLE scraper_schema.product (
     specifications JSONB,
     specifications_parsed BOOLEAN NOT NULL DEFAULT FALSE,
     reviews_parsed BOOLEAN NOT NULL DEFAULT FALSE,
+    price_history_parsed BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -54,6 +54,9 @@ public class Product {
     @Column(name = "reviews_parsed", nullable = false)
     private Boolean reviewsParsed = false;
 
+    @Column(name = "price_history_parsed", nullable = false)
+    private Boolean priceHistoryParsed = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

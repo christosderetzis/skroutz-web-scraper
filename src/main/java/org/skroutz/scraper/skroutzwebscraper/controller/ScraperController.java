@@ -3,6 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto;
+import org.skroutz.scraper.skroutzwebscraper.service.PriceHistoryService;
 import org.skroutz.scraper.skroutzwebscraper.service.ProductsService;
 import org.skroutz.scraper.skroutzwebscraper.service.ReviewsService;
 import org.skroutz.scraper.skroutzwebscraper.service.SpecificationsService;
@@ -18,6 +19,7 @@ public class ScraperController {
     private final SpecificationsService specificationsService;
     private final ReviewsService reviewsService;
     private final ProductsService productsService;
+    private final PriceHistoryService priceHistoryService;
 
     @PostMapping("/specifications")
     public void scrapeSpecifications() {
@@ -31,6 +33,13 @@ public class ScraperController {
         log.info("Starting reviews scraping task...");
         reviewsService.parseReviews();
         log.info("Reviews scraping task completed.");
+    }
+
+    @PostMapping("/price-history")
+    public void scrapePriceHistory() {
+        log.info("Starting price history scraping task...");
+        priceHistoryService.fetchPriceHistoryForProducts();
+        log.info("Price history scraping task completed.");
     }
 
     @PostMapping("/products")
