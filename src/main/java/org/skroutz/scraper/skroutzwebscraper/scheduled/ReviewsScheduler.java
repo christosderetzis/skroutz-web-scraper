@@ -14,7 +14,7 @@ public class ReviewsScheduler {
     private final ReviewsService reviewsService;
 
     // Scheduled to run every 2 hours
-    @Scheduled(fixedRate = 2 * 60 * 60 * 1000)
+    // @Scheduled(fixedRate = 2 * 60 * 60 * 1000)
     public void parseReviews() {
         log.info("Starting reviews parsing task...");
         reviewsService.parseReviews();

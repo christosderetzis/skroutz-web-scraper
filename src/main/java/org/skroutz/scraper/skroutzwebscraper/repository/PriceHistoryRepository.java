@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long> {
+
+    PriceHistory findTopByProductIdOrderByPriceDateDesc(Long productId);
 }

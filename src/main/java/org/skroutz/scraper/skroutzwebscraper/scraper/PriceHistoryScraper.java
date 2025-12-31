@@ -2,7 +2,7 @@ package org.skroutz.scraper.skroutzwebscraper.scraper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.dto.pricehistory.PriceHistoryResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.dto.PriceHistoryResponseDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;

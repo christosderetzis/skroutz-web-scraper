@@ -2,6 +2,7 @@ package org.skroutz.scraper.skroutzwebscraper.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
+import org.skroutz.scraper.skroutzwebscraper.service.PriceHistoryService
 import org.skroutz.scraper.skroutzwebscraper.service.ProductsService
 import org.skroutz.scraper.skroutzwebscraper.service.ReviewsService
 import org.skroutz.scraper.skroutzwebscraper.service.SpecificationsService
@@ -33,6 +34,9 @@ class ScraperControllerSpec extends Specification {
 
     @SpringBean
     SpecificationsService specificationsService = Mock(SpecificationsService)
+
+    @SpringBean
+    PriceHistoryService priceHistoryService = Mock(PriceHistoryService)
 
     ObjectMapper objectMapper = new ObjectMapper()
 
@@ -157,5 +161,14 @@ class ScraperControllerSpec extends Specification {
         1 * productsService.getNumberOfWebPages("https://example.com/products?category=electronics&sort=price&filter=available") >> 2
         1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&sort=price&filter=available")
         1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&sort=price&filter=available&page=2")
+    }
+
+    def "should scrape price history successfully"() {
+        when: "performing POST request to scrape price history"
+        def result = mockMvc.perform(post("/scraper/price-history"))
+
+        then: "should call price history service and return OK"
+        result.andExpect(status().isOk())
+        1 * priceHistoryService.fetchPriceHistoryForProducts()
     }
 }

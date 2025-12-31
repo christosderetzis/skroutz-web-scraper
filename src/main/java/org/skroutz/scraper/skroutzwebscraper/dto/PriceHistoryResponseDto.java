@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.dto.pricehistory;
+package org.skroutz.scraper.skroutzwebscraper.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
