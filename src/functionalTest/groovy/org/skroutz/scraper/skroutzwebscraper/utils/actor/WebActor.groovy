@@ -35,4 +35,10 @@ class WebActor {
                 .uri("/products/{id}", id)
                 .exchange()
     }
+
+    WebTestClient.ResponseSpec scrapePriceHistory() {
+        return webTestClient.post()
+                .uri("/scraper/price-history")
+                .exchange()
+    }
 }
