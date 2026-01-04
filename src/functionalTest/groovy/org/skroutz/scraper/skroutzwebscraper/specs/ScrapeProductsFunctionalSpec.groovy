@@ -8,10 +8,10 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
 
     def "Scrape products, happy path"() {
         given:
-        Integer numberOfPages = 2
-        ScraperRequestDto requestDto = ScraperRequestDto.builder()
-                .url("http://mockserver/products-page.html?numberOfPages=${numberOfPages}")
-                .build()
+            Integer numberOfPages = 2
+            ScraperRequestDto requestDto = ScraperRequestDto.builder()
+                    .url("http://mockserver/products-page.html?numberOfPages=${numberOfPages}")
+                    .build()
 
         when:
             WebTestClient.ResponseSpec response = webActor.scrapeProducts(requestDto, false)
@@ -24,17 +24,17 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
 
     def "Scrape products, happy path with all pages"() {
         given:
-        Integer numberOfPages = 2
-        ScraperRequestDto requestDto = ScraperRequestDto.builder()
-                .url("http://mockserver/products-page.html?numberOfPages=${numberOfPages}")
-                .build()
+            Integer numberOfPages = 2
+            ScraperRequestDto requestDto = ScraperRequestDto.builder()
+                    .url("http://mockserver/products-page.html?numberOfPages=${numberOfPages}")
+                    .build()
 
         when:
-        WebTestClient.ResponseSpec response = webActor.scrapeProducts(requestDto, true)
+            WebTestClient.ResponseSpec response = webActor.scrapeProducts(requestDto, true)
 
         then:
-        response.expectStatus().isOk()
-        def products = productRepository.findAll()
-        assert products.size() == 15
+            response.expectStatus().isOk()
+            def products = productRepository.findAll()
+            assert products.size() == 15
     }
 }

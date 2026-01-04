@@ -18,4 +18,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findAllBySpecificationsParsed(boolean specificationsParsed);
 
     List<Product> findAllByReviewsParsedAndRatingIsNotNull(boolean reviewsParsed);
+
+    List<Product> findAllByPriceHistoryParsed(boolean priceHistoryParsed);
 }

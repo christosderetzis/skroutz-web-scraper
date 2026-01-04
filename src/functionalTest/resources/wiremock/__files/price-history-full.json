@@ -1,0 +1,300 @@
+{
+  "min_price": {
+    "min": 299.99,
+    "max": 349.99,
+    "graphData": {
+      "1_months": {
+        "values": [
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1704067200,
+            "value": 329.99
+          },
+          {
+            "shop_name": "ElectronicsHub",
+            "timestamp": 1704153600,
+            "value": 319.99
+          },
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1704240000,
+            "value": 309.99
+          }
+        ],
+        "has_values": true,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1696118400,
+            "value": 349.99
+          },
+          {
+            "shop_name": "ElectronicsHub",
+            "timestamp": 1698796800,
+            "value": 339.99
+          },
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1701388800,
+            "value": 329.99
+          },
+          {
+            "shop_name": "ElectronicsHub",
+            "timestamp": 1704067200,
+            "value": 319.99
+          }
+        ],
+        "has_values": true,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1688169600,
+            "value": 349.99
+          },
+          {
+            "shop_name": "ElectronicsHub",
+            "timestamp": 1693353600,
+            "value": 339.99
+          },
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1698537600,
+            "value": 329.99
+          },
+          {
+            "shop_name": "ElectronicsHub",
+            "timestamp": 1704067200,
+            "value": 309.99
+          }
+        ],
+        "has_values": true,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1672531200,
+            "value": 349.99
+          },
+          {
+            "shop_name": "ElectronicsHub",
+            "timestamp": 1680307200,
+            "value": 339.99
+          },
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1688169600,
+            "value": 329.99
+          },
+          {
+            "shop_name": "ElectronicsHub",
+            "timestamp": 1696118400,
+            "value": 319.99
+          },
+          {
+            "shop_name": "TechShop",
+            "timestamp": 1704067200,
+            "value": 299.99
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  },
+  "popularity": {
+    "min": 100,
+    "max": 250,
+    "graphData": {
+      "1_months": {
+        "values": [
+          {
+            "timestamp": 1704067200,
+            "value": 150
+          },
+          {
+            "timestamp": 1704153600,
+            "value": 180
+          },
+          {
+            "timestamp": 1704240000,
+            "value": 200
+          }
+        ],
+        "has_values": true,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [
+          {
+            "timestamp": 1696118400,
+            "value": 120
+          },
+          {
+            "timestamp": 1698796800,
+            "value": 150
+          },
+          {
+            "timestamp": 1701388800,
+            "value": 180
+          },
+          {
+            "timestamp": 1704067200,
+            "value": 200
+          }
+        ],
+        "has_values": true,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [
+          {
+            "timestamp": 1688169600,
+            "value": 100
+          },
+          {
+            "timestamp": 1693353600,
+            "value": 130
+          },
+          {
+            "timestamp": 1698537600,
+            "value": 170
+          },
+          {
+            "timestamp": 1704067200,
+            "value": 200
+          }
+        ],
+        "has_values": true,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "timestamp": 1672531200,
+            "value": 100
+          },
+          {
+            "timestamp": 1680307200,
+            "value": 120
+          },
+          {
+            "timestamp": 1688169600,
+            "value": 150
+          },
+          {
+            "timestamp": 1696118400,
+            "value": 180
+          },
+          {
+            "timestamp": 1704067200,
+            "value": 250
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  },
+  "shop_count": {
+    "min": 5,
+    "max": 12,
+    "graphData": {
+      "1_months": {
+        "values": [
+          {
+            "timestamp": 1704067200,
+            "value": 8
+          },
+          {
+            "timestamp": 1704153600,
+            "value": 10
+          },
+          {
+            "timestamp": 1704240000,
+            "value": 12
+          }
+        ],
+        "has_values": true,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [
+          {
+            "timestamp": 1696118400,
+            "value": 5
+          },
+          {
+            "timestamp": 1698796800,
+            "value": 7
+          },
+          {
+            "timestamp": 1701388800,
+            "value": 9
+          },
+          {
+            "timestamp": 1704067200,
+            "value": 12
+          }
+        ],
+        "has_values": true,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [
+          {
+            "timestamp": 1688169600,
+            "value": 5
+          },
+          {
+            "timestamp": 1693353600,
+            "value": 7
+          },
+          {
+            "timestamp": 1698537600,
+            "value": 10
+          },
+          {
+            "timestamp": 1704067200,
+            "value": 12
+          }
+        ],
+        "has_values": true,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "timestamp": 1672531200,
+            "value": 5
+          },
+          {
+            "timestamp": 1680307200,
+            "value": 6
+          },
+          {
+            "timestamp": 1688169600,
+            "value": 8
+          },
+          {
+            "timestamp": 1696118400,
+            "value": 10
+          },
+          {
+            "timestamp": 1704067200,
+            "value": 12
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  }
+}

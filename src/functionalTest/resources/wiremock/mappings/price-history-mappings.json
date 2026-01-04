@@ -1,0 +1,84 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": ".*/product-full/price_graph\\.json",
+        "queryParameters": {
+          "shipping_country": {
+            "equalTo": "GR"
+          },
+          "currency": {
+            "equalTo": "EUR"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "price-history-full.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": ".*/product-minimal/price_graph\\.json",
+        "queryParameters": {
+          "shipping_country": {
+            "equalTo": "GR"
+          },
+          "currency": {
+            "equalTo": "EUR"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "price-history-minimal.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": ".*/product-partial/price_graph\\.json",
+        "queryParameters": {
+          "shipping_country": {
+            "equalTo": "GR"
+          },
+          "currency": {
+            "equalTo": "EUR"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "price-history-partial.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": ".*/product-error/price_graph\\.json"
+      },
+      "response": {
+        "status": 500,
+        "body": "Internal Server Error",
+        "headers": {
+          "Content-Type": "text/plain"
+        }
+      }
+    }
+  ]
+}

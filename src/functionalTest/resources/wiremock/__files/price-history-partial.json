@@ -1,0 +1,138 @@
+{
+  "min_price": {
+    "min": 149.99,
+    "max": 179.99,
+    "graphData": {
+      "1_months": {
+        "values": [
+          {
+            "shop_name": "BudgetStore",
+            "timestamp": 1704067200,
+            "value": 149.99
+          },
+          {
+            "shop_name": "BudgetStore",
+            "timestamp": 1704240000,
+            "value": 159.99
+          }
+        ],
+        "has_values": true,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [],
+        "has_values": false,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [],
+        "has_values": false,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "shop_name": "BudgetStore",
+            "timestamp": 1688169600,
+            "value": 179.99
+          },
+          {
+            "shop_name": "BudgetStore",
+            "timestamp": 1704067200,
+            "value": 149.99
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  },
+  "popularity": {
+    "min": 75,
+    "max": 95,
+    "graphData": {
+      "1_months": {
+        "values": [
+          {
+            "timestamp": 1704067200,
+            "value": 85
+          },
+          {
+            "timestamp": 1704240000,
+            "value": 95
+          }
+        ],
+        "has_values": true,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [],
+        "has_values": false,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [],
+        "has_values": false,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "timestamp": 1688169600,
+            "value": 75
+          },
+          {
+            "timestamp": 1704067200,
+            "value": 95
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  },
+  "shop_count": {
+    "min": 3,
+    "max": 4,
+    "graphData": {
+      "1_months": {
+        "values": [
+          {
+            "timestamp": 1704067200,
+            "value": 3
+          },
+          {
+            "timestamp": 1704240000,
+            "value": 4
+          }
+        ],
+        "has_values": true,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [],
+        "has_values": false,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [],
+        "has_values": false,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "timestamp": 1688169600,
+            "value": 3
+          },
+          {
+            "timestamp": 1704067200,
+            "value": 4
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  }
+}

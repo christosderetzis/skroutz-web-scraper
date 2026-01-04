@@ -1,0 +1,96 @@
+{
+  "min_price": {
+    "min": 199.99,
+    "max": 199.99,
+    "graphData": {
+      "1_months": {
+        "values": [],
+        "has_values": false,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [],
+        "has_values": false,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [],
+        "has_values": false,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "shop_name": "SingleShop",
+            "timestamp": 1704067200,
+            "value": 199.99
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  },
+  "popularity": {
+    "min": 50,
+    "max": 50,
+    "graphData": {
+      "1_months": {
+        "values": [],
+        "has_values": false,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [],
+        "has_values": false,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [],
+        "has_values": false,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "timestamp": 1704067200,
+            "value": 50
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  },
+  "shop_count": {
+    "min": 1,
+    "max": 1,
+    "graphData": {
+      "1_months": {
+        "values": [],
+        "has_values": false,
+        "label": "1 month"
+      },
+      "3_months": {
+        "values": [],
+        "has_values": false,
+        "label": "3 months"
+      },
+      "6_months": {
+        "values": [],
+        "has_values": false,
+        "label": "6 months"
+      },
+      "all": {
+        "values": [
+          {
+            "timestamp": 1704067200,
+            "value": 1
+          }
+        ],
+        "has_values": true,
+        "label": "All time"
+      }
+    }
+  }
+}
