@@ -10,8 +10,7 @@ import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.scraper.PriceHistoryScraper
 import spock.lang.Subject
 
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.sql.Timestamp
 
 class PriceHistoryTxServiceSpec extends WithLoggingBaseSpec {
 
@@ -36,8 +35,8 @@ class PriceHistoryTxServiceSpec extends WithLoggingBaseSpec {
             String url = "https://example.com/price_graph.json"
 
         and: "price history response with new data"
-            def timestamp1 = LocalDateTime.of(2024, 1, 1, 0, 0).atZone(ZoneId.systemDefault()).toEpochSecond()
-            def timestamp2 = LocalDateTime.of(2024, 1, 15, 0, 0).atZone(ZoneId.systemDefault()).toEpochSecond()
+            def timestamp1 = 1704067200L // 2024-01-01 00:00:00 UTC
+            def timestamp2 = 1705276800L // 2024-01-15 00:00:00 UTC
 
             def dataPoints = [
                     PriceHistoryResponseDto.DataPointDto.builder()
@@ -98,14 +97,14 @@ class PriceHistoryTxServiceSpec extends WithLoggingBaseSpec {
             def existingPriceHistory = PriceHistory.builder()
                     .id(1L)
                     .productId(1L)
-                    .priceDate(LocalDateTime.of(2024, 1, 10, 0, 0))
+                    .priceDate(new Timestamp(1704844800000L)) // 2024-01-10 00:00:00 UTC
                     .price(98.00G)
                     .storeName("Old Shop")
                     .build()
 
         and: "response with mixed old and new data"
-            def oldTimestamp = LocalDateTime.of(2024, 1, 5, 0, 0).atZone(ZoneId.systemDefault()).toEpochSecond()
-            def newTimestamp = LocalDateTime.of(2024, 1, 15, 0, 0).atZone(ZoneId.systemDefault()).toEpochSecond()
+            def oldTimestamp = 1704412800L // 2024-01-05 00:00:00 UTC
+            def newTimestamp = 1705276800L // 2024-01-15 00:00:00 UTC
 
             def dataPoints = [
                     PriceHistoryResponseDto.DataPointDto.builder()
@@ -239,14 +238,14 @@ class PriceHistoryTxServiceSpec extends WithLoggingBaseSpec {
             def existingPriceHistory = PriceHistory.builder()
                     .id(1L)
                     .productId(1L)
-                    .priceDate(LocalDateTime.of(2024, 1, 20, 0, 0))
+                    .priceDate(new Timestamp(1705708800000L)) // 2024-01-20 00:00:00 UTC
                     .price(90.00G)
                     .storeName("Latest Shop")
                     .build()
 
         and: "response with only old data"
-            def oldTimestamp1 = LocalDateTime.of(2024, 1, 5, 0, 0).atZone(ZoneId.systemDefault()).toEpochSecond()
-            def oldTimestamp2 = LocalDateTime.of(2024, 1, 10, 0, 0).atZone(ZoneId.systemDefault()).toEpochSecond()
+            def oldTimestamp1 = 1704412800L // 2024-01-05 00:00:00 UTC
+            def oldTimestamp2 = 1704844800L // 2024-01-10 00:00:00 UTC
 
             def dataPoints = [
                     PriceHistoryResponseDto.DataPointDto.builder()
@@ -318,7 +317,7 @@ class PriceHistoryTxServiceSpec extends WithLoggingBaseSpec {
             String url = "https://example.com/price_graph.json"
 
         and: "response with multiple data points at same timestamp"
-            def timestamp = LocalDateTime.of(2024, 1, 1, 0, 0).atZone(ZoneId.systemDefault()).toEpochSecond()
+            def timestamp = 1704067200L // 2024-01-01 00:00:00 UTC
 
             def dataPoints = [
                     PriceHistoryResponseDto.DataPointDto.builder()

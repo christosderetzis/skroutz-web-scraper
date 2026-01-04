@@ -11,12 +11,12 @@ CREATE TABLE scraper_schema.reviews (
     cons TEXT[],
     neutral TEXT[],
     is_verified_purchase BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    CONSTRAINT fk_reviews_product_id 
-        FOREIGN KEY (product_id) 
-        REFERENCES scraper_schema.product(id) 
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_reviews_product_id
+        FOREIGN KEY (product_id)
+        REFERENCES scraper_schema.product(id)
         ON DELETE CASCADE
 );
 

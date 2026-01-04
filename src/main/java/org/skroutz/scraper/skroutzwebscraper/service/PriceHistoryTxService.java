@@ -11,7 +11,7 @@ import org.skroutz.scraper.skroutzwebscraper.utils.DateTimeUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.List;
@@ -61,16 +61,16 @@ public class PriceHistoryTxService {
 
         PriceHistory lastPriceHistory = priceHistoryRepository
                 .findTopByProductIdOrderByPriceDateDesc(product.getId());
-        LocalDateTime lastRecordedDate = lastPriceHistory != null
+        Timestamp lastRecordedDate = lastPriceHistory != null
                 ? lastPriceHistory.getPriceDate()
-                : LocalDateTime.MIN;
+                : new Timestamp(0);
 
         return response.getMinPrice().getGraphData().getAll().getValues().stream()
                 .map(dataPoint -> {
-                    LocalDateTime dateTime = DateTimeUtils.convertTimestampToLocalDateTime(dataPoint.getTimestamp());
-                    return new AbstractMap.SimpleEntry<>(dateTime, dataPoint);
+                    Timestamp timestamp = DateTimeUtils.convertEpochToTimestamp(dataPoint.getTimestamp());
+                    return new AbstractMap.SimpleEntry<>(timestamp, dataPoint);
                 })
-                .filter(entry -> entry.getKey().isAfter(lastRecordedDate))
+                .filter(entry -> entry.getKey().after(lastRecordedDate))
                 .map(entry -> PriceHistory.builder()
                         .productId(product.getId())
                         .price(entry.getValue().getValue())

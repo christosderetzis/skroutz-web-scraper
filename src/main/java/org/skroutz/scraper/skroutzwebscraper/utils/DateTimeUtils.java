@@ -1,15 +1,13 @@
 package org.skroutz.scraper.skroutzwebscraper.utils;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.sql.Timestamp;
 
 public class DateTimeUtils {
 
-    public static LocalDateTime convertTimestampToLocalDateTime(Long timestamp) {
-        if (timestamp == null) {
+    public static Timestamp convertEpochToTimestamp(Long epochSeconds) {
+        if (epochSeconds == null) {
             return null;
         }
-        return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault());
+        return new Timestamp(epochSeconds * 1000);
     }
 }

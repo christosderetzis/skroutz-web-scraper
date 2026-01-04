@@ -9,7 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "price_history", schema = "scraper_schema")
@@ -29,8 +29,8 @@ public class PriceHistory {
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Column(name = "price_date", nullable = false)
-    private LocalDateTime priceDate;
+    @Column(name = "price_date", nullable = false, columnDefinition = "TIMESTAMPTZ")
+    private Timestamp priceDate;
 
     @Column(name = "store_name", length = 255)
     private String storeName;
@@ -40,10 +40,10 @@ public class PriceHistory {
     private Product product;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMPTZ")
+    private Timestamp createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMPTZ")
+    private Timestamp updatedAt;
 }

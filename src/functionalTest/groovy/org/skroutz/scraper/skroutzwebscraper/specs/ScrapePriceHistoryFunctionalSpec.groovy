@@ -4,9 +4,7 @@ import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.springframework.test.web.reactive.server.WebTestClient
 
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.sql.Timestamp
 
 class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
 
@@ -42,35 +40,35 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
         with(priceHistories[0]) {
             price == 349.99
             storeName == "TechShop"
-            priceDate == timestampToLocalDateTime(1672531200)
+            priceDate == toTimestamp(1672531200)
         }
 
         and: "Second record has exact data"
         with(priceHistories[1]) {
             price == 339.99
             storeName == "ElectronicsHub"
-            priceDate == timestampToLocalDateTime(1680307200)
+            priceDate == toTimestamp(1680307200)
         }
 
         and: "Third record has exact data"
         with(priceHistories[2]) {
             price == 329.99
             storeName == "TechShop"
-            priceDate == timestampToLocalDateTime(1688169600)
+            priceDate == toTimestamp(1688169600)
         }
 
         and: "Fourth record has exact data"
         with(priceHistories[3]) {
             price == 319.99
             storeName == "ElectronicsHub"
-            priceDate == timestampToLocalDateTime(1696118400)
+            priceDate == toTimestamp(1696118400)
         }
 
         and: "Fifth record has exact data"
         with(priceHistories[4]) {
             price == 299.99
             storeName == "TechShop"
-            priceDate == timestampToLocalDateTime(1704067200)
+            priceDate == toTimestamp(1704067200)
         }
 
         and: "The product is marked as parsed"
@@ -108,7 +106,7 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
             productId == product.getId()
             price == 199.99
             storeName == "SingleShop"
-            priceDate == timestampToLocalDateTime(1704067200)
+            priceDate == toTimestamp(1704067200)
         }
 
         and: "The product is marked as parsed"
@@ -148,14 +146,14 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
         with(priceHistories[0]) {
             price == 179.99
             storeName == "BudgetStore"
-            priceDate == timestampToLocalDateTime(1688169600)
+            priceDate == toTimestamp(1688169600)
         }
 
         and: "Second record has exact data"
         with(priceHistories[1]) {
             price == 149.99
             storeName == "BudgetStore"
-            priceDate == timestampToLocalDateTime(1704067200)
+            priceDate == toTimestamp(1704067200)
         }
 
         and: "The product is marked as parsed"
@@ -193,7 +191,7 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
         assert updatedProduct.priceHistoryParsed == false
     }
 
-    private static LocalDateTime timestampToLocalDateTime(long timestamp) {
-        return LocalDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
+    private static Timestamp toTimestamp(long epochSeconds) {
+        return new Timestamp(epochSeconds * 1000)
     }
 }

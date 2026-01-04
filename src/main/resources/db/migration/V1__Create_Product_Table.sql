@@ -12,8 +12,8 @@ CREATE TABLE scraper_schema.product (
     specifications_parsed BOOLEAN NOT NULL DEFAULT FALSE,
     reviews_parsed BOOLEAN NOT NULL DEFAULT FALSE,
     price_history_parsed BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_product_url ON scraper_schema.product(url);
