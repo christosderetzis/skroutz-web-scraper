@@ -33,10 +33,10 @@ class GetProductByIdFunctionalSpec extends BaseFunctionalSpec {
 
     def "Unhappy path - Get product by non-existing id"() {
         given: "a non-existing product ID"
-        Long nonExistingProductId = 9999L
+            Long nonExistingProductId = 9999L
 
         when: "requesting the product by the non-existing ID"
-        def response = webActor.getProductById(nonExistingProductId)
+            def response = webActor.getProductById(nonExistingProductId)
 
         then: "the response status should be 404 Not Found"
             response.expectStatus().isNotFound()

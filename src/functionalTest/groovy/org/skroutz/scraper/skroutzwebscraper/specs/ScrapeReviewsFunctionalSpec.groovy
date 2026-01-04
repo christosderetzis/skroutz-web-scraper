@@ -39,10 +39,10 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
 
     def "Scrape reviews, blank url"() {
         given:
-        Product product = ProductCreator.createRandomProduct().tap {
-            url = ""
-        }
-        productRepository.save(product)
+            Product product = ProductCreator.createRandomProduct().tap {
+                url = ""
+            }
+            productRepository.save(product)
 
         when:
             reviewsScheduler.parseReviews()

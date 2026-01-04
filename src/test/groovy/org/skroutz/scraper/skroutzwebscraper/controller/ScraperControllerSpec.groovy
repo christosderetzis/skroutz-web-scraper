@@ -42,56 +42,56 @@ class ScraperControllerSpec extends Specification {
 
     def "should scrape single page when multiple is false"() {
         given: "a scraper request for single page"
-        def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
-        def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
+            def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=false"
-        def result = mockMvc.perform(post("/scraper/products")
-                .param("multiple", "false")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
+            def result = mockMvc.perform(post("/scraper/products")
+                    .param("multiple", "false")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
 
         then: "should scrape single page and return OK"
-        result.andExpect(status().isOk())
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products")
-        0 * productsService.getNumberOfWebPages(_)
+            result.andExpect(status().isOk())
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products")
+            0 * productsService.getNumberOfWebPages(_)
     }
 
     def "should scrape multiple pages when multiple is true and pages exist"() {
         given: "a scraper request for multiple pages"
-        def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
 
         when: "performing POST request with multiple=true"
-        def result = mockMvc.perform(post("/scraper/products")
-                .param("multiple", "true")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(scraperRequestDto)))
+            def result = mockMvc.perform(post("/scraper/products")
+                    .param("multiple", "true")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(scraperRequestDto)))
 
         then: "should scrape all pages and return OK"
-        result.andExpect(status().isOk())
-        1 * productsService.getNumberOfWebPages("https://example.com/products") >> 3
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products")
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products?page=2")
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products?page=3")
+            result.andExpect(status().isOk())
+            1 * productsService.getNumberOfWebPages("https://example.com/products") >> 3
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products")
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products?page=2")
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products?page=3")
     }
 
     def "should handle URL with existing query parameters when scraping multiple pages"() {
         given: "a scraper request with URL containing query parameters"
-        def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products?category=electronics")
-        def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products?category=electronics")
+            def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
-        def result = mockMvc.perform(post("/scraper/products")
-                .param("multiple", "true")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
+            def result = mockMvc.perform(post("/scraper/products")
+                    .param("multiple", "true")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
 
         then: "should append page parameter with ampersand and return OK"
-        result.andExpect(status().isOk())
-        1 * productsService.getNumberOfWebPages("https://example.com/products?category=electronics") >> 3
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics")
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&page=2")
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&page=3")
+            result.andExpect(status().isOk())
+            1 * productsService.getNumberOfWebPages("https://example.com/products?category=electronics") >> 3
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics")
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&page=2")
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&page=3")
     }
 
     def "should return OK when no pages found for multiple scraping"() {
@@ -147,28 +147,28 @@ class ScraperControllerSpec extends Specification {
 
     def "should handle complex URL with multiple query parameters"() {
         given: "a scraper request with complex URL"
-        def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products?category=electronics&sort=price&filter=available")
-        def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products?category=electronics&sort=price&filter=available")
+            def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
-        def result = mockMvc.perform(post("/scraper/products")
-                .param("multiple", "true")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
+            def result = mockMvc.perform(post("/scraper/products")
+                    .param("multiple", "true")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
 
         then: "should handle complex URL correctly"
-        result.andExpect(status().isOk())
-        1 * productsService.getNumberOfWebPages("https://example.com/products?category=electronics&sort=price&filter=available") >> 2
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&sort=price&filter=available")
-        1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&sort=price&filter=available&page=2")
+            result.andExpect(status().isOk())
+            1 * productsService.getNumberOfWebPages("https://example.com/products?category=electronics&sort=price&filter=available") >> 2
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&sort=price&filter=available")
+            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&sort=price&filter=available&page=2")
     }
 
     def "should scrape price history successfully"() {
         when: "performing POST request to scrape price history"
-        def result = mockMvc.perform(post("/scraper/price-history"))
+            def result = mockMvc.perform(post("/scraper/price-history"))
 
         then: "should call price history service and return OK"
-        result.andExpect(status().isOk())
-        1 * priceHistoryService.fetchPriceHistoryForProducts()
+            result.andExpect(status().isOk())
+            1 * priceHistoryService.fetchPriceHistoryForProducts()
     }
 }
