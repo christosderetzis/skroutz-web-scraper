@@ -49,7 +49,7 @@ class SpecificationsScraperSpec extends Specification {
             webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> specGroups
 
         when: "scraping specifications"
-            JsonNode result = scraper.screapeSpecifications(url)
+            JsonNode result = scraper.scrapeSpecifications(url)
 
         then: "webdriver should navigate to URL"
             1 * webDriver.get(url)
@@ -97,7 +97,7 @@ class SpecificationsScraperSpec extends Specification {
             webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> specGroups
 
         when: "scraping specifications"
-            JsonNode result = scraper.screapeSpecifications(url)
+            JsonNode result = scraper.scrapeSpecifications(url)
 
         then: "webdriver should navigate to URL"
             1 * webDriver.get(url)
@@ -123,7 +123,7 @@ class SpecificationsScraperSpec extends Specification {
             webDriver.get(url) >> { throw new RuntimeException("Navigation failed") }
 
         when: "scraping specifications"
-            JsonNode result = scraper.screapeSpecifications(url)
+            JsonNode result = scraper.scrapeSpecifications(url)
 
         then: "should return null"
             result == null
@@ -143,7 +143,7 @@ class SpecificationsScraperSpec extends Specification {
             webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> []
 
         when: "scraping specifications"
-            JsonNode result = scraper.screapeSpecifications(url)
+            JsonNode result = scraper.scrapeSpecifications(url)
 
         then: "webdriver should navigate to URL"
             1 * webDriver.get(url)

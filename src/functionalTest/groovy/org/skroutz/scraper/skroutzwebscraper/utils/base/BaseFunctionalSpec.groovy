@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
 import org.skroutz.scraper.skroutzwebscraper.SkroutzWebScraperApplication
 import org.skroutz.scraper.skroutzwebscraper.repository.PriceHistoryRepository
+import org.skroutz.scraper.skroutzwebscraper.repository.ProductElasticsearchRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.utils.actor.WebActor
@@ -23,6 +24,7 @@ import spock.lang.Specification
         properties = [
                 "spring.main.allow-bean-definition-overriding=true",
                 "DB_PORT=5434",
+                "ELASTICSEARCH_PORT=9201"
         ]
 )
 abstract class BaseFunctionalSpec extends Specification {
@@ -38,6 +40,9 @@ abstract class BaseFunctionalSpec extends Specification {
 
     @Autowired
     PriceHistoryRepository priceHistoryRepository
+
+    @Autowired
+    ProductElasticsearchRepository productElasticsearchRepository
 
     WebActor webActor
 

@@ -1,0 +1,26 @@
+{
+  "analysis": {
+    "analyzer": {
+      "greek_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": ["lowercase", "greek_stemmer"]
+      },
+      "english_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": ["lowercase", "english_stemmer"]
+      }
+    },
+    "filter": {
+      "greek_stemmer": {
+        "type": "stemmer",
+        "language": "greek"
+      },
+      "english_stemmer": {
+        "type": "stemmer",
+        "language": "english"
+      }
+    }
+  }
+}

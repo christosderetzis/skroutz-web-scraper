@@ -20,11 +20,11 @@ public class SpecificationsScraper extends AbstractScraper {
         super(applicationContext);
     }
 
-    public JsonNode screapeSpecifications(String url) {
+    public JsonNode scrapeSpecifications(String url) {
         return executeWithWebDriver(webDriver -> {
             webDriver.get(url);
             try {
-                Thread.sleep(6000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
