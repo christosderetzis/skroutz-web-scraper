@@ -1,0 +1,56 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": ".*/product-with-reviews/reviews\\.json",
+        "queryParameters": {
+          "offset": {
+            "equalTo": "0"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reviews-full.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": ".*/product-with-reviews/reviews\\.json",
+        "queryParameters": {
+          "offset": {
+            "equalTo": "2"
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "bodyFileName": "reviews-empty.json",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPathPattern": ".*/product-error/reviews\\.json"
+      },
+      "response": {
+        "status": 500,
+        "body": "Internal Server Error",
+        "headers": {
+          "Content-Type": "text/plain"
+        }
+      }
+    }
+  ]
+}

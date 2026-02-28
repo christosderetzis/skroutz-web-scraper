@@ -6,6 +6,9 @@ import org.skroutz.scraper.skroutzwebscraper.scheduled.ReviewsScheduler
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.creators.ProductCreator
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.web.reactive.server.WebTestClient
+
+import java.time.LocalDate
 
 
 class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
@@ -13,42 +16,114 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
     @Autowired
     ReviewsScheduler reviewsScheduler
 
-    def "Scrape reviews, happy path"() {
-        given:
-            def maxReviews = 10
-            def expectedInitialReviews = 3  // Mock HTML initially loads 3 reviews
-            Product product = ProductCreator.createRandomProduct().tap {
-                url = "http://mockserver/reviews-page.html?maxReviews=${maxReviews}"
-            }
-            productRepository.save(product)
+    def "Scrape reviews with full data, happy path"() {
+        given: "A product with a URL pointing to full reviews data"
+        Product product = Product.builder()
+                .title("Gaming Laptop")
+                .price(329.99)
+                .imageUrl("http://example.com/image.jpg")
+                .url("http://localhost:8081/product-with-reviews.html")
+                .description("High performance gaming laptop")
+                .rating(4.5)
+                .reviewsParsed(false)
+                .specificationsParsed(false)
+                .priceHistoryParsed(false)
+                .build()
+        productRepository.save(product)
 
-        when:
-            reviewsScheduler.parseReviews()
+        when: "we call the scheduler for reviews"
+        reviewsScheduler.parseReviews()
 
         then: "Product reviewsParsed is true"
-            Product savedProduct = productRepository.findAll().getFirst()
-            with(savedProduct) {
-                reviewsParsed == true
-            }
+        Product savedProduct = productRepository.findAll().getFirst()
+        with(savedProduct) {
+            reviewsParsed == true
+        }
 
-        and: "Only initially visible reviews are scraped (no button clicking)"
-            List<Review> reviews = reviewRepository.findAll()
-            assert reviews.size() == expectedInitialReviews
-            assert reviews.every { it.productId == savedProduct.id }
+        and: "Exactly 2 review records are saved"
+        List<Review> reviews = reviewRepository.findAll().sort { it.reviewDate }
+        assert reviews.size() == 2
+
+        and: "All records belong to the product"
+        assert reviews.every { it.productId == product.id }
+
+        and: "First record has the exact data"
+        with(reviews[0]) {
+            reviewerRating == 5
+            reviewerName == "lazfotiadis"
+            isVerifiedPurchase == false
+            reviewDate == LocalDate.of(2025, 6, 10)
+            helpfulVotes == 7
+            totalVotes == 9
+            reviewText == "The phone is simply wonderful! The photos are perfect."
+
+            pros.sort() == [
+                    "Call Quality",
+                    "Photos",
+                    "Video Recording",
+                    "Music",
+                    "Speed",
+                    "Value for Money",
+                    "Screen Resolution",
+                    "Battery"
+            ].sort()
+
+            cons == null
+            neutral == null
+        }
+
+        and: "Second record has the exact data"
+        with(reviews[1]) {
+            reviewerRating == 4
+            reviewerName == "nikosz11"
+            isVerifiedPurchase == true
+            reviewDate == LocalDate.of(2025, 8, 1)
+            helpfulVotes == 5
+            totalVotes == 7
+            reviewText == "Coming from 12. Changes exist, not crazy but they exist. Great cameras and screen."
+
+            pros.sort() == [
+                    "Call Quality",
+                    "Photos",
+                    "Video Recording",
+                    "Music",
+                    "Speed",
+                    "Screen Resolution"
+            ].sort()
+
+            neutral == ["Value for Money"] as String[]
+            cons == ["Battery"] as String[]
+        }
+
+        and: "The product is marked as parsed"
+        def updatedProduct = productRepository.findById(product.getId()).get()
+        assert updatedProduct.reviewsParsed == true
     }
 
-    def "Scrape reviews, blank url"() {
-        given:
-            Product product = ProductCreator.createRandomProduct().tap {
-                url = ""
-            }
+    def "Scrape reviews handles API errors gracefully"() {
+        given: "A product with a URL that returns an error"
+            Product product = Product.builder()
+                    .title("Error Product")
+                    .price(99.99)
+                    .imageUrl("http://example.com/image.jpg")
+                    .url("http://localhost:8081/product-error.html")
+                    .description("Product that will trigger an error")
+                    .rating(3.0)
+                    .reviewsParsed(false)
+                    .specificationsParsed(false)
+                    .priceHistoryParsed(false)
+                    .build()
             productRepository.save(product)
 
-        when:
+        when: "The reviews scraper is called"
             reviewsScheduler.parseReviews()
 
-        then:
-            List<Review> reviews = reviewRepository.findAll()
+        then: "No reviews data is saved for this product"
+            def reviews = reviewRepository.findAll()
             assert reviews.size() == 0
+
+        and: "The product is not marked as parsed due to the error"
+            def updatedProduct = productRepository.findById(product.getId()).get()
+            assert updatedProduct.reviewsParsed == false
     }
 }
