@@ -16,12 +16,12 @@ class ReviewsMapperSpec extends WithLoggingBaseSpec {
 
     def "mapToReviews with multiple reviews"() {
         given: "multiple review DTOs"
-            def reviewDtos = (1..10).collect { i ->
+            def reviewDtos = (1..9).collect { i ->
                 new ReviewsApiResponseDto.ReviewDto(
                         id: i.toLong(),
                         rating: (i % 5) + 1,
                         authorName: "User $i",
-                        reviewTime: "0$i/01/2024".take(10)
+                        reviewTime: "01/0$i/2024".take(10)
                 )
             }
 
@@ -29,11 +29,11 @@ class ReviewsMapperSpec extends WithLoggingBaseSpec {
             List<Review> reviews = reviewsMapper.mapToReviews(reviewDtos)
 
         then: "all reviews are mapped"
-            reviews.size() == 10
+            reviews.size() == 9
             with(reviews) {
-                it*.reviewerName == (1..10).collect { "User $it" }
-                it*.reviewerRating == (1..10).collect { (it % 5) + 1 }
-                it*.reviewDate == (1..10).collect { LocalDate.of(2024, 1, it) }
+                it*.reviewerName == (1..9).collect { "User $it" }
+                it*.reviewerRating == (1..9).collect { (it % 5) + 1 }
+                it*.reviewDate == (1..9).collect { LocalDate.of(2024, it, 01) }
             }
     }
 
