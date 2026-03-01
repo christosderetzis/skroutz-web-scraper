@@ -65,8 +65,8 @@ jobs:
       with:
         name: scraper-test-reports
         path: | 
-          skroutz-web-scraper/build/reports/tests/test
-          skroutz-web-scraper/build/reports/tests/functionalTest
+          ./build/reports/tests/test
+          ./build/reports/tests/functionalTest
         retention-days: 5
 
     - name: Upload code coverage on codecov
