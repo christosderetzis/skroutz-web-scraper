@@ -72,7 +72,7 @@ jobs:
     - name: Upload code coverage on codecov
       uses: codecov/codecov-action@v3
       with:
-        files: ./skroutz-web-scraper/build/reports/jacoco/test/jacocoTestReport.xml
+        files: ./build/reports/jacoco/test/jacocoTestReport.xml
         flags: unittests
         name: codecov-coverage-report
         fail_ci_if_error: true
