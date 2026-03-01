@@ -1,0 +1,32 @@
+{
+  "reviews": {
+    "reviews": [
+      {
+        "id": 4716028,
+        "rating": 4,
+        "purchased": true,
+        "author_name": "nikosz11",
+        "review_time": "01/08/2025",
+        "helpfulness_message": "5 στους 7 χρήστες τη βρήκαν χρήσιμη",
+        "original_formatted_review": "<p>Coming from 12. Changes exist, not crazy but they exist. Great cameras and screen.</p>",
+        "aggregated_review_data": "<ul class=\"icon pros\"><li>Call Quality</li><li>Photos</li><li>Video Recording</li><li>Music</li><li>Speed</li><li>Screen Resolution</li></ul><ul class=\"icon so-so\"><li>Value for Money</li></ul><ul class=\"icon cons\"><li>Battery</li></ul>",
+        "helpful_votes_count": 5
+      },
+      {
+        "id": 4506635,
+        "rating": 5,
+        "purchased": null,
+        "author_name": "lazfotiadis",
+        "review_time": "10/06/2025",
+        "helpfulness_message": "7 out of 9 found this review helpful",
+        "original_formatted_review": "<p>The phone is simply wonderful! The photos are perfect.</p>",
+        "aggregated_review_data": "<ul class=\"icon pros\"><li>Call Quality</li><li>Photos</li><li>Video Recording</li><li>Music</li><li>Speed</li><li>Value for Money</li><li>Screen Resolution</li><li>Battery</li></ul>",
+        "helpful_votes_count": 7
+      }
+    ],
+    "merged_review_notices": {
+      "4716028": "Review is for color: Black",
+      "4506635": "Review is for color: Black"
+    }
+  }
+}
