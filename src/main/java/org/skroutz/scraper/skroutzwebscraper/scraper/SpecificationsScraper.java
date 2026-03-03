@@ -4,52 +4,65 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
 @Component
 public class SpecificationsScraper extends AbstractScraper {
 
+    private final ObjectMapper mapper = new ObjectMapper();
+
     public SpecificationsScraper(ApplicationContext applicationContext) {
         super(applicationContext);
     }
 
-    public JsonNode screapeSpecifications(String url) {
+    public JsonNode scrapeSpecifications(String url) {
         return executeWithWebDriver(webDriver -> {
             webDriver.get(url);
-            try {
-                Thread.sleep(6000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            return parseSpecifications(webDriver);
+
+            String renderedHtml = webDriver.getPageSource();
+            return parseSpecifications(renderedHtml);
         }, url, "scraping specifications");
     }
 
-    private JsonNode parseSpecifications(WebDriver webDriver) {
-        List<WebElement> specGroups = webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS));
-        ObjectMapper mapper = new ObjectMapper();
+    private JsonNode parseSpecifications(String htmlPage) {
+        Document document = Jsoup.parse(htmlPage);
+        Elements specGroups = document.select(HtmlFields.SPECIFICATIONS);
         ObjectNode rootNode = mapper.createObjectNode();
 
-        for (WebElement group : specGroups) {
-            String category = group.findElement(By.tagName("h3")).getText();
+        for (Element group : specGroups) {
+            Element categoryElement = group.selectFirst("h3");
+            if (categoryElement == null) continue;
+
+            String category = categoryElement.text();
             ObjectNode categoryNode = mapper.createObjectNode();
 
-            List<WebElement> dls = group.findElements(By.tagName("dl"));
-            for (WebElement dl : dls) {
+            Elements dls = group.select("dl");
+            for (Element dl : dls) {
                 try {
-                    String dt = dl.findElement(By.tagName("dt")).getText();
-                    String dd = dl.findElement(By.tagName("dd")).getText().replaceAll("\"", "");
+                    Element dtElement = dl.selectFirst("dt");
+                    Element ddElement = dl.selectFirst("dd");
+                    if (dtElement == null || ddElement == null) continue;
+
+                    String dt = dtElement.text().trim();
+                    String dd = ddElement.text().replace("\"", "").trim();
+                    if (dt.isEmpty() || dd.isEmpty()) continue; // <-- skip empty entries
+
                     categoryNode.put(dt, dd);
                 } catch (Exception e) {
-                    // Skip malformed dl if any
-                    continue;
+                    log.debug("Skipping malformed specification entry: {}", e.getMessage());
                 }
             }
             rootNode.set(category, categoryNode);

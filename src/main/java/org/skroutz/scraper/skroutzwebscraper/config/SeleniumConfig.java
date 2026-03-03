@@ -23,9 +23,6 @@ public class SeleniumConfig {
     @Value("${scraper.timeout:3000}")
     private int timeoutMs;
 
-    @Value("${scraper.chromeUserDataDir:}")
-    private String userDataDir;
-
     @Value("${scraper.selenium.url:}")
     private String seleniumUrl;
 
@@ -52,9 +49,6 @@ public class SeleniumConfig {
         options.setExperimentalOption("useAutomationExtension", false);
         options.addArguments("--disable-blink-features=AutomationControlled");
 
-        if (!userDataDir.isBlank()) {
-            options.addArguments("user-data-dir=" + userDataDir);
-        }
 
         WebDriverManager.chromedriver().setup();
         WebDriver driver = new ChromeDriver(options);

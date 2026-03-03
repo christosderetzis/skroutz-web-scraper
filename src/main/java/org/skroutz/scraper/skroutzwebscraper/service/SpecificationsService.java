@@ -25,7 +25,7 @@ public class SpecificationsService {
                 log.info("Parsing specifications for product: {}", product.getId());
                 String url = product.getUrl();
                 if (!url.isBlank()) {
-                    JsonNode specifications = specificationsScraper.screapeSpecifications(url);
+                    JsonNode specifications = specificationsScraper.scrapeSpecifications(url);
                     product.setSpecifications(specifications);
                     product.setSpecificationsParsed(true);
                     productRepository.save(product);
