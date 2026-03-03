@@ -21,8 +21,8 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
             Product product = new Product(title: "Product 1", price: 100, url: "http://example.com/product1")
 
         and: "we have a json node to return"
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonNode = mapper.readTree("{\"key\":\"value\"}");
+            ObjectMapper mapper = new ObjectMapper()
+            JsonNode jsonNode = mapper.readTree("{\"key\":\"value\"}")
 
         when: "parsing specifications for the product"
             service.parseSpecifications()
