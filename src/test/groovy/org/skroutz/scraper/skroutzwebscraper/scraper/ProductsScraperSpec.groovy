@@ -12,7 +12,7 @@ class ProductsScraperSpec extends Specification {
     ApplicationContext applicationContext = Mock()
 
     @Subject
-    ProductsScraper productsScraper = new ProductsScraper(applicationContext)
+    ProductsScraper productsScraper = new ProductsScraper(applicationContext, "https://www.skroutz.gr")
 
     // ---------- PAGINATION ----------
 
@@ -85,16 +85,23 @@ class ProductsScraperSpec extends Specification {
         given:
             def html = """
                 <div>
-                    <a class="js-sku-link" href="http://example.com" title="Example Product"></a>
+                    <a class="js-sku-link" href="${href}" title="Example Product"></a>
                 </div>
             """
             Element productElement = Jsoup.parse(html).selectFirst("div")
 
         when:
-        def result = productsScraper.extractUrl(productElement)
+            def result = productsScraper.extractUrl(productElement)
 
         then:
-        result == "http://example.com"
+            result == expectedUrl
+
+        where:
+            href                                                          || expectedUrl
+            "http://example.com"                                          || "http://example.com"
+            "https://example.com"                                         || "https://example.com"
+            "/s/45762495/Apple-iPhone-15-Pro-8-128GB-Black-Titanium.html" || "https://www.skroutz.gr/s/45762495/Apple-iPhone-15-Pro-8-128GB-Black-Titanium.html"
+            "/c/40/kinhta-tilefwna.html"                                  || "https://www.skroutz.gr/c/40/kinhta-tilefwna.html"
     }
 
 

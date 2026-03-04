@@ -21,6 +21,7 @@ import spock.lang.Specification
         properties = [
                 "spring.main.allow-bean-definition-overriding=true",
                 "DB_PORT=5434",
+                "scraper.base-url=http://mockserver",
         ]
 )
 abstract class BaseFunctionalSpec extends Specification {

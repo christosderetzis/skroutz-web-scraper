@@ -28,6 +28,7 @@ spring:
 scraper:
   headless: true
   timeout: 100
+  base-url: https://www.skroutz.gr
 
 # Swagger/OpenAPI Configuration
 springdoc:
