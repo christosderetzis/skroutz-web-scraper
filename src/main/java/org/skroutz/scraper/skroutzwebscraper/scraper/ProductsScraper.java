@@ -140,7 +140,7 @@ public class ProductsScraper extends AbstractScraper {
     private String extractUrl(Element productElement) {
         try {
             Element aTag = productElement.selectFirst(HtmlFields.PRODUCT_LINK);
-            return aTag != null ? aTag.attr("href") : null;
+            return aTag != null ? ensureAbsoluteUrl(aTag.attr("href")) : null;
         } catch (Exception e) {
             log.debug("Could not extract URL: {}", e.getMessage());
             return null;
@@ -150,7 +150,7 @@ public class ProductsScraper extends AbstractScraper {
     private String extractTitle(Element productElement) {
         try {
             Element aTag = productElement.selectFirst(HtmlFields.PRODUCT_LINK);
-            return aTag != null ? ensureAbsoluteUrl(aTag.attr("title")) : null;
+            return aTag != null ? aTag.attr("title") : null;
         } catch (Exception e) {
             log.debug("Could not extract title: {}", e.getMessage());
             return null;
