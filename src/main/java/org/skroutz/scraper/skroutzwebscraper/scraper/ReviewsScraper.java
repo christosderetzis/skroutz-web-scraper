@@ -15,10 +15,16 @@ import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class ReviewsScraper {
 
     private final WebClient webClient;
+    private final int timeoutSeconds;
+
+    public ReviewsScraper(WebClient webClient,
+                         @org.springframework.beans.factory.annotation.Value("${scraper.timeout-seconds:30}") int timeoutSeconds) {
+        this.webClient = webClient;
+        this.timeoutSeconds = timeoutSeconds;
+    }
 
     public List<ReviewsApiResponseDto.ReviewDto> scrapeReviews(String url) throws InterruptedException {
         log.info("Scraping reviews for {}", url);
@@ -60,7 +66,7 @@ public class ReviewsScraper {
                             }
                     )
                     .bodyToMono(ReviewsApiResponseDto.class)
-                    .timeout(Duration.ofSeconds(30))
+                    .timeout(Duration.ofSeconds(timeoutSeconds))
                     .block();
 
             if (reviewsApiResponseDto == null) {
