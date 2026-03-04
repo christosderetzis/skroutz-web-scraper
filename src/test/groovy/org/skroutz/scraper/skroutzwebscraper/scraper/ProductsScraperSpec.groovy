@@ -12,7 +12,7 @@ class ProductsScraperSpec extends Specification {
     ApplicationContext applicationContext = Mock()
 
     @Subject
-    ProductsScraper productsScraper = new ProductsScraper(applicationContext)
+    ProductsScraper productsScraper = new ProductsScraper(applicationContext, "https://www.skroutz.gr")
 
     @Unroll
     def "parsePaginationInfo returns #expected for pagination text '#paginationText'"() {
@@ -64,12 +64,13 @@ class ProductsScraperSpec extends Specification {
             result == null
     }
 
-    def "extractUrlAndTitle sets url and title when aTag is present"() {
+    @Unroll
+    def "extractUrlAndTitle sets url=#expectedUrl and title when aTag has href='#href'"() {
         given: "a productElement with a valid aTag"
             Product product = new Product()
             WebElement productElement = Mock()
             productElement.findElement(By.cssSelector(HtmlFields.PRODUCT_LINK)) >> Mock(WebElement) {
-                getAttribute("href") >> "http://example.com"
+                getAttribute("href") >> href
                 getAttribute("title") >> "Example Product"
             }
 
@@ -77,8 +78,15 @@ class ProductsScraperSpec extends Specification {
             productsScraper.extractUrlAndTitle(productElement, product)
 
         then: "url and title are set"
-            product.url == "http://example.com"
+            product.url == expectedUrl
             product.title == "Example Product"
+
+        where:
+            href                                                          || expectedUrl
+            "http://example.com"                                          || "http://example.com"
+            "https://example.com"                                         || "https://example.com"
+            "/s/45762495/Apple-iPhone-15-Pro-8-128GB-Black-Titanium.html" || "https://www.skroutz.gr/s/45762495/Apple-iPhone-15-Pro-8-128GB-Black-Titanium.html"
+            "/c/40/kinhta-tilefwna.html"                                  || "https://www.skroutz.gr/c/40/kinhta-tilefwna.html"
     }
 
     def "extractUrlAndTitle does nothing if aTag is missing"() {

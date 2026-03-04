@@ -29,6 +29,7 @@ scraper:
   headless: false
   timeout: 100
   chromeUserDataDir: C:\\Users\\Christos\\AppData\\Local\\Google\\Chrome\\User Data\\Default
+  base-url: https://www.skroutz.gr
 
 # Swagger/OpenAPI Configuration
 springdoc:

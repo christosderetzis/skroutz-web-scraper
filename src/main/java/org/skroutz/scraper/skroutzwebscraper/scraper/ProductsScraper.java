@@ -8,6 +8,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +22,12 @@ import java.util.List;
 @Slf4j
 public class ProductsScraper extends AbstractScraper {
 
-    public ProductsScraper(ApplicationContext applicationContext) {
+    private final String baseUrl;
+
+    public ProductsScraper(ApplicationContext applicationContext,
+                          @Value("${scraper.base-url}") String baseUrl) {
         super(applicationContext);
+        this.baseUrl = baseUrl;
     }
 
     public List<Product> scrapeProducts(String url) {
@@ -127,11 +132,24 @@ public class ProductsScraper extends AbstractScraper {
     private void extractUrlAndTitle(WebElement productElement, Product product) {
         try {
             WebElement aTag = productElement.findElement(By.cssSelector(HtmlFields.PRODUCT_LINK));
-            product.setUrl(aTag.getAttribute("href"));
+            String href = aTag.getAttribute("href");
+            product.setUrl(ensureAbsoluteUrl(href));
             product.setTitle(aTag.getAttribute("title"));
         } catch (NoSuchElementException e) {
             log.debug("Could not extract URL and title: {}", e.getMessage());
         }
+    }
+
+    private String ensureAbsoluteUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return url;
+        }
+        // If URL is already absolute (starts with http:// or https://), return as-is
+        if (url.startsWith("http://") || url.startsWith("https://")) {
+            return url;
+        }
+        // If URL is relative, prepend base URL
+        return baseUrl + url;
     }
 
     private void extractPrice(WebElement productElement, Product product) {
