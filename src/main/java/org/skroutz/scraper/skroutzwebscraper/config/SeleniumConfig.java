@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Scope;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,13 +59,16 @@ public class SeleniumConfig {
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-gpu",
-                "--window-size=1920,1080"
+                "--window-size=1920,1080",
+                "--disable-blink-features=AutomationControlled"
         );
-
         options.addArguments(
                 "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                         "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
         );
+
+        options.setExperimentalOption("excludeSwitches", Arrays.asList("enable-automation"));
+        options.setExperimentalOption("useAutomationExtension", false);
 
         Map<String, Object> prefs = new HashMap<>();
         prefs.put("profile.managed_default_content_settings.images", 2);

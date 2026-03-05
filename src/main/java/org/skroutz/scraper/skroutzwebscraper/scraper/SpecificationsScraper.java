@@ -8,15 +8,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @Component
@@ -24,8 +18,8 @@ public class SpecificationsScraper extends AbstractScraper {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public SpecificationsScraper(ApplicationContext applicationContext) {
-        super(applicationContext);
+    public SpecificationsScraper(ApplicationContext applicationContext, @Value("${scraper.base-url}") String baseUrl) {
+        super(applicationContext, baseUrl);
     }
 
     public JsonNode scrapeSpecifications(String url) {

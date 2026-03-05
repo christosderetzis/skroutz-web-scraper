@@ -23,12 +23,10 @@ import java.util.List;
 @Slf4j
 public class ProductsScraper extends AbstractScraper {
 
-    private final String baseUrl;
 
     public ProductsScraper(ApplicationContext applicationContext,
                           @Value("${scraper.base-url}") String baseUrl) {
-        super(applicationContext);
-        this.baseUrl = baseUrl;
+        super(applicationContext, baseUrl);
     }
 
     public List<Product> scrapeProducts(String url) {

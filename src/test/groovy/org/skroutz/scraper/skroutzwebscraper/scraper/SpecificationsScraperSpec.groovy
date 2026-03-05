@@ -12,7 +12,7 @@ class SpecificationsScraperSpec extends Specification {
     ApplicationContext applicationContext = Mock(ApplicationContext)
 
     @Subject
-    SpecificationsScraper scraper = new SpecificationsScraper(applicationContext)
+    SpecificationsScraper scraper = new SpecificationsScraper(applicationContext, "https://www.skroutz.gr")
 
     def "scrapeSpecifications should successfully parse specifications"() {
         given: "an HTML page with specification groups"

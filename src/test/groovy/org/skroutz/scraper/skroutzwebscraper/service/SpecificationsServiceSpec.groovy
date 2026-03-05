@@ -29,7 +29,7 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
 
         then: "specifications should be scraped from the product URL"
             1 * productRepository.findAllBySpecificationsParsed(false) >> [product]
-            1 * specificationsScraper.scrapeSpecifications(product.url) >> jsonNode
+            1 * specificationsScraper.scrapeSpecifications(product.url + "?lang=en") >> jsonNode
             1 * productRepository.save({ it.specifications == jsonNode && it.specificationsParsed == true })
             0 * _
     }
@@ -58,7 +58,7 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
 
         then: "an exception is thrown during scraping"
             1 * productRepository.findAllBySpecificationsParsed(false) >> [product]
-            1 * specificationsScraper.scrapeSpecifications(product.url) >> { throw new RuntimeException("Scraping error") }
+            1 * specificationsScraper.scrapeSpecifications(product.url+ "?lang=en") >> { throw new RuntimeException("Scraping error") }
             0 * _
 
         and: "log should contain error about scraping failure"
