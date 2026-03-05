@@ -21,15 +21,15 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
             Product product = new Product(title: "Product 1", price: 100, url: "http://example.com/product1")
 
         and: "we have a json node to return"
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode jsonNode = mapper.readTree("{\"key\":\"value\"}");
+            ObjectMapper mapper = new ObjectMapper()
+            JsonNode jsonNode = mapper.readTree("{\"key\":\"value\"}")
 
         when: "parsing specifications for the product"
             service.parseSpecifications()
 
         then: "specifications should be scraped from the product URL"
             1 * productRepository.findAllBySpecificationsParsed(false) >> [product]
-            1 * specificationsScraper.screapeSpecifications(product.url) >> jsonNode
+            1 * specificationsScraper.scrapeSpecifications(product.url + "?lang=en") >> jsonNode
             1 * productRepository.save({ it.specifications == jsonNode && it.specificationsParsed == true })
             0 * _
     }
@@ -58,7 +58,7 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
 
         then: "an exception is thrown during scraping"
             1 * productRepository.findAllBySpecificationsParsed(false) >> [product]
-            1 * specificationsScraper.screapeSpecifications(product.url) >> { throw new RuntimeException("Scraping error") }
+            1 * specificationsScraper.scrapeSpecifications(product.url+ "?lang=en") >> { throw new RuntimeException("Scraping error") }
             0 * _
 
         and: "log should contain error about scraping failure"

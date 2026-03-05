@@ -29,7 +29,7 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
         webClient = WebClient.builder()
                 .baseUrl(mockWebServer.url("/").toString())
                 .build()
-        reviewsScraper = new ReviewsScraper(webClient)
+        reviewsScraper = new ReviewsScraper(webClient, 1) // 1 second timeout for tests
     }
 
     def cleanup() {
@@ -344,7 +344,7 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
                     .setResponseCode(200)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody(jsonResponse)
-                    .setBodyDelay(2, TimeUnit.SECONDS))
+                    .setBodyDelay(200, TimeUnit.MILLISECONDS))
 
         when: "fetchReviewPage is called"
             ReviewsApiResponseDto response = reviewsScraper.fetchReviewPage(url)

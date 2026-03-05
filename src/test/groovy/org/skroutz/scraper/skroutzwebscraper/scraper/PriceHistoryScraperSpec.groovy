@@ -33,7 +33,7 @@ class PriceHistoryScraperSpec extends WithLoggingBaseSpec {
                 .baseUrl(mockWebServer.url("/").toString())
                 .build()
 
-        priceHistoryScraper = new PriceHistoryScraper(webClient)
+        priceHistoryScraper = new PriceHistoryScraper(webClient, 1) // 1 second timeout for tests
     }
 
     def cleanup() {
@@ -277,12 +277,12 @@ class PriceHistoryScraperSpec extends WithLoggingBaseSpec {
 
             String jsonResponse = objectMapper.writeValueAsString(expectedResponse)
 
-        and: "mock server returns response after delay (under 30s timeout)"
+        and: "mock server returns response after delay (under timeout)"
             mockWebServer.enqueue(new MockResponse()
                     .setResponseCode(200)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody(jsonResponse)
-                    .setBodyDelay(2, TimeUnit.SECONDS))
+                    .setBodyDelay(200, TimeUnit.MILLISECONDS))
 
         when: "fetching price history with slow response"
             String url = mockWebServer.url("/api/price-history/123").toString()

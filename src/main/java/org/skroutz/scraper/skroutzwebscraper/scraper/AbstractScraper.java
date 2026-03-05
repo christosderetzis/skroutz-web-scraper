@@ -2,6 +2,7 @@ package org.skroutz.scraper.skroutzwebscraper.scraper;
 
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.WebDriver;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 
 import java.util.function.Function;
@@ -9,9 +10,11 @@ import java.util.function.Function;
 @Slf4j
 public abstract class AbstractScraper {
 
+    protected final String baseUrl;
     protected final ApplicationContext applicationContext;
 
-    public AbstractScraper(ApplicationContext applicationContext) {
+    public AbstractScraper(ApplicationContext applicationContext, @Value("${scraper.base-url}") String baseUrl) {
+        this.baseUrl = baseUrl;
         this.applicationContext = applicationContext;
     }
 

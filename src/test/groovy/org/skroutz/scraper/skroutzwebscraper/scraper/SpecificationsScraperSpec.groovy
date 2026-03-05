@@ -1,158 +1,114 @@
 package org.skroutz.scraper.skroutzwebscraper.scraper
 
 import com.fasterxml.jackson.databind.JsonNode
-import org.openqa.selenium.By
-import org.openqa.selenium.WebDriver
-import org.openqa.selenium.WebElement
+
 import org.springframework.context.ApplicationContext
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Unroll
 
 class SpecificationsScraperSpec extends Specification {
 
-    ApplicationContext applicationContext = Mock()
-    WebDriver webDriver = Mock()
+    ApplicationContext applicationContext = Mock(ApplicationContext)
 
     @Subject
-    SpecificationsScraper scraper = new SpecificationsScraper(applicationContext)
+    SpecificationsScraper scraper = new SpecificationsScraper(applicationContext, "https://www.skroutz.gr")
 
     def "scrapeSpecifications should successfully parse specifications"() {
-        given: "a URL to scrape"
-            String url = "http://example.com/product"
+        given: "an HTML page with specification groups"
+            String html = """
+                <div id="specs">
+                    <div class="specs-container content section">
+                        <div class="spec-groups">
+                            <div class="spec-details">
+                                <h3>General</h3>
+                                <dl><dt>Weight</dt><dd>2.5kg</dd></dl>
+                                <dl><dt>Dimensions</dt><dd>30x20x10cm</dd></dl>
+                            </div>
+                            <div class="spec-details">
+                                <h3>Technical</h3>
+                                <dl><dt>Power</dt><dd>100W</dd></dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            """
 
-        and: "application context returns webdriver"
-            applicationContext.getBean(WebDriver.class) >> webDriver
+        when: "parsing specifications"
+            JsonNode result = scraper.parseSpecifications(html)
 
-        and: "mock specification groups with categories and key-value pairs"
-            def specs = [
-                    "General"  : ["Weight": "2.5kg", "Dimensions": "30x20x10cm"],
-                    "Technical": ["Power" : "100W"]
-            ]
+        then: "all categories and key-value pairs are parsed correctly"
+            result.has("General")
+            result.get("General").get("Weight").asText() == "2.5kg"
+            result.get("General").get("Dimensions").asText() == "30x20x10cm"
 
-            def specGroups = specs.collect { category, kvs ->
-                def group = Mock(WebElement)
-                def h3 = Mock(WebElement) { getText() >> category }
-                def dls = kvs.collect { key, value ->
-                    def dl = Mock(WebElement)
-                    def dt = Mock(WebElement) { getText() >> key }
-                    def dd = Mock(WebElement) { getText() >> value }
-                    dl.findElement(By.tagName("dt")) >> dt
-                    dl.findElement(By.tagName("dd")) >> dd
-                    dl
-                }
-                group.findElement(By.tagName("h3")) >> h3
-                group.findElements(By.tagName("dl")) >> dls
-                group
-            }
-
-        and: "webdriver finds specification groups"
-            webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> specGroups
-
-        when: "scraping specifications"
-            JsonNode result = scraper.screapeSpecifications(url)
-
-        then: "webdriver should navigate to URL"
-            1 * webDriver.get(url)
-
-        and: "result JSON should contain all categories"
-            specs.each { category, kvs ->
-                assert result.has(category)
-                kvs.each { key, value ->
-                    assert result.get(category).get(key).asText() == value
-                }
-            }
-
-        and: "webdriver should be closed"
-            1 * webDriver.quit()
+            result.has("Technical")
+            result.get("Technical").get("Power").asText() == "100W"
     }
 
-    def "scrapeSpecifications should handle malformed dl elements gracefully new"() {
-        given: "a URL to scrape"
-            String url = "http://example.com/product"
-            applicationContext.getBean(WebDriver.class) >> webDriver
+    def "scrapeSpecifications should skip malformed dl elements gracefully"() {
+        given: "an HTML page with a malformed dl"
+            String html = """
+                <div id="specs">
+                    <div class="specs-container content section">
+                        <div class="spec-groups">
+                            <div class="spec-details">
+                                <h3>General</h3>
+                                <dl><dt>Weight</dt><dd>2.5kg</dd></dl>
+                                <dl><dt></dt><dd></dd></dl> <!-- malformed -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            """
 
-            def specs = ["General": ["Weight": "2.5kg"]]
-            def specGroups = specs.collect { category, kvs ->
-                def group = Mock(WebElement)
-                def h3 = Mock(WebElement) { getText() >> category }
+        when:
+            JsonNode result = scraper.parseSpecifications(html)
 
-                def dls = kvs.collect { key, value ->
-                    def dl = Mock(WebElement)
-                    dl.findElement(By.tagName("dt")) >> Mock(WebElement) { getText() >> key }
-                    dl.findElement(By.tagName("dd")) >> Mock(WebElement) { getText() >> value }
-                    dl
-                }
-
-                // Malformed dl
-                def malformedDl = Mock(WebElement)
-                malformedDl.findElement(By.tagName("dt")) >> { throw new NoSuchElementException("Element not found") }
-                malformedDl.findElement(By.tagName("dd")) >> { throw new NoSuchElementException("Element not found") }
-                dls.add(malformedDl)
-
-                group.findElement(By.tagName("h3")) >> h3
-                group.findElements(By.tagName("dl")) >> dls
-                group
-            }
-
-            webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> specGroups
-
-        when: "scraping specifications"
-            JsonNode result = scraper.screapeSpecifications(url)
-
-        then: "webdriver should navigate to URL"
-            1 * webDriver.get(url)
-            1 * webDriver.quit()
-
-        and: "should return JSON with only valid specifications"
-            specs.each { category, kvs ->
-                assert result.has(category)
-                kvs.each { key, value ->
-                    assert result.get(category).get(key).asText() == value
-                }
-            }
-    }
-
-    def "scrapeSpecifications should return null when webdriver operation fails"() {
-        given: "a URL to scrape"
-            String url = "http://example.com/product"
-
-        and: "application context returns webdriver"
-            applicationContext.getBean(WebDriver.class) >> webDriver
-
-        and: "webdriver.get throws exception"
-            webDriver.get(url) >> { throw new RuntimeException("Navigation failed") }
-
-        when: "scraping specifications"
-            JsonNode result = scraper.screapeSpecifications(url)
-
-        then: "should return null"
-            result == null
-
-        and: "webdriver should be closed"
-            1 * webDriver.quit()
+        then: "only valid dl is parsed"
+            result.has("General")
+            result.get("General").get("Weight").asText() == "2.5kg"
+            result.get("General").size() == 1
     }
 
     def "scrapeSpecifications should return empty object when no specification groups found"() {
-        given: "a URL to scrape"
-            String url = "http://example.com/product"
+        given: "an empty HTML page"
+            String html = "<html><body></body></html>"
 
-        and: "application context returns webdriver"
-            applicationContext.getBean(WebDriver.class) >> webDriver
+        when:
+            JsonNode result = scraper.parseSpecifications(html)
 
-        and: "webdriver finds no specification groups"
-            webDriver.findElements(By.cssSelector(HtmlFields.SPECIFICATIONS)) >> []
-
-        when: "scraping specifications"
-            JsonNode result = scraper.screapeSpecifications(url)
-
-        then: "webdriver should navigate to URL"
-            1 * webDriver.get(url)
-
-        and: "should return empty JSON object"
+        then:
             result != null
             result.size() == 0
+    }
 
-        and: "webdriver should be closed"
-            1 * webDriver.quit()
+    @Unroll
+    def "scrapeSpecifications should handle multiple categories correctly"() {
+        given:
+            String html = """
+                <div id="specs">
+                    <div class="specs-container content section">
+                        <div class="spec-groups">
+                            <div class="spec-details"><h3>${category}</h3>
+                                <dl><dt>${key}</dt><dd>${value}</dd></dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            """
+
+        when:
+            JsonNode result = scraper.parseSpecifications(html)
+
+        then:
+            result.has(category)
+            result.get(category).get(key).asText() == value
+
+        where:
+            category      | key      | value
+            "General"     | "Weight" | "2.5kg"
+            "Technical"   | "Power"  | "100W"
+            "Dimensions"  | "Size"   | "30x20x10cm"
     }
 }
