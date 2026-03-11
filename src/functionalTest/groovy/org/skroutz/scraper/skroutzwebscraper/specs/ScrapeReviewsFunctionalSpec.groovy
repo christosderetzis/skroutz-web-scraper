@@ -2,19 +2,12 @@ package org.skroutz.scraper.skroutzwebscraper.specs
 
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.entity.Review
-import org.skroutz.scraper.skroutzwebscraper.scheduled.ReviewsScheduler
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
-import org.skroutz.scraper.skroutzwebscraper.utils.creators.ProductCreator
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 
 import java.time.LocalDate
 
 
 class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
-
-    @Autowired
-    ReviewsScheduler reviewsScheduler
 
     def "Scrape reviews with full data, happy path"() {
         given: "A product with a URL pointing to full reviews data"
@@ -31,8 +24,8 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
                 .build()
         productRepository.save(product)
 
-        when: "we call the scheduler for reviews"
-        reviewsScheduler.parseReviews()
+        when: "we call the API for reviews"
+        webActor.scrapeReviews()
 
         then: "Product reviewsParsed is true"
         Product savedProduct = productRepository.findAll().getFirst()
@@ -115,8 +108,8 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
                     .build()
             productRepository.save(product)
 
-        when: "The reviews scraper is called"
-            reviewsScheduler.parseReviews()
+        when: "The reviews API is called"
+            webActor.scrapeReviews()
 
         then: "No reviews data is saved for this product"
             def reviews = reviewRepository.findAll()
