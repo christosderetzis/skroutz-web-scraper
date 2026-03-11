@@ -59,6 +59,7 @@ public class Review {
     private String[] neutral;
 
     @Column(name = "is_verified_purchase")
+    @Builder.Default
     private Boolean isVerifiedPurchase = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
