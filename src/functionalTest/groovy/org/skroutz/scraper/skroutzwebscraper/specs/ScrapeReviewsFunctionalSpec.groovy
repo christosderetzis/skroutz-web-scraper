@@ -1,7 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.entity.Review
+import org.skroutz.scraper.skroutzwebscraper.processing.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.processing.entity.Review
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 
 import java.time.LocalDate

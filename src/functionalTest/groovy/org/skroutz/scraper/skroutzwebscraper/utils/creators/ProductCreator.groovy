@@ -1,7 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.utils.creators
 
 import com.github.javafaker.Faker
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.processing.entity.Product
 
 class ProductCreator {
 

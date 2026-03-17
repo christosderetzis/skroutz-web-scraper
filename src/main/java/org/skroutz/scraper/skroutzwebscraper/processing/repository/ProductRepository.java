@@ -1,0 +1,20 @@
+package org.skroutz.scraper.skroutzwebscraper.processing.repository;
+
+import org.skroutz.scraper.skroutzwebscraper.processing.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+
+    Optional<Product> findByUrl(String url);
+
+    List<Product> findAllBySpecificationsParsed(boolean specificationsParsed);
+
+    List<Product> findAllByReviewsParsedAndRatingIsNotNull(boolean reviewsParsed);
+
+    List<Product> findAllByPriceHistoryParsed(boolean priceHistoryParsed);
+}

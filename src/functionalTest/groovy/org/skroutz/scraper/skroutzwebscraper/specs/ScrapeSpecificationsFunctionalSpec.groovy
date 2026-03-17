@@ -1,7 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
 import com.fasterxml.jackson.databind.JsonNode
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.processing.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.helpers.JsonFileReader
 import org.skyscreamer.jsonassert.JSONAssert

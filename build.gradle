@@ -58,12 +58,22 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.modulith:spring-modulith-bom:2.0.1'
+    }
+}
+
 dependencies {
 
     // spring boot
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // spring modulith
+    implementation 'org.springframework.modulith:spring-modulith-starter-core'
+    testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
 
     // flyway
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
@@ -295,10 +305,11 @@ jacocoTestReport {
                     '**/SkroutzWebScraperApplication.class',
                     '**/Abstract*',
                     '**/HtmlFields.class',
-                    '**/utis/**',
+                    '**/utils/**',
                     '**/*MapperImpl*',
                     '**/ScraperController.class',
-                    '**/controllerAdvice/**'
+                    '**/controllerAdvice/**',
+                    '**/event/**'
             ])
         }))
     }
@@ -326,7 +337,8 @@ jacocoTestCoverageVerification {
                     '**/utils/**',
                     '**/*MapperImpl*',
                     '**/ScraperController.class',
-                    '**/controllerAdvice/**'
+                    '**/controllerAdvice/**',
+                    '**/event/**'
             ])
         }))
     }

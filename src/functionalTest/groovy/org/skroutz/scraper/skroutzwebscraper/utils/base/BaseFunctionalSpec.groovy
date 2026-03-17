@@ -3,9 +3,9 @@ package org.skroutz.scraper.skroutzwebscraper.utils.base
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
 import org.skroutz.scraper.skroutzwebscraper.SkroutzWebScraperApplication
-import org.skroutz.scraper.skroutzwebscraper.repository.PriceHistoryRepository
-import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
-import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
+import org.skroutz.scraper.skroutzwebscraper.processing.repository.PriceHistoryRepository
+import org.skroutz.scraper.skroutzwebscraper.processing.repository.ProductRepository
+import org.skroutz.scraper.skroutzwebscraper.processing.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.utils.actor.WebActor
 import org.skroutz.scraper.skroutzwebscraper.utils.config.TestWebClientConfig
 import org.springframework.beans.factory.annotation.Autowired
