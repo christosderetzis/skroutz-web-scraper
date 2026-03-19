@@ -86,7 +86,7 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
 
         then: "specifications scraper returns #scenario"
             1 * productRepository.findAllBySpecificationsParsed(false) >> [product]
-            1 * specificationsScraper.scrapeSpecifications(product.url) >> specifications
+            1 * specificationsScraper.scrapeSpecifications(product.url + "?lang=en") >> specifications
             0 * _
 
         and: "log should contain warning about no specifications"
@@ -113,8 +113,8 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
 
         then: "specifications should be scraped from both product URLs"
             1 * productRepository.findAllBySpecificationsParsed(false) >> [product1, product2]
-            1 * specificationsScraper.scrapeSpecifications(product1.url) >> jsonNode1
-            1 * specificationsScraper.scrapeSpecifications(product2.url) >> jsonNode2
+            1 * specificationsScraper.scrapeSpecifications(product1.url + "?lang=en") >> jsonNode1
+            1 * specificationsScraper.scrapeSpecifications(product2.url + "?lang=en") >> jsonNode2
             1 * productRepository.saveAll({ List<Product> products ->
                 products.size() == 2 &&
                 products[0].specifications == jsonNode1 &&
