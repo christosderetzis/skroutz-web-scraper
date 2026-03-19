@@ -8,23 +8,23 @@ import org.skroutz.scraper.skroutzwebscraper.repository.ProductElasticsearchRepo
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.utils.actor.WebActor
-import org.skroutz.scraper.skroutzwebscraper.utils.config.TestSeleniumConfig
 import org.skroutz.scraper.skroutzwebscraper.utils.config.TestWebClientConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.test.context.DynamicPropertyRegistry
-import org.springframework.test.context.DynamicPropertySource
 import spock.lang.Shared
 import spock.lang.Specification
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = [SkroutzWebScraperApplication, TestSeleniumConfig, TestWebClientConfig],
+        classes = [SkroutzWebScraperApplication, TestWebClientConfig],
         properties = [
                 "spring.main.allow-bean-definition-overriding=true",
                 "DB_PORT=5434",
                 "ELASTICSEARCH_PORT=9201"
+                "scraper.base-url=http://mockserver",
+                "scraper.delay-range-min=100",
+                "scraper.selenium.url=http://localhost:4444/wd/hub",
         ]
 )
 abstract class BaseFunctionalSpec extends Specification {

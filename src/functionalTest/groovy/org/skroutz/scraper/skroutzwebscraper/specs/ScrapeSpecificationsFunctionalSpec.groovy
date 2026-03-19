@@ -3,17 +3,12 @@ package org.skroutz.scraper.skroutzwebscraper.specs
 import com.fasterxml.jackson.databind.JsonNode
 import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.scheduled.SpecificationsScheduler
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.helpers.JsonFileReader
 import org.skyscreamer.jsonassert.JSONAssert
 import org.skyscreamer.jsonassert.JSONCompareMode
-import org.springframework.beans.factory.annotation.Autowired
 
 class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
-
-    @Autowired
-    SpecificationsScheduler specificationsScheduler
 
     def "Scrape specifications, happy path"() {
         given:
@@ -28,7 +23,7 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             product = productRepository.save(product)
 
         when:
-            specificationsScheduler.parseSpecifications()
+            webActor.scrapeSpecifications()
 
         then:
             Product savedProduct = productRepository.findById(product.id).orElse(null)
@@ -53,7 +48,7 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             product = productRepository.save(product)
 
         when:
-            specificationsScheduler.parseSpecifications()
+            webActor.scrapeSpecifications()
 
         then:
             Product savedProduct = productRepository.findById(product.id).orElse(null)

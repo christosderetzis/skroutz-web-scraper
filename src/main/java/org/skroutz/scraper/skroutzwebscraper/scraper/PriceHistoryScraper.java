@@ -12,11 +12,17 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class PriceHistoryScraper {
 
     private final WebClient webClient;
+    private final int timeoutSeconds;
+
+    public PriceHistoryScraper(WebClient webClient,
+                               @org.springframework.beans.factory.annotation.Value("${scraper.timeout-seconds:30}") int timeoutSeconds) {
+        this.webClient = webClient;
+        this.timeoutSeconds = timeoutSeconds;
+    }
 
     public PriceHistoryResponseDto fetchPriceHistory(String url) {
         log.info("Fetching price history data from URL: {}", url);
@@ -36,7 +42,7 @@ public class PriceHistoryScraper {
                             }
                     )
                     .bodyToMono(PriceHistoryResponseDto.class)
-                    .timeout(Duration.ofSeconds(30))
+                    .timeout(Duration.ofSeconds(timeoutSeconds))
                     .block();
 
             if (response == null) {

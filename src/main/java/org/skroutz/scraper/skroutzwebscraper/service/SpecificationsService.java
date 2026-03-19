@@ -1,4 +1,3 @@
-
 package org.skroutz.scraper.skroutzwebscraper.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,7 +48,8 @@ public class SpecificationsService {
 
         try {
             log.info("Parsing specifications for product: {}", product.getId());
-            JsonNode specifications = specificationsScraper.scrapeSpecifications(url);
+            String formattedUrl = url.contains("?") ? url + "&lang=en" : url + "?lang=en";
+            JsonNode specifications = specificationsScraper.scrapeSpecifications(formattedUrl);
 
             if (specifications == null || specifications.isEmpty()) {
                 log.warn("No specifications found for product: {}", product.getId());

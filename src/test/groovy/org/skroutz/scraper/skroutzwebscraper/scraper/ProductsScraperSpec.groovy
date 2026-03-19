@@ -1,7 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.scraper
 
-import org.openqa.selenium.*
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 import org.springframework.context.ApplicationContext
 import spock.lang.Specification
 import spock.lang.Subject
@@ -12,104 +12,128 @@ class ProductsScraperSpec extends Specification {
     ApplicationContext applicationContext = Mock()
 
     @Subject
-    ProductsScraper productsScraper = new ProductsScraper(applicationContext)
+    ProductsScraper productsScraper = new ProductsScraper(applicationContext, "https://www.skroutz.gr")
+
+    // ---------- PAGINATION ----------
 
     @Unroll
     def "parsePaginationInfo returns #expected for pagination text '#paginationText'"() {
-        given: "a WebDriver with a pagination span"
-            WebDriver webDriver = Mock()
-            webDriver.findElement(By.cssSelector(HtmlFields.PAGINATION_BUTTON)) >> Mock(WebElement) {
-                getText() >> paginationText
-            }
+        given:
+        def html = """
+            <div class="paginator">
+                <button><span>${paginationText}</span></button>
+            </div>
+        """
 
-        when: "parsing pagination info"
-            def result = productsScraper.parsePaginationInfo(webDriver)
+        when:
+        def result = productsScraper.parsePaginationInfo(html)
 
-        then: "the correct number of pages is returned"
-            result == expected
+        then:
+        result == expected
 
         where:
-            paginationText      || expected
-            "1 from 11"         || 11
-            "2 from 5"          || 5
-            "1 από 7"           || 7
-            "Page 1 of 3"       || null
-            "invalid text"      || null
-            "1 from"            || null
+        paginationText      || expected
+        "1 from 11"         || 11
+        "2 from 5"          || 5
+        "1 από 7"           || 7
+        "Page 1 of 3"       || null
+        "invalid text"      || null
+        "1 from"            || null
     }
 
-    def "parsePaginationInfo returns null when findElement throws"() {
-        given: "a WebDriver that throws an exception"
-            WebDriver webDriver = Mock()
-            webDriver.findElement(By.cssSelector(HtmlFields.PAGINATION_BUTTON)) >> { throw new RuntimeException("not found") }
+    def "parsePaginationInfo returns null when pagination element missing"() {
+        given:
+        def html= "<html></html>"
 
-        when: "parsing pagination info"
-            def result = productsScraper.parsePaginationInfo(webDriver)
+        when:
+        def result = productsScraper.parsePaginationInfo(html)
 
-        then: "null is returned"
+        then:
+        result == null
+    }
+
+    // ---------- URL + TITLE ----------
+
+    def "extractTitle sets title when aTag is present"() {
+        given:
+            def html = """
+                <div>
+                    <a class="js-sku-link" href="http://example.com" title="Example Product"></a>
+                </div>
+            """
+            Element productElement = Jsoup.parse(html).selectFirst("div")
+
+        when:
+            def result = productsScraper.extractTitle(productElement)
+
+        then:
+            result == "Example Product"
+    }
+
+    def "extractTitle does nothing if aTag is missing"() {
+        given:
+            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
+
+        when:
+            def result = productsScraper.extractTitle(productElement)
+
+        then:
             result == null
     }
 
-    def "parsePaginationInfo returns null when totalPagesText is not a number"() {
-        given: "a WebDriver with non-numeric total pages"
-            WebDriver webDriver = Mock()
-            webDriver.findElement(By.cssSelector(HtmlFields.PAGINATION_BUTTON)) >> Mock(WebElement) {
-                getText() >> "1 from abc"
-            }
+    def "extractUrl sets url when aTag is present"() {
+        given:
+            def html = """
+                <div>
+                    <a class="js-sku-link" href="${href}" title="Example Product"></a>
+                </div>
+            """
+            Element productElement = Jsoup.parse(html).selectFirst("div")
 
-        when: "parsing pagination info"
-            def result = productsScraper.parsePaginationInfo(webDriver)
+        when:
+            def result = productsScraper.extractUrl(productElement)
 
-        then: "null is returned"
+        then:
+            result == expectedUrl
+
+        where:
+            href                                                          || expectedUrl
+            "http://example.com"                                          || "http://example.com"
+            "https://example.com"                                         || "https://example.com"
+            "/s/45762495/Apple-iPhone-15-Pro-8-128GB-Black-Titanium.html" || "https://www.skroutz.gr/s/45762495/Apple-iPhone-15-Pro-8-128GB-Black-Titanium.html"
+            "/c/40/kinhta-tilefwna.html"                                  || "https://www.skroutz.gr/c/40/kinhta-tilefwna.html"
+    }
+
+
+
+    def "extractUrl does nothing if aTag is missing"() {
+        given:
+            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
+
+        when:
+            def result = productsScraper.extractUrl(productElement)
+
+        then:
             result == null
     }
 
-    def "extractUrlAndTitle sets url and title when aTag is present"() {
-        given: "a productElement with a valid aTag"
-            Product product = new Product()
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.PRODUCT_LINK)) >> Mock(WebElement) {
-                getAttribute("href") >> "http://example.com"
-                getAttribute("title") >> "Example Product"
-            }
-
-        when: "extracting url and title"
-            productsScraper.extractUrlAndTitle(productElement, product)
-
-        then: "url and title are set"
-            product.url == "http://example.com"
-            product.title == "Example Product"
-    }
-
-    def "extractUrlAndTitle does nothing if aTag is missing"() {
-        given: "a productElement without aTag"
-            Product product = new Product()
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.PRODUCT_LINK)) >> { throw new NoSuchElementException("not found") }
-
-        when: "extracting url and title"
-            productsScraper.extractUrlAndTitle(productElement, product)
-
-        then: "url and title remain null"
-            product.url == null
-            product.title == null
-    }
+    // ---------- PRICE ----------
 
     @Unroll
-    def "extractPrice sets price=#expected for price text '#priceText'"() {
-        given: "a productElement with a priceSpan"
-            Product product = new Product()
-            WebElement priceSpan = Mock() {
-                getText() >> priceText
-            }
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.PRICE_LINK)) >> priceSpan
+    def "extractPrice returns price=#expected for price text '#priceText'"() {
+        given:
+            def html = """
+                <div>
+                    <a data-e2e-testid="sku-price-link">${priceText}</a>
+                </div>
+            """
+            Element productElement = Jsoup.parse(html).selectFirst("div")
 
-        when: "extracting price"
-            productsScraper.extractPrice(productElement, product)
+        when:
+            def result = productsScraper.extractPrice(productElement)
 
-        then: "price is set as expected"
-            product.price == expected
+        then:
+            result == expected
 
         where:
             priceText           || expected
@@ -120,148 +144,124 @@ class ProductsScraperSpec extends Specification {
             "από 800,00 €"      || new BigDecimal("800.00")
     }
 
-    def "extractPrice sets price to null if priceSpan is missing"() {
-        given: "a productElement without priceSpan"
-            Product product = new Product()
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.PRICE_LINK)) >> { throw new NoSuchElementException("not found") }
+    def "extractPrice returns null if priceSpan missing"() {
+        given:
+        Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
 
-        when: "extracting price"
-            productsScraper.extractPrice(productElement, product)
+        when:
+        def result = productsScraper.extractPrice(productElement)
 
-        then: "price is null"
-            product.price == null
+        then:
+        result == null
     }
 
-    def "extractPrice sets price to null if price is not a number"() {
-        given: "a productElement with non-numeric price"
-            Product product = new Product()
-            WebElement priceSpan = Mock() {
-                getText() >> "not a price"
-            }
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.PRICE_LINK)) >> priceSpan
+    def "extractPrice returns null if price is not a number"() {
+        given:
+            def html = """
+                <div>
+                    <a data-e2e-testid="sku-price-link">not a price</a>
+                </div>
+            """
+            Element productElement = Jsoup.parse(html).selectFirst("div")
 
-        when: "extracting price"
-            productsScraper.extractPrice(productElement, product)
+        when:
+            def result = productsScraper.extractPrice(productElement)
 
-        then: "price is null"
-            product.price == null
+        then:
+
+
+
+
+        result == null
     }
 
-    @Unroll
-    def "processPrice returns '#expected' for input '#input'"() {
-        given: "a priceSpan mock"
-            def priceSpan = Mock(WebElement) {
-                getText() >> input
-            }
-            def method = ProductsScraper.declaredMethods.find { it.name == "processPrice" }
-            method.accessible = true
-
-        when: "calling processPrice via reflection"
-            def result = method.invoke(null, priceSpan)
-
-        then: "the result is as expected"
-            result == expected
-
-        where:
-            input                || expected
-            "500,00"             || "500.00"
-            "1.200,50"           || "1200.50"
-            "500,00 - 600,00"    || "500.00"
-            "from 700,00 €"      || "700.00"
-            "από 800,00 €"       || "800.00"
-    }
+    // ---------- IMAGE ----------
 
     def "extractImageUrl sets imageUrl when img is present"() {
-        given: "a productElement with an img"
-            Product product = new Product()
-            WebElement img = Mock() {
-                getAttribute("src") >> "http://example.com/image.jpg"
-            }
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.IMAGE_CONTAINER)) >> img
+        given:
+            def html = """
+                <div>
+                    <div class="image-container">
+                        <img src="http://example.com/image.jpg"/>
+                    </div>
+                </div>
+            """
+            Element productElement = Jsoup.parse(html).selectFirst("div")
 
-        when: "extracting image url"
-            productsScraper.extractImageUrl(productElement, product)
+        when:
+            def result = productsScraper.extractImageUrl(productElement)
 
-        then: "imageUrl is set"
-            product.imageUrl == "http://example.com/image.jpg"
+        then:
+            result == "http://example.com/image.jpg"
     }
 
-    def "extractImageUrl sets imageUrl to null if img is missing"() {
-        given: "a productElement without img"
-            Product product = new Product()
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.IMAGE_CONTAINER)) >> { throw new NoSuchElementException("not found") }
+    def "extractImageUrl sets imageUrl to null if img missing"() {
+        given:
+            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
 
-        when: "extracting image url"
-            productsScraper.extractImageUrl(productElement, product)
+        when:
+            def result = productsScraper.extractImageUrl(productElement)
 
-        then: "imageUrl is null"
-            product.imageUrl == null
+        then:
+            result == null
     }
 
-    def "extractDescription sets description when desc is present and displayed"() {
-        given: "a productElement with a displayed desc"
-            Product product = new Product()
-            WebElement desc = Mock() {
-                isDisplayed() >> true
-                getText() >> "Product description"
-            }
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.DESCRIPTION)) >> desc
+    def "extractImageUrl sets imageUrl to null if element does not exist" () {
+        when:
+            def result = productsScraper.extractImageUrl(null)
 
-        when: "extracting description"
-            productsScraper.extractDescription(productElement, product)
-
-        then: "description is set"
-            product.description == "Product description"
+        then:
+            result == null
     }
 
-    def "extractDescription sets description to null if desc is not displayed"() {
-        given: "a productElement with a hidden desc"
-            Product product = new Product()
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.DESCRIPTION)) >> Mock(WebElement) {
-                isDisplayed() >> false
-            }
+    // ---------- DESCRIPTION ----------
 
-        when: "extracting description"
-            productsScraper.extractDescription(productElement, product)
+    def "extractDescription sets description when desc is present"() {
+        given:
+            def html = """
+                <div>
+                    <p class="specs">Product description</p>
+                </div>
+            """
+            Element productElement = Jsoup.parse(html).selectFirst("div")
 
-        then: "description is null"
-            product.description == null
+        when:
+            def result = productsScraper.extractDescription(productElement)
+
+        then:
+            result == "Product description"
     }
 
-    def "extractDescription sets description to null if desc is missing"() {
-        given: "a productElement without desc"
-            Product product = new Product()
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.DESCRIPTION)) >> { throw new NoSuchElementException("not found") }
+    def "extractDescription sets description to null if desc missing"() {
+        given:
+            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
 
-        when: "extracting description"
-            productsScraper.extractDescription(productElement, product)
+        when:
+            def result = productsScraper.extractDescription(productElement)
 
-        then: "description is null"
-            product.description == null
+        then:
+            result == null
     }
+
+    // ---------- RATING ----------
 
     @Unroll
     def "extractRating sets rating=#expected for rating text '#ratingText'"() {
-        given: "a productElement with a ratingSpan"
-            Product product = new Product()
-            WebElement ratingSpan = Mock() {
-                getText() >> ratingText
-            }
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.RATING)) >> ratingSpan
+        given:
+            def html = """
+                <div>
+                    <div class="rating-wrapper">
+                        <span data-testid="star-rating-value">${ratingText}</span>
+                    </div>
+                </div>
+            """
+            Element productElement = Jsoup.parse(html).selectFirst("div")
 
-        when: "extracting rating"
-            productsScraper.extractRating(productElement, product)
+        when:
+            def result = productsScraper.extractRating(productElement)
 
-        then: "rating is set as expected"
-            product.rating == expected
+        then:
+            result == expected
 
         where:
             ratingText   || expected
@@ -269,32 +269,32 @@ class ProductsScraperSpec extends Specification {
             "3.0"        || new BigDecimal("3.0")
     }
 
-    def "extractRating sets rating to null if ratingSpan is missing"() {
-        given: "a productElement without ratingSpan"
-            Product product = new Product()
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.RATING)) >> { throw new NoSuchElementException("not found") }
+    def "extractRating sets rating to null if rating missing"() {
+        given:
+            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
 
-        when: "extracting rating"
-            productsScraper.extractRating(productElement, product)
+        when:
+            def result = productsScraper.extractRating(productElement)
 
-        then: "rating is null"
-            product.rating == null
+        then:
+            result == null
     }
 
-    def "extractRating sets rating to null if rating is not a number"() {
-        given: "a productElement with non-numeric rating"
-            Product product = new Product()
-            WebElement ratingSpan = Mock() {
-                getText() >> "not a rating"
-            }
-            WebElement productElement = Mock()
-            productElement.findElement(By.cssSelector(HtmlFields.RATING)) >> ratingSpan
+    def "extractRating sets rating to null if rating is not numeric"() {
+        given:
+            def html = """
+                <div>
+                    <div class="rating-wrapper">
+                        <span data-testid="star-rating-value">not a rating</span>
+                    </div>
+                </div>
+            """
+            Element productElement = Jsoup.parse(html).selectFirst("div")
 
-        when: "extracting rating"
-            productsScraper.extractRating(productElement, product)
+        when:
+            def result = productsScraper.extractRating(productElement)
 
-        then: "rating is null"
-            product.rating == null
+        then:
+            result == null
     }
 }

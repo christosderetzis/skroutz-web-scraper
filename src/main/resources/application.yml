@@ -30,9 +30,11 @@ spring:
 
 # Scraper Configuration
 scraper:
-  headless: false
-  timeout: 100
-  chromeUserDataDir: C:\\Users\\Christos\\AppData\\Local\\Google\\Chrome\\User Data\\Default
+  headless: true
+  base-url: https://www.skroutz.gr
+  timeout-seconds: 30
+  selenium:
+    url: http://localhost:4444
 
 # Swagger/OpenAPI Configuration
 springdoc:

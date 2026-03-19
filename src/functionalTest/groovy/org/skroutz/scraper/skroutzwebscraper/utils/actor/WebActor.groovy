@@ -41,4 +41,16 @@ class WebActor {
                 .uri("/scraper/price-history")
                 .exchange()
     }
+
+    WebTestClient.ResponseSpec scrapeSpecifications() {
+        return webTestClient.post()
+                .uri("/scraper/specifications")
+                .exchange()
+    }
+
+    WebTestClient.ResponseSpec scrapeReviews() {
+        return webTestClient.post()
+                .uri("/scraper/reviews")
+                .exchange()
+    }
 }

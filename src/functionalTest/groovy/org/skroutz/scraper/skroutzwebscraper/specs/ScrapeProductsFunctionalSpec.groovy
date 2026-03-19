@@ -20,6 +20,9 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
             def products = productRepository.findAll()
             assert products.size() == 4
+
+        and: "all product URLs should start with base URL"
+            assert products.every { it.url.startsWith("http://mockserver") }
     }
 
     def "Scrape products, happy path with all pages"() {
@@ -36,5 +39,8 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
             def products = productRepository.findAll()
             assert products.size() == 15
+
+        and: "all product URLs should start with base URL"
+            assert products.every { it.url.startsWith("http://mockserver") }
     }
 }

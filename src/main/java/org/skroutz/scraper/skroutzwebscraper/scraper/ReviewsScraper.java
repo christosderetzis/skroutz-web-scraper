@@ -1,233 +1,99 @@
 package org.skroutz.scraper.skroutzwebscraper.scraper;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
-import java.time.LocalDate;
-import org.skroutz.scraper.skroutzwebscraper.entity.Review;
-import org.springframework.context.ApplicationContext;
+import org.skroutz.scraper.skroutzwebscraper.dto.ReviewsApiResponseDto;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-
-import static org.skroutz.scraper.skroutzwebscraper.scraper.HtmlFields.*;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
-public class ReviewsScraper extends AbstractScraper {
+public class ReviewsScraper {
 
-    private static final Duration WAIT_TIMEOUT = Duration.ofSeconds(15);
-    private static final int PARALLEL_THRESHOLD = 50;
+    private final WebClient webClient;
+    private final int timeoutSeconds;
 
-    public ReviewsScraper(ApplicationContext applicationContext) {
-        super(applicationContext);
+    public ReviewsScraper(WebClient webClient,
+                         @org.springframework.beans.factory.annotation.Value("${scraper.timeout-seconds:30}") int timeoutSeconds) {
+        this.webClient = webClient;
+        this.timeoutSeconds = timeoutSeconds;
     }
 
-    public List<Review> scrapeReviews(String url) {
-        return executeWithWebDriver(webDriver -> {
-            webDriver.get(url);
+    public List<ReviewsApiResponseDto.ReviewDto> scrapeReviews(String url) throws InterruptedException {
+        log.info("Scraping reviews for {}", url);
 
-            // Wait for reviews container to be present
-            WebDriverWait wait = new WebDriverWait(webDriver, WAIT_TIMEOUT);
-            wait.until(ExpectedConditions.presenceOfElementLocated(
-                    By.cssSelector(REVIEWS_CONTAINER)));
+        Integer offset = 0;
+        Integer pageSize;
+        List<ReviewsApiResponseDto.ReviewDto> reviewDtos = new ArrayList<>();
+        String reviewUrl = buildReviewUrl(url, offset);
 
-            List<WebElement> reviewElements = findReviewElements(webDriver);
-            return extractReviews(reviewElements);
-        }, url, "scraping reviews");
+        do {
+            Thread.sleep(100);
+            ReviewsApiResponseDto response = fetchReviewPage(reviewUrl);
+            List<ReviewsApiResponseDto.ReviewDto> reviewPageItems = response.getReviews().getReviews();
+            reviewDtos.addAll(reviewPageItems);
+            pageSize = reviewPageItems.size();
+            offset += pageSize;
+            reviewUrl = buildReviewUrl(url, offset);
+        } while (pageSize > 0);
+
+        log.info("Total reviews fetched: {}", reviewDtos.size());
+        return reviewDtos;
     }
 
-    private List<WebElement> findReviewElements(WebDriver webDriver) {
-        JavascriptExecutor js = (JavascriptExecutor) webDriver;
+    public ReviewsApiResponseDto fetchReviewPage(String url) {
+        log.debug("Fetching single review data from URL: {}", url);
 
-        // Scroll to reviews container
-        WebElement reviewsContainer = webDriver.findElement(By.cssSelector(REVIEWS_CONTAINER));
-        js.executeScript("arguments[0].scrollIntoView({behavior: 'instant', block: 'center'});", reviewsContainer);
-
-        WebElement reviewsList = webDriver.findElement(By.cssSelector(REVIEWS_LIST));
-
-        // Extract only currently visible reviews without clicking "load more"
-        @SuppressWarnings("unchecked")
-        List<WebElement> filteredReviews = (List<WebElement>) js.executeScript(
-                """
-                const list = arguments[0];
-                const items = Array.from(list.querySelectorAll('%s'));
-                return items.filter(item => !item.querySelector('%s'));
-                """.formatted(REVIEW_ITEM, MERGED_REVIEW_INFO),
-                reviewsList
-        );
-
-        log.info("Found {} reviews (currently visible)", filteredReviews.size());
-        return filteredReviews;
-    }
-
-    private List<Review> extractReviews(List<WebElement> reviewElements) {
-        // Use parallel streams only for large datasets (>50 reviews)
-        Stream<WebElement> stream = reviewElements.size() > PARALLEL_THRESHOLD
-                ? reviewElements.parallelStream()
-                : reviewElements.stream();
-
-        return stream
-                .map(this::parseReview)
-                .toList();
-    }
-
-    /**
-     * Extracts all review data using a single JavaScript call for optimal performance.
-     * This reduces ~9 DOM queries per review to just 1, providing 5-10x speedup.
-     */
-    private Review parseReview(WebElement reviewElement) {
-        WebDriver driver = ((WrapsDriver) reviewElement).getWrappedDriver();
-        JavascriptExecutor js = (JavascriptExecutor) driver;
-
-        // Single JavaScript execution to extract all data at once
-        String script = """
-            const el = arguments[0];
-            return {
-                reviewerName: el.querySelector('%s')?.textContent?.trim() || null,
-                stars: el.getAttribute('data-stars'),
-                reviewText: Array.from(el.querySelectorAll('%s'))
-                    .map(p => p.textContent.trim())
-                    .join('\\n\\n')
-                    .trim() || null,
-                date: el.querySelector('%s')?.textContent?.trim() || null,
-                isVerified: !!el.querySelector('%s'),
-                helpfulText: el.querySelector('%s')?.textContent?.trim() || null,
-                pros: Array.from(el.querySelectorAll('%s'))
-                    .map(li => li.textContent.trim()),
-                neutral: Array.from(el.querySelectorAll('%s'))
-                    .map(li => li.textContent.trim()),
-                cons: Array.from(el.querySelectorAll('%s'))
-                    .map(li => li.textContent.trim())
-            };
-        """.formatted(REVIEWER_NAME, REVIEW_BODY, REVIEW_DATE, VERIFICATION_MARK,
-                HELPFULNESS_MESSAGE, PROS_LIST, NEUTRAL_LIST, CONS_LIST);
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) js.executeScript(script, reviewElement);
-
-        return mapToReview(data);
-    }
-
-    /**
-     * Maps JavaScript-extracted data to Review entity
-     */
-    private Review mapToReview(Map<String, Object> data) {
-        Review review = new Review();
-
-        // Basic fields
-        review.setReviewerName((String) data.get("reviewerName"));
-        review.setReviewText((String) data.get("reviewText"));
-        review.setIsVerifiedPurchase((Boolean) data.get("isVerified"));
-
-        // Rating
-        String stars = (String) data.get("stars");
-        if (stars != null) {
-            try {
-                review.setReviewerRating(Integer.parseInt(stars));
-            } catch (NumberFormatException e) {
-                log.warn("Failed to parse rating: {}", stars);
-                review.setReviewerRating(0);
-            }
-        }
-
-        // Date
-        String dateText = (String) data.get("date");
-        if (dateText != null) {
-            parseDateText(dateText, review);
-        }
-
-        // Helpful votes
-        String helpfulText = (String) data.get("helpfulText");
-        if (helpfulText != null) {
-            parseHelpfulVotes(helpfulText, review);
-        } else {
-            review.setHelpfulVotes(0);
-            review.setTotalVotes(0);
-        }
-
-        // Arrays (pros, neutral, cons)
-        review.setPros(toArrayOrNull((List<?>) data.get("pros")));
-        review.setNeutral(toArrayOrNull((List<?>) data.get("neutral")));
-        review.setCons(toArrayOrNull((List<?>) data.get("cons")));
-
-        log.debug("Parsed review: name='{}', rating={}, date={}, verified={}",
-                review.getReviewerName(),
-                review.getReviewerRating(),
-                review.getReviewDate(),
-                review.getIsVerifiedPurchase());
-
-        return review;
-    }
-
-    /**
-     * Converts a list to String array, returns null for empty lists
-     */
-    private String[] toArrayOrNull(List<?> list) {
-        if (list == null || list.isEmpty()) {
-            return null;
-        }
-        return list.stream()
-                .map(Object::toString)
-                .toArray(String[]::new);
-    }
-
-    /**
-     * Parses date text in format "23/09/2023" or "2025-09-23"
-     */
-    private void parseDateText(String dateText, Review review) {
         try {
-            if (dateText.contains("/")) {
-                String[] parts = dateText.split("/");
-                review.setReviewDate(LocalDate.of(
-                        Integer.parseInt(parts[2]), // year
-                        Integer.parseInt(parts[1]), // month
-                        Integer.parseInt(parts[0])  // day
-                ));
-            } else if (dateText.contains("-")) {
-                String[] parts = dateText.split("-");
-                review.setReviewDate(LocalDate.of(
-                        Integer.parseInt(parts[0]), // year
-                        Integer.parseInt(parts[1]), // month
-                        Integer.parseInt(parts[2])  // day
-                ));
-            } else {
-                log.warn("Unexpected date format: {}", dateText);
-                review.setReviewDate(null);
+            ReviewsApiResponseDto reviewsApiResponseDto = webClient
+                    .get()
+                    .uri(url)
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> {
+                                log.error("Error fetching review data. Status: {}", clientResponse.statusCode());
+                                return Mono.error(new RuntimeException(
+                                        "Failed to fetch review data from API"
+                                ));
+                            }
+                    )
+                    .bodyToMono(ReviewsApiResponseDto.class)
+                    .timeout(Duration.ofSeconds(timeoutSeconds))
+                    .block();
+
+            if (reviewsApiResponseDto == null) {
+                log.error("Received null response from review API");
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Failed to fetch review data: null response"
+                );
             }
+
+            log.debug("Successfully fetched review data from URL: {}", url);
+            return reviewsApiResponseDto;
         } catch (Exception e) {
-            log.warn("Failed to parse review date '{}': {}", dateText, e.getMessage());
-            review.setReviewDate(null);
+            log.error("Error fetching review data from URL: {}", url, e);
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to fetch review data: " + e.getMessage(),
+                    e
+            );
         }
     }
 
-    /**
-     * Parses helpful votes text like "1 out of 1 found this review helpful"
-     * or "1 στους 1 χρήστης βρήκε αυτή την κριτική χρήσιμη"
-     */
-    private void parseHelpfulVotes(String helpfulText, Review review) {
-        try {
-            String[] parts = helpfulText.split(" ");
-            if (helpfulText.contains("out of")) {
-                review.setHelpfulVotes(Integer.parseInt(parts[0]));
-                review.setTotalVotes(Integer.parseInt(parts[3]));
-            } else if (helpfulText.contains("χρήστες") || helpfulText.contains("στους")) {
-                review.setHelpfulVotes(Integer.parseInt(parts[0]));
-                review.setTotalVotes(Integer.parseInt(parts[2]));
-            } else {
-                log.warn("Unexpected helpful votes format: {}", helpfulText);
-                review.setHelpfulVotes(0);
-                review.setTotalVotes(0);
-            }
-        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
-            log.warn("Failed to parse helpful votes '{}': {}", helpfulText, e.getMessage());
-            review.setHelpfulVotes(0);
-            review.setTotalVotes(0);
+    private String buildReviewUrl(String productUrl, Integer offset) {
+        int htmlIndex = productUrl.indexOf(".html");
+        if (htmlIndex != -1) {
+            productUrl = productUrl.substring(0, htmlIndex);
         }
+        return "%s/reviews.json?offset=%d".formatted(productUrl, offset);
     }
 }

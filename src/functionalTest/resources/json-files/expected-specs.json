@@ -1,56 +1,56 @@
 {
-  "Main Specifications": {
-    "Mobile Phone Type": "SmartPhone",
-    "Operating System": "iOS",
-    "SIM": "SIM + eSIM",
-    "Release Year": "2021",
-    "Colour": "Beige",
-    "Weight": "174 gr",
-    "Package Contents": "Charging Cable",
-    "Model": "iPhone 13"
-  },
-  "Processor & Memory": {
-    "Processor Model": "Apple A15 Bionic",
-    "Processor Power": "3.22 GHz",
-    "Processor Cores": "2+4",
-    "RAM": "4 GB",
-    "Capacity": "128 GB",
-    "Card Slot": "No"
-  },
-  "Display": {
-    "Size": "6",
-    "Analysis": "2532 x 1170 pixels",
-    "Type": "Super Retina XDR OLED",
-    "Handling": "Touch screen",
-    "Definition": "Full HD"
-  },
-  "Camera": {
-    "Rear Camera": "Dual",
-    "Rear Camera Lenses": "Wide Angle 12MP, Ultra Wide Angle 12MP",
-    "Rear Camera Video Resolution": "1080p 240fps Slow Motion, 4K 60fps",
-    "Rear Camera Flash": "Yes",
-    "Selfie Camera Lenses": "Wide Angle 12MP"
-  },
-  "Network & Connectivity": {
-    "Network Connection": "5G",
-    "Connectivity": "Bluetooth, Lightning, Wi-Fi",
-    "NFC": "Yes"
-  },
-  "Battery": {
-    "Capacity": "3240 mAh",
-    "Removable": "No",
-    "Fast Charging": "Yes",
-    "Wireless Charging Qi": "Yes"
-  },
-  "Special Features": {
-    "Protection": "Dust Resistant, Water Resistant",
-    "Protection Certification": "IP68",
-    "Sensors": "Accelerometer, Face ID, Light Sensor, Proximity, Barometer, Gyroscope, Compass",
-    "Fingerprint": "Without"
-  },
-  "Dimensions": {
-    "Length": "146.7 mm",
-    "Width": "71.5 mm",
-    "Thickness": "7.65 mm"
-  }
+  "Main Specifications": [
+    {"key": "Mobile Phone Type", "value": "SmartPhone"},
+    {"key": "Operating System", "value": "iOS"},
+    {"key": "SIM", "value": "SIM + eSIM"},
+    {"key": "Release Year", "value": 2021},
+    {"key": "Colour", "value": "Beige"},
+    {"key": "Weight", "value": 174, "unit": "gr"},
+    {"key": "Package Contents", "value": "Charging Cable"},
+    {"key": "Model", "value": "iPhone 13"}
+  ],
+  "Processor & Memory": [
+    {"key": "Processor Model", "value": "Apple A15 Bionic"},
+    {"key": "Processor Power", "value": 3.22, "unit": "GHz"},
+    {"key": "Processor Cores", "value": "2+4"},
+    {"key": "RAM", "value": 4, "unit": "GB"},
+    {"key": "Capacity", "value": 128, "unit": "GB"},
+    {"key": "Card Slot", "value": "No"}
+  ],
+  "Display": [
+    {"key": "Size", "value": 6},
+    {"key": "Analysis", "value": "2532 x 1170 pixels"},
+    {"key": "Type", "value": "Super Retina XDR OLED"},
+    {"key": "Handling", "value": "Touch screen"},
+    {"key": "Definition", "value": "Full HD"}
+  ],
+  "Camera": [
+    {"key": "Rear Camera", "value": "Dual"},
+    {"key": "Rear Camera Lenses", "value": "Wide Angle 12MP, Ultra Wide Angle 12MP"},
+    {"key": "Rear Camera Video Resolution", "value": "1080p 240fps Slow Motion, 4K 60fps"},
+    {"key": "Rear Camera Flash", "value": "Yes"},
+    {"key": "Selfie Camera Lenses", "value": "Wide Angle 12MP"}
+  ],
+  "Network & Connectivity": [
+    {"key": "Network Connection", "value": 5, "unit": "G"},
+    {"key": "Connectivity", "value": "Bluetooth, Lightning, Wi-Fi"},
+    {"key": "NFC", "value": "Yes"}
+  ],
+  "Battery": [
+    {"key": "Capacity", "value": 3240, "unit": "mAh"},
+    {"key": "Removable", "value": "No"},
+    {"key": "Fast Charging", "value": "Yes"},
+    {"key": "Wireless Charging Qi", "value": "Yes"}
+  ],
+  "Special Features": [
+    {"key": "Protection", "value": "Dust Resistant, Water Resistant"},
+    {"key": "Protection Certification", "value": "IP68"},
+    {"key": "Sensors", "value": "Accelerometer, Face ID, Light Sensor, Proximity, Barometer, Gyroscope, Compass"},
+    {"key": "Fingerprint", "value": "Without"}
+  ],
+  "Dimensions": [
+    {"key": "Length", "value": 146.7, "unit": "mm"},
+    {"key": "Width", "value": 71.5, "unit": "mm"},
+    {"key": "Thickness", "value": 7.65, "unit": "mm"}
+  ]
 }
