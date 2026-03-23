@@ -24,6 +24,10 @@ spring:
   flyway:
     schemas: scraper_schema
 
+  # Elasticsearch Configuration
+  elasticsearch:
+    uris: http://localhost:${ELASTICSEARCH_PORT:9200}
+
 # Scraper Configuration
 scraper:
   headless: true

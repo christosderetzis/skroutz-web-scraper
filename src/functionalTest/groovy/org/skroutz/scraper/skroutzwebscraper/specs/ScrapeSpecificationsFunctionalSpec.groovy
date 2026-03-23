@@ -1,6 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
 import com.fasterxml.jackson.databind.JsonNode
+import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.helpers.JsonFileReader
@@ -31,6 +32,10 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
                 JSONAssert.assertEquals(expectedJsonNode.toString(), specifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
                 specificationsParsed == true
             }
+
+        and: "Product is indexed in elasticsearch"
+            List<ProductDocument> productDocuments = productElasticsearchRepository.findAll()
+            assert productDocuments.size() == 1
     }
 
     def "Scrape specifications, blank url"() {
