@@ -3,6 +3,9 @@ package org.skroutz.scraper.skroutzwebscraper.utils.base
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
 import org.skroutz.scraper.skroutzwebscraper.SkroutzWebScraperApplication
+import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument
+import org.skroutz.scraper.skroutzwebscraper.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.mapper.ProductDocumentMapper
 import org.skroutz.scraper.skroutzwebscraper.repository.PriceHistoryRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductElasticsearchRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
@@ -44,6 +47,9 @@ abstract class BaseFunctionalSpec extends Specification {
     @Autowired
     ProductElasticsearchRepository productElasticsearchRepository
 
+    @Autowired
+    ProductDocumentMapper productDocumentMapper
+
     WebActor webActor
 
     @Shared
@@ -53,16 +59,47 @@ abstract class BaseFunctionalSpec extends Specification {
         priceHistoryRepository.deleteAll()
         reviewRepository.deleteAll()
         productRepository.deleteAll()
+        productElasticsearchRepository.deleteAll()
     }
 
     def cleanup() {
         priceHistoryRepository.deleteAll()
         reviewRepository.deleteAll()
         productRepository.deleteAll()
+        productElasticsearchRepository.deleteAll()
     }
 
     @PostConstruct
     void init() {
         webActor = new WebActor(port)
+    }
+
+    protected Product createAndIndexProduct(String title) {
+        Product product = Product.builder()
+                .title(title)
+                .url("http://example.com/${title.replaceAll(' ', '-').toLowerCase()}")
+                .price(999.99.toBigDecimal())
+                .imageUrl("http://example.com/image.jpg")
+                .description("Test product")
+                .rating(4.5.toBigDecimal())
+                .reviewsParsed(false)
+                .specificationsParsed(false)
+                .priceHistoryParsed(false)
+                .build()
+
+        Product savedProduct = productRepository.saveAndFlush(product)
+
+        ProductDocument document = productDocumentMapper.toDocument(savedProduct)
+        productElasticsearchRepository.save(document)
+
+        waitForElasticsearchRefresh()
+
+        return savedProduct
+    }
+
+    private void waitForElasticsearchRefresh() {
+        // Elasticsearch needs time to index documents and make them searchable
+        // In tests, we need to wait a bit for the index to refresh
+        Thread.sleep(1500)
     }
 }

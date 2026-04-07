@@ -148,7 +148,8 @@ public class ProductsScraper extends AbstractScraper {
     private String extractTitle(Element productElement) {
         try {
             Element aTag = productElement.selectFirst(HtmlFields.PRODUCT_LINK);
-            return aTag != null ? aTag.attr("title") : null;
+            String title = aTag != null ? aTag.attr("title") : null;
+            return title != null ? title.replace("\\\"", "\"") : null;
         } catch (Exception e) {
             log.debug("Could not extract title: {}", e.getMessage());
             return null;

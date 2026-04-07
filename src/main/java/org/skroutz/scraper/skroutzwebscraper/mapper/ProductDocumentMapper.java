@@ -6,6 +6,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument;
+import org.skroutz.scraper.skroutzwebscraper.dto.ProductSuggestionDto;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 
 import java.sql.Timestamp;
@@ -34,4 +35,6 @@ public interface ProductDocumentMapper {
     default Instant map(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant();
     }
+
+    ProductSuggestionDto toSuggestionDto(ProductDocument productDocument);
 }
