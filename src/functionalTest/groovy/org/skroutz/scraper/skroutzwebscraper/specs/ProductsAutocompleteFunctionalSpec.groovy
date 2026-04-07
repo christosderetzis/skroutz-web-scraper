@@ -18,7 +18,6 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             def macbookPro = createAndIndexProduct("MacBook Pro 16-inch")
             def macbookAir = createAndIndexProduct("MacBook Air 13-inch")
             def iPadPro = createAndIndexProduct("iPad Pro 12.9-inch")
-            waitForElasticsearchRefresh()
 
         when: "searching for 'macbook'"
             def response = webActor.autocomplete("macbook")
@@ -40,7 +39,6 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             createAndIndexProduct("MacBook Pro 16-inch")
             createAndIndexProduct("MacBook Air 13-inch")
             createAndIndexProduct("MacBook Pro 14-inch")
-            waitForElasticsearchRefresh()
 
         when: "searching with limit of 2"
             def response = webActor.autocomplete("macbook", 2)
@@ -57,7 +55,6 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
     def "Happy path - Autocomplete uses default limit of 5"() {
         given: "10 matching products indexed in Elasticsearch"
             (1..10).each { createAndIndexProduct("MacBook Pro ${it}-inch") }
-            waitForElasticsearchRefresh()
 
         when: "searching without specifying limit"
             def response = webActor.autocomplete("macbook")
