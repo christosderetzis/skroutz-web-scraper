@@ -1,17 +1,9 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductSuggestionDto
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.mapper.ProductDocumentMapper
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.core.ParameterizedTypeReference
 
 class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
-
-    @Autowired
-    ProductDocumentMapper productDocumentMapper
 
     def "Happy path - Autocomplete returns matching products"() {
         given: "products indexed in Elasticsearch"
@@ -26,8 +18,7 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
 
         and: "should return only MacBook products"
-            List<ProductSuggestionDto> suggestions = response.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
+            List<ProductSuggestionDto> suggestions = extractResponseList(response, ProductSuggestionDto)
             suggestions.size() == 2
             suggestions.any { it.id == macbookPro.id && it.title == macbookPro.title }
             suggestions.any { it.id == macbookAir.id && it.title == macbookAir.title }
@@ -47,8 +38,7 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
 
         and: "should return at most 2 results"
-            List<ProductSuggestionDto> suggestions = response.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
+            List<ProductSuggestionDto> suggestions = extractResponseList(response, ProductSuggestionDto)
             suggestions.size() <= 2
     }
 
@@ -63,8 +53,7 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
 
         and: "should return at most 5 results (default)"
-            List<ProductSuggestionDto> suggestions = response.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
+            List<ProductSuggestionDto> suggestions = extractResponseList(response, ProductSuggestionDto)
             suggestions.size() <= 5
     }
 
@@ -78,12 +67,9 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             def responseMixedCase = webActor.autocomplete("MaCbOoK")
 
         then: "all responses should return the same product"
-            def suggestionsLowercase = responseLowercase.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
-            def suggestionsUppercase = responseUppercase.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
-            def suggestionsMixedCase = responseMixedCase.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
+            def suggestionsLowercase = extractResponseList(responseLowercase, ProductSuggestionDto)
+            def suggestionsUppercase = extractResponseList(responseUppercase, ProductSuggestionDto)
+            def suggestionsMixedCase = extractResponseList(responseMixedCase, ProductSuggestionDto)
 
             suggestionsLowercase.size() == 1
             suggestionsUppercase.size() == 1
@@ -106,8 +92,7 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
 
         and: "should only return products with 'macbook' followed by a word starting with 'neo'"
-            List<ProductSuggestionDto> suggestions = response.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
+            List<ProductSuggestionDto> suggestions = extractResponseList(response, ProductSuggestionDto)
             suggestions.size() == 1
             suggestions[0].id == macbookNeo.id
             suggestions[0].title == macbookNeo.title
@@ -126,8 +111,7 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
 
         and: "should match the product"
-            List<ProductSuggestionDto> suggestions = response.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
+            List<ProductSuggestionDto> suggestions = extractResponseList(response, ProductSuggestionDto)
             suggestions.size() == 1
             suggestions[0].id == product.id
     }
@@ -144,8 +128,7 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
 
         and: "should return empty list"
-            List<ProductSuggestionDto> suggestions = response.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
+            List<ProductSuggestionDto> suggestions = extractResponseList(response, ProductSuggestionDto)
             suggestions.isEmpty()
     }
 
@@ -160,8 +143,7 @@ class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {
             response.expectStatus().isOk()
 
         and: "should return empty list (phrase must match in order)"
-            List<ProductSuggestionDto> suggestions = response.expectBody(new ParameterizedTypeReference<List<ProductSuggestionDto>>() {})
-                    .returnResult().getResponseBody()
+            List<ProductSuggestionDto> suggestions = extractResponseList(response, ProductSuggestionDto)
             suggestions.isEmpty()
     }
 }
