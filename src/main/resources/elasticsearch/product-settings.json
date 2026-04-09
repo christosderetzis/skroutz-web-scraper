@@ -10,6 +10,11 @@
         "type": "custom",
         "tokenizer": "standard",
         "filter": ["lowercase", "english_stemmer"]
+      },
+      "autocomplete": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": ["lowercase", "autocomplete_filter"]
       }
     },
     "filter": {
@@ -20,7 +25,12 @@
       "english_stemmer": {
         "type": "stemmer",
         "language": "english"
-      }
+      },
+      "autocomplete_filter": {
+         "type": "edge_ngram",
+         "min_gram": 2,
+         "max_gram": 20
+        }
     }
   }
 }

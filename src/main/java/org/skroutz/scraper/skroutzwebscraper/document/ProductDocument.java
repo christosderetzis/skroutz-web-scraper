@@ -8,6 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Setting;
 
 import java.math.BigDecimal;
@@ -28,7 +30,12 @@ public class ProductDocument {
     @Field(type = FieldType.Keyword)
     private String url;
 
-    @Field(type = FieldType.Text, analyzer = "english_analyzer")
+    @MultiField(
+        mainField = @Field(type = FieldType.Text, analyzer = "english_analyzer"),
+        otherFields = {
+            @InnerField(suffix = "autocomplete", type = FieldType.Text, analyzer = "autocomplete")
+        }
+    )
     private String title;
 
     @Field(type = FieldType.Double)

@@ -53,4 +53,17 @@ class WebActor {
                 .uri("/scraper/reviews")
                 .exchange()
     }
+
+    WebTestClient.ResponseSpec autocomplete(String query, Integer limit = null) {
+        return webTestClient.get()
+                .uri(uriBuilder -> {
+                    def builder = uriBuilder.path("/products/autocomplete")
+                            .queryParam("q", query)
+                    if (limit != null) {
+                        builder.queryParam("limit", limit)
+                    }
+                    builder.build()
+                })
+                .exchange()
+    }
 }
