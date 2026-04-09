@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.mapper.ProductMapper;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
@@ -27,11 +28,11 @@ public class ProductsService {
     private final ProductMapper productMapper;
 
     @Transactional
-    public void scrapeAndSaveProducts(String url) {
-        log.info("Starting to scrape and save products from URL: {}", url);
+    public void scrapeAndSaveProducts(ScraperRequestDto scraperRequestDto) {
+        log.info("Starting to scrape and save products from URL: {}", scraperRequestDto.getUrl());
 
         try {
-            List<Product> scrapedProducts = productsScraper.scrapeProducts(url);
+            List<Product> scrapedProducts = productsScraper.scrapeProducts(scraperRequestDto);
             log.info("Scraped {} products from URL", scrapedProducts.size());
 
             List<Product> savedProducts = new ArrayList<>();
@@ -93,6 +94,7 @@ public class ProductsService {
         updated |= updateField(scraped.getRating(), existing.getRating(), existing::setRating);
         updated |= updateField(scraped.getImageUrl(), existing.getImageUrl(), existing::setImageUrl);
         updated |= updateField(scraped.getDescription(), existing.getDescription(), existing::setDescription);
+        updated |= updateField(scraped.getCategory(), existing.getCategory(), existing::setCategory);
 
         if (updated) {
             Product updatedProduct = productRepository.save(existing);

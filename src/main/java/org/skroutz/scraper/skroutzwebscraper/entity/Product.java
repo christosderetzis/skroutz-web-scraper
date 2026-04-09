@@ -32,6 +32,9 @@ public class Product {
     @Column(name = "title", nullable = false, length = 500)
     private String title;
 
+    @Column(name = "category", length = 255)
+    private String category;
+
     @Column(name = "price", precision = 10, scale = 2)
     private BigDecimal price;
 

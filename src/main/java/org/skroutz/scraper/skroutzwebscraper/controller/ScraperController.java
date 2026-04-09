@@ -45,29 +45,33 @@ public class ScraperController {
     @PostMapping("/products")
     public ResponseEntity<Void> scrapeProducts(@RequestBody ScraperRequestDto scraperRequestDto,
                                                 @RequestParam boolean multiple) {
-        String baseUrl = scraperRequestDto.getUrl();
-
         if (multiple) {
-            Integer totalPages = productsService.getNumberOfWebPages(baseUrl);
+            Integer totalPages = productsService.getNumberOfWebPages(scraperRequestDto.getUrl());
             if (totalPages <= 0) {
-                log.warn("No pages found to scrape for URL: {}", baseUrl);
+                log.warn("No pages found to scrape for URL: {}", scraperRequestDto.getUrl());
                 return ResponseEntity.ok().build();
             }
 
-            scrapeMultiplePages(baseUrl, totalPages);
+            scrapeMultiplePages(scraperRequestDto, totalPages);
         } else {
-            log.info("Scraping single page products from URL: {}", baseUrl);
-            productsService.scrapeAndSaveProducts(baseUrl);
+            log.info("Scraping single page products from URL: {}", scraperRequestDto.getUrl());
+            productsService.scrapeAndSaveProducts(scraperRequestDto);
         }
 
         return ResponseEntity.ok().build();
     }
 
-    private void scrapeMultiplePages(String baseUrl, int totalPages) {
+    private void scrapeMultiplePages(ScraperRequestDto scraperRequestDto, int totalPages) {
         for (int page = 1; page <= totalPages; page++) {
-            String urlToScrape = buildUrlWithPage(baseUrl, page);
+            String urlToScrape = buildUrlWithPage(scraperRequestDto.getUrl(), page);
             log.info("Scraping products from page {} of URL: {}", page, urlToScrape);
-            productsService.scrapeAndSaveProducts(urlToScrape);
+
+            ScraperRequestDto pageRequestDto = ScraperRequestDto.builder()
+                    .url(urlToScrape)
+                    .category(scraperRequestDto.getCategory())
+                    .build();
+
+            productsService.scrapeAndSaveProducts(pageRequestDto);
         }
     }
 

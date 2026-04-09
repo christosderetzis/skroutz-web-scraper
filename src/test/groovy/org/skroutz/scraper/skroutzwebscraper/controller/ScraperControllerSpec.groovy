@@ -42,7 +42,7 @@ class ScraperControllerSpec extends Specification {
 
     def "should scrape single page when multiple is false"() {
         given: "a scraper request for single page"
-            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products", category: "electronics")
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=false"
@@ -53,13 +53,13 @@ class ScraperControllerSpec extends Specification {
 
         then: "should scrape single page and return OK"
             result.andExpect(status().isOk())
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products")
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products" && it.category == "electronics" })
             0 * productsService.getNumberOfWebPages(_)
     }
 
     def "should scrape multiple pages when multiple is true and pages exist"() {
         given: "a scraper request for multiple pages"
-            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products", category: "electronics")
 
         when: "performing POST request with multiple=true"
             def result = mockMvc.perform(post("/scraper/products")
@@ -70,14 +70,14 @@ class ScraperControllerSpec extends Specification {
         then: "should scrape all pages and return OK"
             result.andExpect(status().isOk())
             1 * productsService.getNumberOfWebPages("https://example.com/products") >> 3
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products")
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products?page=2")
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products?page=3")
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products" && it.category == "electronics" })
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products?page=2" && it.category == "electronics" })
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products?page=3" && it.category == "electronics" })
     }
 
     def "should handle URL with existing query parameters when scraping multiple pages"() {
         given: "a scraper request with URL containing query parameters"
-            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products?category=electronics")
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products?category=electronics", category: "electronics")
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
@@ -89,14 +89,14 @@ class ScraperControllerSpec extends Specification {
         then: "should append page parameter with ampersand and return OK"
             result.andExpect(status().isOk())
             1 * productsService.getNumberOfWebPages("https://example.com/products?category=electronics") >> 3
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics")
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&page=2")
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&page=3")
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products?category=electronics" && it.category == "electronics" })
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products?category=electronics&page=2" && it.category == "electronics" })
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products?category=electronics&page=3" && it.category == "electronics" })
     }
 
     def "should return OK when no pages found for multiple scraping"() {
         given: "a scraper request for multiple pages"
-            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products", category: "electronics")
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
@@ -108,12 +108,12 @@ class ScraperControllerSpec extends Specification {
         then: "should return OK without scraping any pages"
             result.andExpect(status().isOk())
             1 * productsService.getNumberOfWebPages("https://example.com/products") >> 0
-            0 * productsService.scrapeAndSaveProducts(_)
+            0 * productsService.scrapeAndSaveProducts(_, _)
     }
 
     def "should return OK when negative pages found for multiple scraping"() {
         given: "a scraper request for multiple pages"
-            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products", category: "electronics")
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
@@ -125,12 +125,12 @@ class ScraperControllerSpec extends Specification {
         then: "should return OK without scraping any pages"
             result.andExpect(status().isOk())
             1 * productsService.getNumberOfWebPages("https://example.com/products") >> -1
-            0 * productsService.scrapeAndSaveProducts(_)
+            0 * productsService.scrapeAndSaveProducts(_, _)
     }
 
     def "should handle single page scraping correctly in multiple mode"() {
         given: "a scraper request for multiple pages with only one page"
-            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products")
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products", category: "electronics")
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
@@ -142,12 +142,12 @@ class ScraperControllerSpec extends Specification {
         then: "should scrape only the base URL without page parameter"
             result.andExpect(status().isOk())
             1 * productsService.getNumberOfWebPages("https://example.com/products") >> 1
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products")
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products" && it.category == "electronics" })
     }
 
     def "should handle complex URL with multiple query parameters"() {
         given: "a scraper request with complex URL"
-            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products?category=electronics&sort=price&filter=available")
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products?category=electronics&sort=price&filter=available", category: "electronics")
             def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
 
         when: "performing POST request with multiple=true"
@@ -159,8 +159,8 @@ class ScraperControllerSpec extends Specification {
         then: "should handle complex URL correctly"
             result.andExpect(status().isOk())
             1 * productsService.getNumberOfWebPages("https://example.com/products?category=electronics&sort=price&filter=available") >> 2
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&sort=price&filter=available")
-            1 * productsService.scrapeAndSaveProducts("https://example.com/products?category=electronics&sort=price&filter=available&page=2")
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products?category=electronics&sort=price&filter=available" && it.category == "electronics" })
+            1 * productsService.scrapeAndSaveProducts({ it.url == "https://example.com/products?category=electronics&sort=price&filter=available&page=2" && it.category == "electronics" })
     }
 
     def "should scrape price history successfully"() {

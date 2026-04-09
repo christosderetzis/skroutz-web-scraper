@@ -11,6 +11,7 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
             Integer numberOfPages = 2
             ScraperRequestDto requestDto = ScraperRequestDto.builder()
                     .url("http://mockserver/products-page.html?numberOfPages=${numberOfPages}")
+                    .category("electronics")
                     .build()
 
         when:
@@ -23,6 +24,9 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
 
         and: "all product URLs should start with base URL"
             assert products.every { it.url.startsWith("http://mockserver") }
+
+        and: "all products should have the category set"
+            assert products.every { it.category == "electronics" }
     }
 
     def "Scrape products, happy path with all pages"() {
@@ -30,6 +34,7 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
             Integer numberOfPages = 2
             ScraperRequestDto requestDto = ScraperRequestDto.builder()
                     .url("http://mockserver/products-page.html?numberOfPages=${numberOfPages}")
+                    .category("smartphones")
                     .build()
 
         when:
@@ -42,5 +47,8 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
 
         and: "all product URLs should start with base URL"
             assert products.every { it.url.startsWith("http://mockserver") }
+
+        and: "all products should have the category set"
+            assert products.every { it.category == "smartphones" }
     }
 }
