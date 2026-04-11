@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class ScraperRequestDto {
 
     private String url;
+    private String category;
 }

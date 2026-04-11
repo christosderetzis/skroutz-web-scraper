@@ -80,6 +80,7 @@ abstract class BaseFunctionalSpec extends Specification {
         Product product = Product.builder()
                 .title(title)
                 .url("http://example.com/${title.replaceAll(' ', '-').toLowerCase()}")
+                .category("electronics")
                 .price(999.99.toBigDecimal())
                 .imageUrl("http://example.com/image.jpg")
                 .description("Test product")

@@ -38,6 +38,9 @@ public class ProductDocument {
     )
     private String title;
 
+    @Field(type = FieldType.Keyword)
+    private String category;
+
     @Field(type = FieldType.Double)
     private BigDecimal price;
 

@@ -8,6 +8,7 @@ import org.jsoup.select.Elements;
 import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -29,10 +30,10 @@ public class ProductsScraper extends AbstractScraper {
         super(applicationContext, baseUrl);
     }
 
-    public List<Product> scrapeProducts(String url) {
+    public List<Product> scrapeProducts(ScraperRequestDto scraperRequestDto) {
         List<Product> result = executeWithWebDriver(webDriver -> {
             // 1. Open page
-            webDriver.get(url);
+            webDriver.get(scraperRequestDto.getUrl());
 
             // 2. Wait until page content is rendered
             WebDriverWait wait = new WebDriverWait(webDriver, Duration.ofSeconds(15));
@@ -46,8 +47,8 @@ public class ProductsScraper extends AbstractScraper {
             String renderedHtml = webDriver.getPageSource();
 
             // 4. Scrape products from the rendered HTML
-            return scrapeProductsFromPage(renderedHtml);
-        }, url, "scraping products");
+            return scrapeProductsFromPage(renderedHtml, scraperRequestDto.getCategory());
+        }, scraperRequestDto.getUrl(), "scraping products");
         return result != null ? result : List.of();
     }
 
@@ -61,7 +62,7 @@ public class ProductsScraper extends AbstractScraper {
         return result != null ? result : 0;
     }
 
-    private List<Product> scrapeProductsFromPage(String htmlPage) {
+    private List<Product> scrapeProductsFromPage(String htmlPage, String category) {
         Document doc = Jsoup.parse(htmlPage);
         Element olElement = doc.selectFirst(HtmlFields.LISTING_CONTAINER);
 
@@ -79,17 +80,17 @@ public class ProductsScraper extends AbstractScraper {
 
         log.info("Successfully found {} product elements in the HTML page", productElements.size());
 
-        return extractProducts(productElements);
+        return extractProducts(productElements, category);
     }
 
-    private List<Product> extractProducts(Elements productElements) {
+    private List<Product> extractProducts(Elements productElements, String category) {
         List<Product> products = new ArrayList<>();
         int counter = 1;
 
         for (Element productElement : productElements) {
             try {
                 log.info("Processing product element {}/{}", counter++, productElements.size());
-                Product product = extractSingleProduct(productElement);
+                Product product = extractSingleProduct(productElement, category);
                 products.add(product);
             } catch (Exception e) {
                 log.error("Failed to parse product element: {}", e.getMessage());
@@ -99,7 +100,7 @@ public class ProductsScraper extends AbstractScraper {
         return products;
     }
 
-    private Product extractSingleProduct(Element productElement) {
+    private Product extractSingleProduct(Element productElement, String category) {
        Product product = new Product();
        product.setTitle(extractTitle(productElement));
        product.setUrl(extractUrl(productElement));
@@ -107,6 +108,7 @@ public class ProductsScraper extends AbstractScraper {
        product.setDescription(extractDescription(productElement));
        product.setRating(extractRating(productElement));
        product.setImageUrl(extractImageUrl(productElement));
+       product.setCategory(category);
        return product;
     }
 
