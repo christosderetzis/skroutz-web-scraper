@@ -1,9 +1,9 @@
 package org.skroutz.scraper.skroutzwebscraper.repository;
 
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findByUrl(String url);
 
-    List<Product> findAllBySpecificationsParsed(boolean specificationsParsed);
+    Page<Product> findAllBySpecificationsIsNullOrderByIdAsc(Pageable pageable);
 
     List<Product> findAllByReviewsParsedAndRatingIsNotNull(boolean reviewsParsed);
 

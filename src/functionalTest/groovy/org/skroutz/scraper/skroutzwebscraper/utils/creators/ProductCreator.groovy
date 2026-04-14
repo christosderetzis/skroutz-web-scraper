@@ -16,7 +16,6 @@ class ProductCreator {
                 .description(faker.lorem().paragraph())
                 .rating(faker.number().randomDouble(2, 1, 5).toBigDecimal())
                 .reviewsParsed(false)
-                .specificationsParsed(false)
                 .priceHistoryParsed(false)
                 .build()
     }

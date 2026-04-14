@@ -6,6 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.scraper.SpecificationsScraper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,28 +18,68 @@ import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SpecificationsService {
 
     private final ProductRepository productRepository;
     private final SpecificationsScraper specificationsScraper;
     private final ProductSearchService productSearchService;
+    private final Integer batchSize;
 
-    @Transactional
+    public SpecificationsService(ProductRepository productRepository, SpecificationsScraper specificationsScraper, ProductSearchService productSearchService,
+                                 @Value("${scraper.specifications.batch-size:30}") Integer size) {
+        this.productRepository = productRepository;
+        this.specificationsScraper = specificationsScraper;
+        this.productSearchService = productSearchService;
+        this.batchSize = size;
+    }
+
     public void parseSpecifications() {
-        List<Product> unparsedProducts = productRepository.findAllBySpecificationsParsed(false);
-        List<Product> successfullyParsedProducts = new ArrayList<>();
+        int batchNumber = 0;
+        int totalProcessed = 0;
+        int totalSuccessful = 0;
 
-        for (Product product : unparsedProducts) {
+        Page<Product> productPage;
+        do {
+            // Always query page 0 since processed products have specifications set and removed from results
+            Pageable pageable = PageRequest.of(0, batchSize);
+            productPage = productRepository.findAllBySpecificationsIsNullOrderByIdAsc(pageable);
+
+            if (productPage.isEmpty()) {
+                break;
+            }
+
+            batchNumber++;
+            log.info("Processing batch {} with {} products", batchNumber, productPage.getNumberOfElements());
+
+            List<Product> successfulProducts = processBatch(productPage.getContent());
+
+            // Save all products (mark them as parsed to avoid infinite loop)
+            productRepository.saveAll(productPage.getContent());
+
+            // Only index successful products
+            if (!successfulProducts.isEmpty()) {
+                indexProducts(successfulProducts);
+                totalSuccessful += successfulProducts.size();
+            }
+
+            totalProcessed += productPage.getNumberOfElements();
+
+        } while (!productPage.isEmpty());
+
+        log.info("Completed specifications parsing. Total processed: {}, Total successful: {}",
+                totalProcessed, totalSuccessful);
+    }
+
+    private List<Product> processBatch(List<Product> products) {
+        List<Product> successfulProducts = new ArrayList<>();
+
+        for (Product product : products) {
             if (parseProductSpecifications(product)) {
-                successfullyParsedProducts.add(product);
+                successfulProducts.add(product);
             }
         }
 
-        if (!successfullyParsedProducts.isEmpty()) {
-            productRepository.saveAll(successfullyParsedProducts);
-            indexProducts(successfullyParsedProducts);
-        }
+        return successfulProducts;
     }
 
     private boolean parseProductSpecifications(Product product) {
@@ -57,7 +101,6 @@ public class SpecificationsService {
             }
 
             product.setSpecifications(specifications);
-            product.setSpecificationsParsed(true);
             log.info("Successfully parsed specifications for product: {}", product.getTitle());
             return true;
         } catch (Exception e) {

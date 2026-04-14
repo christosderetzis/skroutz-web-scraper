@@ -86,7 +86,6 @@ abstract class BaseFunctionalSpec extends Specification {
                 .description("Test product")
                 .rating(4.5.toBigDecimal())
                 .reviewsParsed(false)
-                .specificationsParsed(false)
                 .priceHistoryParsed(false)
                 .build()
 

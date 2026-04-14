@@ -51,10 +51,6 @@ public class Product {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode specifications;
 
-    @Column(name = "specifications_parsed", nullable = false)
-    @Builder.Default
-    private Boolean specificationsParsed = false;
-
     @Column(name = "reviews_parsed", nullable = false)
     @Builder.Default
     private Boolean reviewsParsed = false;
