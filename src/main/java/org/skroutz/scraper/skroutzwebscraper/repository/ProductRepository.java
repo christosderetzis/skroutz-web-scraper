@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findByUrl(String url);
 
-    Page<Product> findAllBySpecificationsIsNullOrderByIdAsc(Pageable pageable);
+    Page<Product> findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(Pageable pageable);
 
     List<Product> findAllByReviewsParsedAndRatingIsNotNull(boolean reviewsParsed);
 

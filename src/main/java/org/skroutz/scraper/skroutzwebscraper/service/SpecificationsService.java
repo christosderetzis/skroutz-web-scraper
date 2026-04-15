@@ -1,7 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.RequiredArgsConstructor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
@@ -11,7 +11,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,9 +39,9 @@ public class SpecificationsService {
 
         Page<Product> productPage;
         do {
-            // Always query page 0 since processed products have specifications set and removed from results
+            // Always query page 0 since processed products are removed from results
             Pageable pageable = PageRequest.of(0, batchSize);
-            productPage = productRepository.findAllBySpecificationsIsNullOrderByIdAsc(pageable);
+            productPage = productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(pageable);
 
             if (productPage.isEmpty()) {
                 break;
@@ -76,6 +75,9 @@ public class SpecificationsService {
         for (Product product : products) {
             if (parseProductSpecifications(product)) {
                 successfulProducts.add(product);
+            } else {
+                // Mark as skipped to prevent infinite loop (leave specifications as NULL for retry)
+                product.setSpecificationsSkipped(true);
             }
         }
 
@@ -101,6 +103,7 @@ public class SpecificationsService {
             }
 
             product.setSpecifications(specifications);
+            product.setSpecificationsSkipped(false); // Reset flag on successful parse
             log.info("Successfully parsed specifications for product: {}", product.getTitle());
             return true;
         } catch (Exception e) {

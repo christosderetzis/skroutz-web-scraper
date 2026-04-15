@@ -51,6 +51,7 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             Product savedProduct = productRepository.findById(product.id).orElse(null)
             with(savedProduct) {
                 specifications == null
+                specificationsSkipped == true
             }
     }
 }

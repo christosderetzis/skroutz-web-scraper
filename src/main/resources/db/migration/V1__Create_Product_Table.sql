@@ -10,6 +10,7 @@ CREATE TABLE scraper_schema.product (
     description TEXT,
     rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5),
     specifications JSONB,
+    specifications_skipped BOOLEAN NOT NULL DEFAULT FALSE,
     reviews_parsed BOOLEAN NOT NULL DEFAULT FALSE,
     price_history_parsed BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
