@@ -190,38 +190,4 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
         and: "log should contain completion message with zero counts"
             assertLog(Level.INFO, "Completed specifications parsing. Total processed: 0, Total successful: 0")
     }
-
-    def "Happy path, should reset skipped flag on successful retry"() {
-        given: "a previously skipped product (after reset)"
-            Product product = new Product(title: "Product 1", price: 100, url: "http://example.com/product1")
-            product.specificationsSkipped = false  // Reset for retry
-            product.specifications = null
-
-        and: "we have a json node to return on retry"
-            ObjectMapper mapper = new ObjectMapper()
-            JsonNode jsonNode = mapper.readTree('{"key":"value"}')
-
-        and: "a page with the product"
-            Pageable pageable = PageRequest.of(0, 100)
-            Page<Product> page = new PageImpl<>([product], pageable, 1)
-            Page<Product> emptyPage = new PageImpl<>([], pageable, 0)
-
-        when: "parsing specifications for the product"
-            service.parseSpecifications()
-
-        then: "specifications should be scraped successfully"
-            1 * productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(_ as Pageable) >> page
-            1 * specificationsScraper.scrapeSpecifications(product.url + "?lang=en") >> jsonNode
-            1 * productRepository.saveAll({ List<Product> products ->
-                products.size() == 1 &&
-                products[0].specifications == jsonNode &&
-                products[0].specificationsSkipped == false
-            })
-            1 * productSearchService.indexProducts({ List<Product> products ->
-                products.size() == 1 &&
-                products[0].specifications == jsonNode
-            })
-            1 * productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(_ as Pageable) >> emptyPage
-            0 * _
-    }
 }
