@@ -19,7 +19,6 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             product.title = productTitle
             product.price = productPrice
             product.url = productUrl
-            product.specificationsParsed = false
             product = productRepository.save(product)
 
         when:
@@ -30,7 +29,6 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             JsonNode expectedJsonNode = JsonFileReader.readJsonFromResource("expected-specs.json")
             with(savedProduct) {
                 JSONAssert.assertEquals(expectedJsonNode.toString(), specifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
-                specificationsParsed == true
             }
 
         and: "Product is indexed in elasticsearch"
@@ -44,7 +42,6 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             product.title = "Test Product No Specifications"
             product.price = 100.0
             product.url = ""
-            product.specificationsParsed = false
             product = productRepository.save(product)
 
         when:
@@ -54,7 +51,7 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             Product savedProduct = productRepository.findById(product.id).orElse(null)
             with(savedProduct) {
                 specifications == null
-                specificationsParsed == false
+                specificationsSkipped == true
             }
     }
 }

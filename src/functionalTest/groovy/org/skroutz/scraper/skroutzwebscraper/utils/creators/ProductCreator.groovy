@@ -15,8 +15,8 @@ class ProductCreator {
                 .url(faker.internet().url())
                 .description(faker.lorem().paragraph())
                 .rating(faker.number().randomDouble(2, 1, 5).toBigDecimal())
+                .specificationsSkipped(false)
                 .reviewsParsed(false)
-                .specificationsParsed(false)
                 .priceHistoryParsed(false)
                 .build()
     }

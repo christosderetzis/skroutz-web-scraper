@@ -85,8 +85,8 @@ abstract class BaseFunctionalSpec extends Specification {
                 .imageUrl("http://example.com/image.jpg")
                 .description("Test product")
                 .rating(4.5.toBigDecimal())
+                .specificationsSkipped(false)
                 .reviewsParsed(false)
-                .specificationsParsed(false)
                 .priceHistoryParsed(false)
                 .build()
 
