@@ -27,7 +27,7 @@ import spock.lang.Specification
                 "spring.main.allow-bean-definition-overriding=true",
                 "DB_PORT=5434",
                 "ELASTICSEARCH_PORT=9201",
-                "scraper.base-url=http://mockserver",
+                "scraper.base-url=http://localhost:8081",
                 "scraper.delay-range-min=100",
                 "scraper.selenium.url=http://localhost:4444/wd/hub",
         ]

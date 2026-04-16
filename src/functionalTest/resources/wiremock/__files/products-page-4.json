@@ -1,0 +1,39 @@
+{
+  "skus": [
+    {
+      "id": 28392444,
+      "sku_url": "/s/28392444/vivo-x90-pro.html",
+      "name": "Vivo X90 Pro",
+      "spec_summary": "Zeiss optics.",
+      "price": "1100€",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/041489/41489005/large_20230222150019_vivo_x90_pro_5g_12gb_256gb.jpeg",
+      "review_score": "4.7",
+      "reviews_count": "198"
+    },
+    {
+      "id": 28392445,
+      "sku_url": "/s/28392445/honor-magic5-pro.html",
+      "name": "Honor Magic5 Pro",
+      "spec_summary": "Great all-rounder.",
+      "price": "950€",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/041789/41789005/large_20230306150019_honor_magic5_pro_5g_12gb_512gb.jpeg",
+      "review_score": "4.7",
+      "reviews_count": "267"
+    },
+    {
+      "id": 28392446,
+      "sku_url": "/s/28392446/nothing-phone-2.html",
+      "name": "Nothing Phone (2)",
+      "spec_summary": "Unique design.",
+      "price": "650€",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/045289/45289005/large_20230711150019_nothing_phone_2_5g_12gb_256gb.jpeg",
+      "review_score": "4.5",
+      "reviews_count": "356"
+    }
+  ],
+  "page": {
+    "current_page": 4,
+    "total_pages": 4
+  }
+}
+

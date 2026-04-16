@@ -1,0 +1,49 @@
+{
+  "skus": [
+    {
+      "id": 28392440,
+      "sku_url": "/s/28392440/nokia-g400.html",
+      "name": "Nokia G400",
+      "spec_summary": "A solid budget phone.",
+      "price": "230€",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/039890/39890081/large_20220105113533_nokia_g400_5g.jpeg",
+      "review_score": "3.9",
+      "reviews_count": "78"
+    },
+    {
+      "id": 28392441,
+      "sku_url": "/s/28392441/realme-gt-neo-5.html",
+      "name": "Realme GT Neo 5",
+      "spec_summary": "Fast charging.",
+      "price": "450€",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/041589/41589003/large_20230228150019_realme_gt_neo_5_5g_16gb_256gb.jpeg",
+      "review_score": "4.1",
+      "reviews_count": "230"
+    },
+    {
+      "id": 28392442,
+      "sku_url": "/s/28392442/asus-zenfone-10.html",
+      "name": "Asus Zenfone 10",
+      "spec_summary": "Compact and powerful.",
+      "price": "800€",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/044889/44889005/large_20230629150019_asus_zenfone_10_5g_8gb_128gb.jpeg",
+      "review_score": "4.6",
+      "reviews_count": "142"
+    },
+    {
+      "id": 28392443,
+      "sku_url": "/s/28392443/oppo-find-x6-pro.html",
+      "name": "Oppo Find X6 Pro",
+      "spec_summary": "Excellent camera system.",
+      "price": "1200€",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/041889/41889005/large_20230321150019_oppo_find_x6_pro_5g_12gb_256gb.jpeg",
+      "review_score": "4.8",
+      "reviews_count": "411"
+    }
+  ],
+  "page": {
+    "current_page": 3,
+    "total_pages": 4
+  }
+}
+
