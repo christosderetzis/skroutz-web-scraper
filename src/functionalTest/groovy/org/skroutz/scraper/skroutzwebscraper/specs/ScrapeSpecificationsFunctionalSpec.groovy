@@ -12,7 +12,7 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
 
     def "Scrape specifications, happy path"() {
         given:
-            def productUrl = "http://mockserver/product-details.html"
+            def productUrl = "http://localhost:8080/product-details.html"
             def productTitle = "Test Product with Specifications"
             def productPrice = 150.0
             Product product = new Product()

@@ -95,6 +95,9 @@ public class SpecificationsService {
         try {
             log.info("Parsing specifications for product: {}", product.getId());
             String formattedUrl = url.contains("?") ? url + "&lang=en" : url + "?lang=en";
+
+            // Add a short delay to avoid overwhelming the target server
+            Thread.sleep(500);
             JsonNode specifications = specificationsScraper.scrapeSpecifications(formattedUrl);
 
             if (specifications == null || specifications.isEmpty()) {

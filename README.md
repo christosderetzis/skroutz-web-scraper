@@ -1,6 +1,6 @@
 # Skroutz Web Scraper
 
-A Spring Boot application for scraping product information from Skroutz.gr using Selenium WebDriver and Jsoup.
+A Spring Boot application for scraping product information from Skroutz.gr using Jsoup for HTML parsing.
 
 ## Features
 
@@ -14,7 +14,7 @@ A Spring Boot application for scraping product information from Skroutz.gr using
 - **Search Infrastructure**: Elasticsearch 9.3.0 with Kibana for data visualization
 - **REST API**: Endpoints for triggering scraping operations and querying products
 - **API Documentation**: Swagger/OpenAPI integration
-- **Docker Support**: PostgreSQL, Elasticsearch, Kibana, and Selenium containerization
+- **Docker Support**: PostgreSQL, Elasticsearch, and Kibana containerization
 - **Code Coverage**: JaCoCo with 80% line/method and 70% branch coverage thresholds
 
 ## Technology Stack
@@ -24,8 +24,7 @@ A Spring Boot application for scraping product information from Skroutz.gr using
 - **Spring Data JPA** — database operations
 - **Spring Data Elasticsearch** — search and autocomplete functionality
 - **Spring WebFlux** — reactive HTTP client (reviews API)
-- **Selenium WebDriver** — browser-based scraping via remote Selenium Grid
-- **Jsoup** — HTML parsing
+- **Jsoup** — HTML parsing and web scraping
 - **PostgreSQL 15** — primary database with JSONB support
 - **Elasticsearch 9.3.0** — search engine for product indexing and autocomplete
 - **Kibana 9.3.0** — data visualization and Elasticsearch management
@@ -33,7 +32,7 @@ A Spring Boot application for scraping product information from Skroutz.gr using
 - **MapStruct** — object mapping
 - **Lombok** — boilerplate reduction
 - **Swagger/OpenAPI** — API documentation
-- **Docker Compose** — PostgreSQL, Elasticsearch, Kibana, and Selenium containerization
+- **Docker Compose** — PostgreSQL, Elasticsearch, and Kibana containerization
 
 ### Testing
 
@@ -60,7 +59,6 @@ This starts:
 - **PostgreSQL** (port 5432) — product database
 - **Elasticsearch** (port 9200) — search engine
 - **Kibana** (port 5601) — Elasticsearch UI and visualization
-- **Selenium Chrome** (port 4444) — browser automation
 
 ### 2. Build the Application
 
@@ -202,9 +200,7 @@ Specifications are stored as structured JSONB. Each category contains an array o
 
 | Setting          | Default                  |
 |------------------|--------------------------|
-| Headless Mode    | true                     |
 | Timeout          | 30 seconds               |
-| Selenium URL     | http://localhost:4444     |
 | Base URL         | https://www.skroutz.gr   |
 
 Configuration can be modified in `src/main/resources/application.yml`.
@@ -223,7 +219,7 @@ Once the application is running:
 src/
 ├── main/
 │   ├── java/org/skroutz/scraper/skroutzwebscraper/
-│   │   ├── config/            # Configuration (Selenium, OpenAPI, WebClient, Elasticsearch)
+│   │   ├── config/            # Configuration (OpenAPI, WebClient, Elasticsearch)
 │   │   ├── controller/        # REST controllers (ScraperController, ProductsController)
 │   │   ├── controllerAdvice/  # Global exception handling
 │   │   ├── document/          # Elasticsearch documents (ProductDocument)
