@@ -43,44 +43,10 @@ public class ScraperController {
     }
 
     @PostMapping("/products")
-    public ResponseEntity<Void> scrapeProducts(@RequestBody ScraperRequestDto scraperRequestDto,
+    public ResponseEntity<Void> scrapeProducts(@RequestBody ScraperRequestDto request,
                                                 @RequestParam boolean multiple) {
-        if (multiple) {
-            Integer totalPages = productsService.getNumberOfWebPages(scraperRequestDto.getUrl());
-            if (totalPages <= 0) {
-                log.warn("No pages found to scrape for URL: {}", scraperRequestDto.getUrl());
-                return ResponseEntity.ok().build();
-            }
-
-            scrapeMultiplePages(scraperRequestDto, totalPages);
-        } else {
-            log.info("Scraping single page products from URL: {}", scraperRequestDto.getUrl());
-            productsService.scrapeAndSaveProducts(scraperRequestDto);
-        }
-
+        log.info("Received request to scrape products from URL: {}, multiple: {}", request.getUrl(), multiple);
+        productsService.scrapeProducts(request, multiple);
         return ResponseEntity.ok().build();
-    }
-
-    private void scrapeMultiplePages(ScraperRequestDto scraperRequestDto, int totalPages) {
-        for (int page = 1; page <= totalPages; page++) {
-            String urlToScrape = buildUrlWithPage(scraperRequestDto.getUrl(), page);
-            log.info("Scraping products from page {} of URL: {}", page, urlToScrape);
-
-            ScraperRequestDto pageRequestDto = ScraperRequestDto.builder()
-                    .url(urlToScrape)
-                    .category(scraperRequestDto.getCategory())
-                    .build();
-
-            productsService.scrapeAndSaveProducts(pageRequestDto);
-        }
-    }
-
-    private String buildUrlWithPage(String baseUrl, int page) {
-        if (page == 1) {
-            return baseUrl;
-        }
-
-        String separator = baseUrl.contains("?") ? "&" : "?";
-        return baseUrl + separator + "page=" + page;
     }
 }

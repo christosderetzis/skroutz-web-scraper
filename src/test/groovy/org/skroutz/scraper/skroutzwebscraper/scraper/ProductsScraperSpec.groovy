@@ -1,300 +1,573 @@
 package org.skroutz.scraper.skroutzwebscraper.scraper
 
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
-import org.springframework.context.ApplicationContext
-import spock.lang.Specification
+import ch.qos.logback.classic.Level
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.SocketPolicy
+import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
+import org.skroutz.scraper.skroutzwebscraper.dto.ProductApiResponseDto
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.server.ResponseStatusException
 import spock.lang.Subject
-import spock.lang.Unroll
 
-class ProductsScraperSpec extends Specification {
+import java.util.concurrent.TimeUnit
 
-    ApplicationContext applicationContext = Mock()
+class ProductsScraperSpec extends WithLoggingBaseSpec {
+
+    MockWebServer mockWebServer
+    WebClient webClient
 
     @Subject
-    ProductsScraper productsScraper = new ProductsScraper(applicationContext, "https://www.skroutz.gr")
+    ProductsScraper productsScraper
 
-    // ---------- PAGINATION ----------
+    def setup() {
+        mockWebServer = new MockWebServer()
+        mockWebServer.start()
 
-    @Unroll
-    def "parsePaginationInfo returns #expected for pagination text '#paginationText'"() {
-        given:
-        def html = """
-            <div class="paginator">
-                <button><span>${paginationText}</span></button>
-            </div>
-        """
+        webClient = WebClient.builder()
+                .baseUrl(mockWebServer.url("/").toString())
+                .build()
 
-        when:
-        def result = productsScraper.parsePaginationInfo(html)
-
-        then:
-        result == expected
-
-        where:
-        paginationText      || expected
-        "1 from 11"         || 11
-        "2 from 5"          || 5
-        "1 από 7"           || 7
-        "Page 1 of 3"       || null
-        "invalid text"      || null
-        "1 from"            || null
+        productsScraper = new ProductsScraper(webClient, 1) // 1 second timeout for tests
     }
 
-    def "parsePaginationInfo returns null when pagination element missing"() {
-        given:
-        def html= "<html></html>"
-
-        when:
-        def result = productsScraper.parsePaginationInfo(html)
-
-        then:
-        result == null
+    def cleanup() {
+        mockWebServer.shutdown()
     }
 
-    // ---------- URL + TITLE ----------
+    def "fetchProductsPage successfully fetches product data"() {
+        given: "a valid products response"
+            String jsonResponse = '''
+            {
+                "skus": [
+                    {
+                        "id": 123,
+                        "sku_url": "https://www.skroutz.gr/s/123/product",
+                        "name": "Test Product",
+                        "spec_summary": "Test description",
+                        "price": "99.99",
+                        "image_url": "https://example.com/image.jpg",
+                        "review_score": "4.5",
+                        "reviews_count": "100"
+                    }
+                ],
+                "page": {
+                    "total_pages": 5,
+                    "current_page": 1
+                }
+            }
+            '''
 
-    def "extractTitle sets title when aTag is present"() {
-        given:
-            def html = """
-                <div>
-                    <a class="js-sku-link" href="http://example.com" title="Example Product"></a>
-                </div>
-            """
-            Element productElement = Jsoup.parse(html).selectFirst("div")
+        and: "mock server enqueues successful response"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
 
-        when:
-            def result = productsScraper.extractTitle(productElement)
+        when: "fetching products page"
+            String url = mockWebServer.url("/api/products").toString()
+            ProductApiResponseDto result = productsScraper.fetchProductsPage(url)
 
-        then:
-            result == "Example Product"
+        then: "result matches expected response"
+            with(result) {
+                it != null
+                items.size() == 1
+                items[0].skroutzId == 123L
+                items[0].title == "Test Product"
+                items[0].price == "99.99"
+                page.totalPages == 5
+                page.currentPage == 1
+            }
+
+        and: "logs indicate success"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.WARN, "Successfully fetched product page data")
+
+        and: "mock server received the request"
+            mockWebServer.requestCount == 1
     }
 
-    def "extractTitle does nothing if aTag is missing"() {
-        given:
-            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
+    def "fetchProductsPage handles 404 Not Found error"() {
+        given: "mock server returns 404"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(404)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Not Found"}'))
 
-        when:
-            def result = productsScraper.extractTitle(productElement)
+        when: "fetching products page"
+            String url = mockWebServer.url("/api/products/999").toString()
+            productsScraper.fetchProductsPage(url)
 
-        then:
-            result == null
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
+
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Error fetching products. Status:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
+
+        and: "mock server received the request"
+            mockWebServer.requestCount == 1
     }
 
-    def "extractUrl sets url when aTag is present"() {
-        given:
-            def html = """
-                <div>
-                    <a class="js-sku-link" href="${href}" title="Example Product"></a>
-                </div>
-            """
-            Element productElement = Jsoup.parse(html).selectFirst("div")
+    def "fetchProductsPage handles 400 Bad Request error"() {
+        given: "mock server returns 400"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(400)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Bad Request"}'))
 
-        when:
-            def result = productsScraper.extractUrl(productElement)
+        when: "fetching products page"
+            String url = mockWebServer.url("/api/products/invalid").toString()
+            productsScraper.fetchProductsPage(url)
 
-        then:
-            result == expectedUrl
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
 
-        where:
-            href                                                          || expectedUrl
-            "http://example.com"                                          || "http://example.com"
-            "https://example.com"                                         || "https://example.com"
-            "/s/45762495/Apple-iPhone-15-Pro-8-128GB-Black-Titanium.html" || "https://www.skroutz.gr/s/45762495/Apple-iPhone-15-Pro-8-128GB-Black-Titanium.html"
-            "/c/40/kinhta-tilefwna.html"                                  || "https://www.skroutz.gr/c/40/kinhta-tilefwna.html"
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Error fetching products. Status:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
+    def "fetchProductsPage handles 500 Internal Server Error"() {
+        given: "mock server returns 500"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(500)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Internal Server Error"}'))
 
+        when: "fetching products page"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
 
-    def "extractUrl does nothing if aTag is missing"() {
-        given:
-            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
 
-        when:
-            def result = productsScraper.extractUrl(productElement)
-
-        then:
-            result == null
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Error fetching products. Status:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
-    // ---------- PRICE ----------
+    def "fetchProductsPage handles 503 Service Unavailable error"() {
+        given: "mock server returns 503"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(503)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Service Unavailable"}'))
 
-    @Unroll
-    def "extractPrice returns price=#expected for price text '#priceText'"() {
-        given:
-            def html = """
-                <div>
-                    <a data-e2e-testid="sku-price-link">${priceText}</a>
-                </div>
-            """
-            Element productElement = Jsoup.parse(html).selectFirst("div")
+        when: "fetching products page"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
 
-        when:
-            def result = productsScraper.extractPrice(productElement)
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
 
-        then:
-            result == expected
-
-        where:
-            priceText           || expected
-            "500,00"            || new BigDecimal("500.00")
-            "1.200,50"          || new BigDecimal("1200.50")
-            "500,00 - 600,00"   || new BigDecimal("500.00")
-            "from 700,00 €"     || new BigDecimal("700.00")
-            "από 800,00 €"      || new BigDecimal("800.00")
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Error fetching products. Status:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
-    def "extractPrice returns null if priceSpan missing"() {
-        given:
-        Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
+    def "fetchProductsPage handles empty response body"() {
+        given: "mock server returns empty body"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(""))
 
-        when:
-        def result = productsScraper.extractPrice(productElement)
+        when: "fetching products with empty response"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
 
-        then:
-        result == null
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
+
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
-    def "extractPrice returns null if price is not a number"() {
-        given:
-            def html = """
-                <div>
-                    <a data-e2e-testid="sku-price-link">not a price</a>
-                </div>
-            """
-            Element productElement = Jsoup.parse(html).selectFirst("div")
+    def "fetchProductsPage handles malformed JSON response"() {
+        given: "mock server returns malformed JSON"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"invalid": json}'))
 
-        when:
-            def result = productsScraper.extractPrice(productElement)
+        when: "fetching products with malformed JSON"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
 
-        then:
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
 
-
-
-
-        result == null
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
-    // ---------- IMAGE ----------
+    def "fetchProductsPage handles connection timeout"() {
+        given: "mock server disconnects after accepting connection"
+            mockWebServer.enqueue(new MockResponse()
+                    .setSocketPolicy(SocketPolicy.NO_RESPONSE))
 
-    def "extractImageUrl sets imageUrl when img is present"() {
-        given:
-            def html = """
-                <div>
-                    <div class="image-container">
-                        <img src="http://example.com/image.jpg"/>
-                    </div>
-                </div>
-            """
-            Element productElement = Jsoup.parse(html).selectFirst("div")
+        when: "fetching products with connection timeout"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
 
-        when:
-            def result = productsScraper.extractImageUrl(productElement)
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
 
-        then:
-            result == "http://example.com/image.jpg"
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
-    def "extractImageUrl sets imageUrl to null if img missing"() {
-        given:
-            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
+    def "fetchProductsPage handles network disconnect"() {
+        given: "mock server disconnects during response"
+            mockWebServer.enqueue(new MockResponse()
+                    .setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY))
 
-        when:
-            def result = productsScraper.extractImageUrl(productElement)
+        when: "fetching products with network disconnect"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
 
-        then:
-            result == null
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
+
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
-    def "extractImageUrl sets imageUrl to null if element does not exist" () {
-        when:
-            def result = productsScraper.extractImageUrl(null)
+    def "fetchProductsPage handles slow response within timeout"() {
+        given: "a valid response with delay"
+            String jsonResponse = '''
+            {
+                "skus": [
+                    {
+                        "id": 123,
+                        "name": "Test Product"
+                    }
+                ],
+                "page": {
+                    "total_pages": 1,
+                    "current_page": 1
+                }
+            }
+            '''
 
-        then:
-            result == null
+        and: "mock server returns response after delay (under timeout)"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse)
+                    .setBodyDelay(200, TimeUnit.MILLISECONDS))
+
+        when: "fetching products with slow response"
+            String url = mockWebServer.url("/api/products").toString()
+            ProductApiResponseDto result = productsScraper.fetchProductsPage(url)
+
+        then: "request succeeds despite delay"
+            with(result) {
+                it != null
+                items.size() == 1
+                items[0].skroutzId == 123L
+            }
+
+        and: "logs indicate success"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.WARN, "Successfully fetched product page data")
     }
 
-    // ---------- DESCRIPTION ----------
+    def "fetchProductsPage handles null response"() {
+        given: "mock server returns null-like response"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("null"))
 
-    def "extractDescription sets description when desc is present"() {
-        given:
-            def html = """
-                <div>
-                    <p class="specs">Product description</p>
-                </div>
-            """
-            Element productElement = Jsoup.parse(html).selectFirst("div")
+        when: "fetching products with null response"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
 
-        when:
-            def result = productsScraper.extractDescription(productElement)
+        then: "ResponseStatusException is thrown"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products: null response")
+            }
 
-        then:
-            result == "Product description"
+        and: "error is logged"
+            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.ERROR, "Received null response from products API")
     }
 
-    def "extractDescription sets description to null if desc missing"() {
-        given:
-            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
+    def "fetchProductsPage handles complex nested product data"() {
+        given: "a complex products response with multiple items"
+            String jsonResponse = '''
+            {
+                "skus": [
+                    {
+                        "id": 123,
+                        "sku_url": "https://www.skroutz.gr/s/123/product-one",
+                        "name": "Product One",
+                        "spec_summary": "Detailed description for product one",
+                        "price": "199.99",
+                        "image_url": "https://example.com/image1.jpg",
+                        "review_score": "4.8",
+                        "reviews_count": "250"
+                    },
+                    {
+                        "id": 456,
+                        "sku_url": "https://www.skroutz.gr/s/456/product-two",
+                        "name": "Product Two",
+                        "spec_summary": "Detailed description for product two",
+                        "price": "299.99",
+                        "image_url": "https://example.com/image2.jpg",
+                        "review_score": "4.2",
+                        "reviews_count": "89"
+                    },
+                    {
+                        "id": 789,
+                        "sku_url": "https://www.skroutz.gr/s/789/product-three",
+                        "name": "Product Three",
+                        "spec_summary": "Detailed description for product three",
+                        "price": "149.50",
+                        "image_url": "https://example.com/image3.jpg",
+                        "review_score": "5.0",
+                        "reviews_count": "500"
+                    }
+                ],
+                "page": {
+                    "total_pages": 10,
+                    "current_page": 3
+                }
+            }
+            '''
 
-        when:
-            def result = productsScraper.extractDescription(productElement)
+        and: "mock server enqueues complex response"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
 
-        then:
-            result == null
+        when: "fetching products"
+            String url = mockWebServer.url("/api/products").toString()
+            ProductApiResponseDto result = productsScraper.fetchProductsPage(url)
+
+        then: "complex nested data is properly deserialized"
+            with(result) {
+                it != null
+                items.size() == 3
+
+                with(items[0]) {
+                    skroutzId == 123L
+                    title == "Product One"
+                    description == "Detailed description for product one"
+                    price == "199.99"
+                    imageUrl == "https://example.com/image1.jpg"
+                    rating == "4.8"
+                    ratingCount == "250"
+                }
+
+                with(items[1]) {
+                    skroutzId == 456L
+                    title == "Product Two"
+                    price == "299.99"
+                    rating == "4.2"
+                    ratingCount == "89"
+                }
+
+                with(items[2]) {
+                    skroutzId == 789L
+                    title == "Product Three"
+                    price == "149.50"
+                    rating == "5.0"
+                    ratingCount == "500"
+                }
+
+                with(page) {
+                    totalPages == 10
+                    currentPage == 3
+                }
+            }
+
+        and: "logs indicate success"
+            assertLog(Level.WARN, "Successfully fetched product page data")
     }
 
-    // ---------- RATING ----------
+    def "fetchProductsPage retries on 403 Forbidden and succeeds on first retry"() {
+        given: "mock server returns 403 then 200"
+            String jsonResponse = '''
+            {
+                "skus": [
+                    {
+                        "id": 123,
+                        "name": "Test Product"
+                    }
+                ],
+                "page": {}
+            }
+            '''
 
-    @Unroll
-    def "extractRating sets rating=#expected for rating text '#ratingText'"() {
-        given:
-            def html = """
-                <div>
-                    <div class="rating-wrapper">
-                        <span data-testid="star-rating-value">${ratingText}</span>
-                    </div>
-                </div>
-            """
-            Element productElement = Jsoup.parse(html).selectFirst("div")
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Forbidden"}'))
 
-        when:
-            def result = productsScraper.extractRating(productElement)
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
 
-        then:
-            result == expected
+        when: "fetching products"
+            String url = mockWebServer.url("/api/products").toString()
+            ProductApiResponseDto result = productsScraper.fetchProductsPage(url)
 
-        where:
-            ratingText   || expected
-            "4,5"        || new BigDecimal("4.5")
-            "3.0"        || new BigDecimal("3.0")
+        then: "request succeeds after retry"
+            result != null
+            result.items.size() == 1
+
+        and: "retry log is present"
+            assertLog(Level.ERROR, "Error fetching products. Status:")
+            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 1/3 after 2 seconds...")
+
+        and: "mock server received 2 requests"
+            mockWebServer.requestCount == 2
     }
 
-    def "extractRating sets rating to null if rating missing"() {
-        given:
-            Element productElement = Jsoup.parse("<div></div>").selectFirst("div")
+    def "fetchProductsPage retries on 403 Forbidden and succeeds on second retry"() {
+        given: "mock server returns 403 twice then 200"
+            String jsonResponse = '''
+            {
+                "skus": [
+                    {
+                        "id": 123,
+                        "name": "Test Product"
+                    }
+                ],
+                "page": {}
+            }
+            '''
 
-        when:
-            def result = productsScraper.extractRating(productElement)
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Forbidden"}'))
 
-        then:
-            result == null
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Forbidden"}'))
+
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
+
+        when: "fetching products"
+            String url = mockWebServer.url("/api/products").toString()
+            ProductApiResponseDto result = productsScraper.fetchProductsPage(url)
+
+        then: "request succeeds after retries"
+            result != null
+            result.items.size() == 1
+
+        and: "retry logs are present"
+            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 1/3 after 2 seconds...")
+            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 2/3 after 2 seconds...")
+
+        and: "mock server received 3 requests"
+            mockWebServer.requestCount == 3
     }
 
-    def "extractRating sets rating to null if rating is not numeric"() {
-        given:
-            def html = """
-                <div>
-                    <div class="rating-wrapper">
-                        <span data-testid="star-rating-value">not a rating</span>
-                    </div>
-                </div>
-            """
-            Element productElement = Jsoup.parse(html).selectFirst("div")
+    def "fetchProductsPage exhausts retries on 403 Forbidden and throws exception"() {
+        given: "mock server returns 403 for all retries"
+            4.times {
+                mockWebServer.enqueue(new MockResponse()
+                        .setResponseCode(403)
+                        .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .setBody('{"error": "Forbidden"}'))
+            }
 
-        when:
-            def result = productsScraper.extractRating(productElement)
+        when: "fetching products"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
 
-        then:
-            result == null
+        then: "ResponseStatusException is thrown after all retries"
+            def exception = thrown(ResponseStatusException)
+            with(exception) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch products")
+            }
+
+        and: "all retry logs are present"
+            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 1/3 after 2 seconds...")
+            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 2/3 after 2 seconds...")
+            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 3/3 after 2 seconds...")
+            assertLog(Level.ERROR, "Max retries (3) exhausted for URL:")
+
+        and: "mock server received 4 requests (initial + 3 retries)"
+            mockWebServer.requestCount == 4
+    }
+
+    def "fetchProductsPage does not retry on non-403 errors"() {
+        given: "mock server returns 500"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(500)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Internal Server Error"}'))
+
+        when: "fetching products"
+            String url = mockWebServer.url("/api/products").toString()
+            productsScraper.fetchProductsPage(url)
+
+        then: "ResponseStatusException is thrown immediately without retries"
+            def exception = thrown(ResponseStatusException)
+            exception.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+
+        and: "no retry logs are present"
+            !assertLog(Level.WARN, "Retrying attempt")
+
+        and: "mock server received only 1 request"
+            mockWebServer.requestCount == 1
     }
 }
