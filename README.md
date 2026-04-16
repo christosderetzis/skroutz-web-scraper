@@ -248,7 +248,7 @@ src/
 
 ### Running Functional Tests
 
-Functional tests use Docker Compose to spin up PostgreSQL, Elasticsearch, Selenium, and a mock HTTP server:
+Functional tests use Docker Compose to spin up PostgreSQL, Elasticsearch, and mock HTTP servers:
 
 ```bash
 ./gradlew functionalTest
