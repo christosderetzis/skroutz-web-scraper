@@ -1,0 +1,47 @@
+{
+  "skus": [
+    {
+      "id": 28392436,
+      "sku_url": "/s/28392436/oneplus-11.html",
+      "name": "OnePlus 11",
+      "spec_summary": "Flagship killer.",
+      "price": "650,00 €",
+      "image_url": "https://cdn.shopflix.gr/products/SFA-08180133/images/530/9645230.jpg?imwidth=640"
+    },
+    {
+      "id": 28392437,
+      "sku_url": "/s/28392437/sony-xperia-1-v.html",
+      "name": "Sony Xperia 1 V",
+      "spec_summary": "For photography enthusiasts.",
+      "price": "1.399,00 €",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/044182/44182101/large_20230628150019_sony_xperia_1_v_5g_12gb_256gb_black.jpeg",
+      "review_score": "4.4",
+      "reviews_count": "324"
+    },
+    {
+      "id": 28392438,
+      "sku_url": "/s/28392438/motorola-edge-40.html",
+      "name": "Motorola Edge 40",
+      "spec_summary": "Stylish and powerful.",
+      "price": "399,99 €",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/043590/43590985/large_20230524150019_motorola_edge_40_5g_8gb_256gb_nebula_green.jpeg",
+      "review_score": "4.3",
+      "reviews_count": "210"
+    },
+    {
+      "id": 28392439,
+      "sku_url": "/s/28392439/huawei-p60-pro.html",
+      "name": "Huawei P60 Pro",
+      "spec_summary": "Excellent camera performance.",
+      "price": "899,00 €",
+      "image_url": "https://a.scdn.gr/images/sku_main_images/042590/42590005/large_20230419150019_huawei_p60_pro_5g_12gb_256gb.jpeg",
+      "review_score": "4.5",
+      "reviews_count": "450"
+    }
+  ],
+  "page": {
+    "current_page": 2,
+    "total_pages": 4
+  }
+}
+

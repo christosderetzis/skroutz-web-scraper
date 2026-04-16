@@ -6,11 +6,10 @@ import org.springframework.test.web.reactive.server.WebTestClient
 
 class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
 
-    def "Scrape products, happy path"() {
+    def "Scrape products with single, happy path"() {
         given:
-            Integer numberOfPages = 2
             ScraperRequestDto requestDto = ScraperRequestDto.builder()
-                    .url("http://mockserver/products-page.html?numberOfPages=${numberOfPages}")
+                    .url("http://localhost:8081/products-page.html")
                     .category("electronics")
                     .build()
 
@@ -23,7 +22,7 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
             assert products.size() == 4
 
         and: "all product URLs should start with base URL"
-            assert products.every { it.url.startsWith("http://mockserver") }
+            assert products.every { it.url.startsWith("http://localhost:8081") }
 
         and: "all products should have the category set"
             assert products.every { it.category == "electronics" }
@@ -31,9 +30,8 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
 
     def "Scrape products, happy path with all pages"() {
         given:
-            Integer numberOfPages = 2
             ScraperRequestDto requestDto = ScraperRequestDto.builder()
-                    .url("http://mockserver/products-page.html?numberOfPages=${numberOfPages}")
+                    .url("http://localhost:8081//products-page.html")
                     .category("smartphones")
                     .build()
 
@@ -46,7 +44,7 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
             assert products.size() == 15
 
         and: "all product URLs should start with base URL"
-            assert products.every { it.url.startsWith("http://mockserver") }
+            assert products.every { it.url.startsWith("http://localhost:8081") }
 
         and: "all products should have the category set"
             assert products.every { it.category == "smartphones" }

@@ -1,0 +1,45 @@
+{
+  "skus": [
+    {
+      "id": 28392432,
+      "sku_url": "/s/28392432/samsung-galaxy-a54-5g-128gb-8gb-ram-graphite.html",
+      "name": "Samsung Galaxy A54",
+      "spec_summary": "A great phone with a great camera.",
+      "price": "299,99 €",
+      "image_url": "https://cdn.shopflix.gr/products/SFA-10065519/images/530/1738147931_8806094891973.webp?imwidth=640",
+      "review_score": "4.5",
+      "reviews_count": "1500"
+    },
+    {
+      "id": 28392433,
+      "sku_url": "/s/28392433/iphone-15-pro.html",
+      "name": "iPhone 15 Pro",
+      "spec_summary": "The latest iPhone.",
+      "image_url": "https://cdn.shopflix.gr/products/SFA-12065500/images/530/sf_temp_images_2023_2023_10_09_1696857317_0195949021022.jpeg?imwidth=640",
+      "review_score": "4.8",
+      "reviews_count": "2410"
+    },
+    {
+      "id": 28392434,
+      "sku_url": "/s/28392434/xiaomi-redmi-note-12.html",
+      "name": "Xiaomi Redmi Note 12",
+      "spec_summary": "A budget-friendly option.",
+      "price": "150,00 €",
+      "review_score": "4.2",
+      "reviews_count": "412"
+    },
+    {
+      "id": 28392435,
+      "sku_url": "/s/28392435/google-pixel-8.html",
+      "name": "Google Pixel 8",
+      "price": "799,00 €",
+      "image_url": "https://cdn.shopflix.gr/products/SFA-16102510/images/530/1702556289_SF_16102510.jpeg?imwidth=640",
+      "review_score": "4.6",
+      "reviews_count": "987"
+    }
+  ],
+  "page": {
+    "current_page": 1,
+    "total_pages": 4
+  }
+}

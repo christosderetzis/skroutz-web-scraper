@@ -1,22 +1,21 @@
 package org.skroutz.scraper.skroutzwebscraper.service;
 
-import java.util.function.Consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.skroutz.scraper.skroutzwebscraper.dto.ProductApiResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.mapper.ProductMapper;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.scraper.ProductsScraper;
+import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -26,68 +25,86 @@ public class ProductsService {
     private final ProductsScraper productsScraper;
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final UrlBuilder urlBuilder;
 
-    @Transactional
-    public void scrapeAndSaveProducts(ScraperRequestDto scraperRequestDto) {
-        log.info("Starting to scrape and save products from URL: {}", scraperRequestDto.getUrl());
+    public void scrapeProducts(ScraperRequestDto request, boolean multiplePages) {
+        log.info("Starting scrape for URL: {}, multiplePages: {}, category: {}",
+                request.getUrl(),
+                multiplePages,
+                request.getCategory());
 
-        try {
-            List<Product> scrapedProducts = productsScraper.scrapeProducts(scraperRequestDto);
-            log.info("Scraped {} products from URL", scrapedProducts.size());
-
-            List<Product> savedProducts = new ArrayList<>();
-
-            for (Product product : scrapedProducts) {
-                try {
-                    Product savedProduct = saveProductIfNotExists(product);
-                    if (savedProduct != null) {
-                        savedProducts.add(savedProduct);
-                    }
-                } catch (Exception e) {
-                    log.error("Error saving product '{}': {}", product.getTitle(), e.getMessage());
-                }
-            }
-
-            log.info("Successfully saved {} new products to database", savedProducts.size());
-
-        } catch (Exception e) {
-            log.error("Error during scraping and saving process: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to scrape and save products", e);
-        }
-    }
-
-    public Integer getNumberOfWebPages(String url) {
-        log.info("Getting number of web pages for URL: {}", url);
-
-        try {
-            Integer numberOfPages = productsScraper.getNumberOfPages(url);
-            log.info("Number of web pages found: {}", numberOfPages);
-            return numberOfPages;
-        } catch (Exception e) {
-            log.error("Error getting number of web pages: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to get number of web pages", e);
-        }
-    }
-
-    private Product saveProductIfNotExists(Product product) {
-        if (product.getUrl() == null || product.getTitle() == null) {
-            log.warn("Skipping product with missing URL or title");
-            return null;
-        }
-
-        Optional<Product> existingProduct = productRepository.findByUrl(product.getUrl());
-
-        if (existingProduct.isPresent()) {
-            log.debug("Product already exists with URL: {}", product.getUrl());
-            return updateExistingProduct(existingProduct.get(), product);
+        if (multiplePages) {
+            scrapeMultiplePages(request.getUrl(), request.getCategory());
         } else {
-            Product savedProduct = productRepository.save(product);
-            log.debug("Saved new product: {}", savedProduct.getTitle());
-            return savedProduct;
+            scrapePage(request.getUrl(), request.getCategory());
         }
     }
 
-    private Product updateExistingProduct(Product existing, Product scraped) {
+    private void scrapeMultiplePages(String url, String category) {
+        int totalPages = getTotalPages(url);
+
+        if (totalPages <= 0) {
+            log.warn("No pages found for URL: {}", url);
+            return;
+        }
+
+        log.info("Found {} pages to scrape", totalPages);
+
+        IntStream.rangeClosed(1, totalPages)
+                .mapToObj(page -> urlBuilder.buildUrlWithPage(url, page))
+                .forEach(pageUrl -> scrapePage(pageUrl, category));
+
+        log.info("Finished scraping all pages.");
+    }
+
+    private void scrapePage(String url, String category) {
+        try {
+            log.info("Scraping page: {}", url);
+
+            String jsonUrl = urlBuilder.convertToJsonUrl(url);
+
+            ProductApiResponseDto response =
+                    productsScraper.fetchProductsPage(jsonUrl);
+
+            response.getItems().stream()
+                    .map(dto -> productMapper.toProduct(dto, category, urlBuilder))
+                    .forEach(this::saveOrUpdate);
+
+            log.info("Finished scraping page: {}", url);
+
+        } catch (Exception e) {
+            log.error("Failed scraping page {}: {}", url, e.getMessage(), e);
+        }
+    }
+
+    private int getTotalPages(String url) {
+        String jsonUrl = urlBuilder.convertToJsonUrl(url);
+
+        ProductApiResponseDto response =
+                productsScraper.fetchProductsPage(jsonUrl);
+
+        return response.getPage().getTotalPages();
+    }
+
+    private void saveOrUpdate(Product scrapedProduct) {
+        if (scrapedProduct.getUrl() == null || scrapedProduct.getTitle() == null) {
+            log.warn("Skipping invalid product due to missing title/url");
+            return;
+        }
+
+        productRepository.findByUrl(scrapedProduct.getUrl())
+                .ifPresentOrElse(
+                        existing -> updateExistingProduct(existing, scrapedProduct),
+                        () -> saveNew(scrapedProduct)
+                );
+    }
+
+    private void saveNew(Product product) {
+        productRepository.save(product);
+        log.debug("Saved new product: {}", product.getTitle());
+    }
+
+    private void updateExistingProduct(Product existing, Product scraped) {
         boolean updated = false;
 
         updated |= updateField(scraped.getPrice(), existing.getPrice(), existing::setPrice);
@@ -99,10 +116,7 @@ public class ProductsService {
         if (updated) {
             Product updatedProduct = productRepository.save(existing);
             log.debug("Updated existing product: {}", updatedProduct.getTitle());
-            return updatedProduct;
         }
-
-        return existing;
     }
 
     private <T> boolean updateField(T newValue, T currentValue, Consumer<T> setter) {

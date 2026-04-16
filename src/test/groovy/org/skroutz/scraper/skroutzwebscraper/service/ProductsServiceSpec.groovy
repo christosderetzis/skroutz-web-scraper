@@ -1,12 +1,15 @@
 package org.skroutz.scraper.skroutzwebscraper.service
 
 import ch.qos.logback.classic.Level
+import org.mapstruct.Mapping
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
+import org.skroutz.scraper.skroutzwebscraper.dto.ProductApiResponseDto
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.mapper.ProductMapper
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.scraper.ProductsScraper
+import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder
 import spock.lang.Subject
 import spock.lang.Unroll
 
@@ -15,152 +18,174 @@ class ProductsServiceSpec extends WithLoggingBaseSpec {
     ProductsScraper productsScraper = Mock(ProductsScraper)
     ProductMapper productMapper = Mock(ProductMapper)
     ProductRepository productRepository = Mock(ProductRepository)
+    UrlBuilder urlBuilder = new UrlBuilder("https://example.com")
 
     @Subject
-    ProductsService service = new ProductsService(productsScraper, productRepository, productMapper)
+    ProductsService service = new ProductsService(productsScraper, productRepository, productMapper, urlBuilder)
 
-    def "Happy path, should scrape and save products if products do not exist"() {
-        given: "a scraper request"
-            def scraperRequestDto = new ScraperRequestDto(
-                url: "http://example.com/products",
-                category: "electronics"
-            )
+    def "Happy path, scrape products from single page and save if it does not exist"() {
+        given: "a scraper request for single page"
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products.html", category: "electronics")
 
         and: "a list of scraped products"
             List<Product> scrapedProducts = [
                     new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "electronics"),
-                    new Product(title: "Product 2", price: 200, url: "http://example.com/product2", category: "electronics")
             ]
 
-        when: "scraping and saving products"
-            service.scrapeAndSaveProducts(scraperRequestDto)
+        ProductApiResponseDto apiResponseDto = new ProductApiResponseDto(
+                items: [
+                    new ProductApiResponseDto.ProductDetailsResponseDto(title: "Product 1", price: 100, url: "http://example.com/product1"),
+                ]
+        )
+
+        when: "scraping products from single page"
+            service.scrapeProducts(scraperRequestDto, false)
 
         then: "products should be scraped from the URL"
-            1 * productsScraper.scrapeProducts({ it.url == "http://example.com/products" && it.category == "electronics" }) >> scrapedProducts
-            scrapedProducts.each {
+            1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDto
+            1 * productMapper.toProduct(apiResponseDto.items[0], "electronics", urlBuilder) >> scrapedProducts[0]
+            1 * productRepository.findByUrl(scrapedProducts[0].url) >> Optional.empty()
+            1 * productRepository.save(scrapedProducts[0]) >> scrapedProducts[0]
+            0 * _
+
+        and: "log should contain info about scraped products"
+            assertLog(Level.INFO, "Finished scraping page: https://example.com/products")
+    }
+
+    def "Happy path, scrape products from single page and do not save if it already exists with same price"() {
+        given: "a scraper request for single page"
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products.html", category: "electronics")
+
+        and: "a list of scraped products"
+            List<Product> scrapedProducts = [
+                    new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "electronics"),
+            ]
+
+        ProductApiResponseDto apiResponseDto = new ProductApiResponseDto(
+                items: [
+                    new ProductApiResponseDto.ProductDetailsResponseDto(title: "Product 1", price: 100, url: "http://example.com/product1"),
+                ]
+        )
+
+        when: "scraping products from single page"
+            service.scrapeProducts(scraperRequestDto, false)
+
+        then: "products should be scraped from the URL"
+            1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDto
+            1 * productMapper.toProduct(apiResponseDto.items[0], "electronics", urlBuilder) >> scrapedProducts[0]
+            1 * productRepository.findByUrl(scrapedProducts[0].url) >> Optional.of(scrapedProducts[0])
+            0 * productRepository.save(_)
+            0 * _
+
+        and: "log should contain info about scraped products"
+            assertLog(Level.INFO, "Finished scraping page: https://example.com/products")
+    }
+
+    def "Happy path, scrape products from single page and update if it already exists but with different price"() {
+        given: "a scraper request for single page"
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products.html", category: "electronics")
+
+        and: "a list of scraped products"
+            List<Product> scrapedProducts = [
+                    new Product(title: "Product 1", price: 150, url: "http://example.com/product1", category: "electronics"),
+            ]
+
+        ProductApiResponseDto apiResponseDto = new ProductApiResponseDto(
+                items: [
+                    new ProductApiResponseDto.ProductDetailsResponseDto(title: "Product 1", price: 150, url: "http://example.com/product1"),
+                ]
+        )
+
+        when: "scraping products from single page"
+            service.scrapeProducts(scraperRequestDto, false)
+
+        then: "products should be scraped from the URL"
+            1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDto
+            1 * productMapper.toProduct(apiResponseDto.items[0], "electronics", urlBuilder) >> scrapedProducts[0]
+            1 * productRepository.findByUrl(scrapedProducts[0].url) >> Optional.of(new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "electronics"))
+            1 * productRepository.save(scrapedProducts[0]) >> scrapedProducts[0]
+            0 * _
+
+        and: "log should contain info about scraped products"
+            assertLog(Level.INFO, "Finished scraping page: https://example.com/products")
+    }
+
+    def "Happy path, scrape products from multiple pages and save if they do not exist"() {
+        given: "a scraper request for multiple pages"
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products.html", category: "electronics")
+
+        and: "a list of scraped products for page 1 and page 2"
+            List<Product> scrapedProductsPage1 = [
+                    new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "electronics"),
+            ]
+            List<Product> scrapedProductsPage2 = [
+                    new Product(title: "Product 2", price: 200, url: "http://example.com/product2", category: "electronics"),
+            ]
+
+            ProductApiResponseDto apiResponseDtoPage1 = new ProductApiResponseDto(
+                    items: [
+                            new ProductApiResponseDto.ProductDetailsResponseDto(title: "Product 1", price: 100, url: "http://example.com/product1"),
+                    ],
+                    page: new ProductApiResponseDto.PageDetailsResponseDto(totalPages: 2, currentPage: 1)
+            )
+
+            ProductApiResponseDto apiResponseDtoPage2 = new ProductApiResponseDto(
+                    items: [
+                            new ProductApiResponseDto.ProductDetailsResponseDto(title: "Product 2", price: 200, url: "http://example.com/product2"),
+                    ],
+                    page: new ProductApiResponseDto.PageDetailsResponseDto(totalPages: 2, currentPage: 2)
+            )
+
+        when: "scraping products from multiple pages"
+            service.scrapeProducts(scraperRequestDto, true)
+
+        then: "products should be scraped from all pages"
+            2 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDtoPage1
+            1 * productsScraper.fetchProductsPage("https://example.com/products.json?page=2") >> apiResponseDtoPage2
+            1 * productMapper.toProduct(apiResponseDtoPage1.items[0], "electronics", urlBuilder) >> scrapedProductsPage1[0]
+            1 * productMapper.toProduct(apiResponseDtoPage2.items[0], "electronics", urlBuilder) >> scrapedProductsPage2[0]
+            [scrapedProductsPage1[0], scrapedProductsPage2[0]].each {
                 1 * productRepository.findByUrl(it.url) >> Optional.empty()
                 1 * productRepository.save(it) >> it
             }
             0 * _
 
-        and: "log should contain info about saved products"
-            assertLog(Level.INFO, "Successfully saved 2 new products to database")
-    }
-
-    def "Happy path, Should products if they already exist"() {
-        given: "a scraper request"
-            def scraperRequestDto = new ScraperRequestDto(
-                url: "http://example.com/products",
-                category: "electronics"
-            )
-
-        and: "an existing product and another that was scraped with different price"
-            Product existingProduct = new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "electronics")
-            Product scrapedProductWithNewPrice = new Product(title: "Product 1", price: 250, url: "http://example.com/product1", category: "electronics")
-
-        when: "scraping and saving products"
-            service.scrapeAndSaveProducts(scraperRequestDto)
-
-        then: "products should be scraped from the URL"
-            1 * productsScraper.scrapeProducts({ it.url == "http://example.com/products" && it.category == "electronics" }) >> [scrapedProductWithNewPrice]
-            1 * productRepository.findByUrl(scrapedProductWithNewPrice.url) >> Optional.of(existingProduct)
-            1 * productRepository.save(scrapedProductWithNewPrice)
-            0 * _
-    }
-
-    def "Happy path, should not save products if they already exist with same price"() {
-        given: "a scraper request"
-            def scraperRequestDto = new ScraperRequestDto(
-                url: "http://example.com/products",
-                category: "electronics"
-            )
-
-        and: "an existing product and another that was scraped with same price"
-            Product existingProduct = new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "electronics")
-
-        when: "scraping and saving products"
-            service.scrapeAndSaveProducts(scraperRequestDto)
-
-        then: "products should be scraped from the URL"
-            1 * productsScraper.scrapeProducts({ it.url == "http://example.com/products" && it.category == "electronics" }) >> [existingProduct]
-            1 * productRepository.findByUrl(existingProduct.url) >> Optional.of(existingProduct)
-            0 * productRepository.save(_)
-            0 * _
+        and:
+        assertLog(Level.INFO, "Found 2 pages to scrape")
     }
 
     def "Unhappy path, should log error if scraping fails"() {
-        given: "a scraper request"
-            def scraperRequestDto = new ScraperRequestDto(
-                url: "http://example.com/products",
-                category: "electronics"
-            )
+        given: "a scraper request for single page"
+            def scraperRequestDto = new ScraperRequestDto(url: "https://example.com/products.html", category: "electronics")
 
-        when: "scraping and saving products"
-            service.scrapeAndSaveProducts(scraperRequestDto)
+        when: "scraping products from single page"
+            service.scrapeProducts(scraperRequestDto, false)
 
         then: "scraper throws exception"
-            1 * productsScraper.scrapeProducts({ it.url == "http://example.com/products" && it.category == "electronics" }) >> { throw new Exception("Scraping failed") }
+            1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> { throw new Exception("Scraping failed") }
             0 * _
 
-        and:
-            def ex = thrown(RuntimeException)
-            ex.message.contains("Failed to scrape and save products")
+        and: "log should contain error about failed scraping"
+            assertLog(Level.ERROR, "Failed scraping page https://example.com/products.html")
     }
 
-    @Unroll
-    def "Unhappy path, should do nothing if scraped product #field is null"() {
-        given: "a scraper request"
-            def scraperRequestDto = new ScraperRequestDto(
-                url: "http://example.com/products",
-                category: "electronics"
+    def "Unhappy path, should log error if getting number of pages fail"() {
+        given: "a URL to check"
+            String url = "https://example.com/products.html"
+            ScraperRequestDto scraperRequestDto = new ScraperRequestDto(url: url, category: "electronics")
+
+            // create a ProductApiResponseDto with page details to trigger multiple page scraping
+            ProductApiResponseDto apiResponseDto = new ProductApiResponseDto(
+                    items: [],
+                    page: new ProductApiResponseDto.PageDetailsResponseDto(totalPages: 0, currentPage: 0)
             )
 
-        and: "a list of scraped products with one having null URL"
-            Product product = new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "electronics")
-            product."$field" = value
-
-        when: "scraping and saving products"
-            service.scrapeAndSaveProducts(scraperRequestDto)
-
-        then: "products should be scraped from the URL and not saved"
-            1 * productsScraper.scrapeProducts({ it.url == "http://example.com/products" && it.category == "electronics" }) >> [product]
-            0 * _
-
-        where:
-           field   | value
-           "url"   | null
-           "title" | null
-    }
-
-    def "Happy path, should return number of web pages"() {
-        given: "a URL to check"
-            String url = "http://example.com/products"
-
         when: "getting number of web pages"
-            int pages = service.getNumberOfWebPages(url)
-
-        then: "should return the number of pages from the scraper"
-            1 * productsScraper.getNumberOfPages(url) >> 5
-            0 * _
-
-        and: "should return correct number of pages"
-            pages == 5
-    }
-
-    def "Unhappy path, should log error if getting number of pages fails"() {
-        given: "a URL to check"
-            String url = "http://example.com/products"
-
-        when: "getting number of web pages"
-            service.getNumberOfWebPages(url)
+            service.scrapeProducts(scraperRequestDto, false)
 
         then: "scraper throws exception"
-            1 * productsScraper.getNumberOfPages(url) >> { throw new Exception("Failed to get pages") }
+            1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDto
             0 * _
-
-        and:
-            def ex = thrown(RuntimeException)
-            ex.message.contains("Failed to get number of web pages")
     }
 }
 
