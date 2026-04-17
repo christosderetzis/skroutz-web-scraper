@@ -1,6 +1,8 @@
 package org.skroutz.scraper.skroutzwebscraper.scraper
 
 import com.fasterxml.jackson.databind.JsonNode
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.springframework.context.ApplicationContext
 import spock.lang.Specification
 import spock.lang.Subject
@@ -8,10 +10,8 @@ import spock.lang.Unroll
 
 class SpecificationsScraperSpec extends Specification {
 
-    ApplicationContext applicationContext = Mock(ApplicationContext)
-
     @Subject
-    SpecificationsScraper scraper = new SpecificationsScraper(applicationContext, "https://www.skroutz.gr")
+    SpecificationsScraper scraper = new SpecificationsScraper()
 
     def "parseSpecifications skips entries with empty key or value"() {
         given:
@@ -30,9 +30,10 @@ class SpecificationsScraperSpec extends Specification {
                     </div>
                 </div>
             """
+            Document doc = Jsoup.parse(html)
 
         when:
-            JsonNode result = scraper.parseSpecifications(html)
+            JsonNode result = scraper.parseSpecifications(doc)
             JsonNode array = result.get("General")
 
         then:
@@ -42,7 +43,7 @@ class SpecificationsScraperSpec extends Specification {
 
     def "parseSpecifications returns empty object for empty HTML"() {
         when:
-            JsonNode result = scraper.parseSpecifications("<html><body></body></html>")
+            JsonNode result = scraper.parseSpecifications(Jsoup.parse("<html><body></body></html>"))
 
         then:
             result != null
@@ -69,9 +70,10 @@ class SpecificationsScraperSpec extends Specification {
                     </div>
                 </div>
             """
+            Document doc = Jsoup.parse(html)
 
         when:
-            JsonNode result = scraper.parseSpecifications(html)
+            JsonNode result = scraper.parseSpecifications(doc)
 
         then:
             result.has("Βασικά Χαρακτηριστικά")
@@ -95,9 +97,10 @@ class SpecificationsScraperSpec extends Specification {
     def "parseSpecifications parses '#rawValue' → value=#expectedValue unit=#expectedUnit"() {
         given:
             String html = buildHtml("Cat", ["Key": rawValue])
+            Document doc = Jsoup.parse(html)
 
         when:
-            JsonNode result = scraper.parseSpecifications(html)
+            JsonNode result = scraper.parseSpecifications(doc)
             def entry = findByKey(result.get("Cat"), "Key")
 
         then:

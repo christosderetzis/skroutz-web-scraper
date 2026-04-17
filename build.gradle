@@ -73,10 +73,6 @@ dependencies {
     // openapi
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.0'
 
-    // selenium
-    implementation 'org.seleniumhq.selenium:selenium-java:4.39.0'
-    implementation 'io.github.bonigarcia:webdrivermanager:6.3.3'
-
     // jsoup
     implementation 'org.jsoup:jsoup:1.22.1'
 

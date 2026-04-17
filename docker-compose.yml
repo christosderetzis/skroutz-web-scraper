@@ -44,15 +44,6 @@ services:
     networks:
       - elastic
 
-  selenium:
-    image: selenium/standalone-chrome:latest
-    container_name: selenium-chrome
-    ports:
-      - "4444:4444"
-      - "7900:7900"  # VNC port for viewing browser sessions
-    shm_size: 2gb
-    restart: unless-stopped
-
 volumes:
   postgres_data:
   elasticsearch_data:

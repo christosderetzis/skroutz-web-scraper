@@ -65,30 +65,6 @@ services:
       timeout: 5s
       retries: 3
 
-  chrome:
-    image: selenium/standalone-chrome:latest
-    container_name: chrome
-    environment:
-      - SE_NODE_MAX_SESSIONS=1
-      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
-    shm_size: 2gb
-    networks:
-      - test-network
-    ports:
-      - "4444:4444"
-      - "7900:7900"  # VNC port for debugging (optional)
-    depends_on:
-      mockserver:
-        condition: service_healthy
-      wiremock:
-        condition: service_healthy
-    platform: linux/amd64
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:4444/wd/hub/status" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 networks:
   test-network:
     driver: bridge

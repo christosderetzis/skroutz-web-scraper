@@ -29,7 +29,6 @@ import spock.lang.Specification
                 "ELASTICSEARCH_PORT=9201",
                 "scraper.base-url=http://localhost:8081",
                 "scraper.delay-range-min=100",
-                "scraper.selenium.url=http://localhost:4444/wd/hub",
         ]
 )
 abstract class BaseFunctionalSpec extends Specification {
