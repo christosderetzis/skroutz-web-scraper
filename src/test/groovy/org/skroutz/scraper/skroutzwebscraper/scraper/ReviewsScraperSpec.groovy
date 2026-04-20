@@ -29,180 +29,13 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
         webClient = WebClient.builder()
                 .baseUrl(mockWebServer.url("/").toString())
                 .build()
-        reviewsScraper = new ReviewsScraper(webClient, 1) // 1 second timeout for tests
+        reviewsScraper = new ReviewsScraper(webClient, 1, 3) // 1 second timeout, 3 retries for tests
     }
 
     def cleanup() {
         mockWebServer.shutdown()
     }
 
-    def "Happy path, scrape reviews from single page"() {
-        given: "a product URL and mock response with reviews"
-            String productUrl = mockWebServer.url("/product").toString()
-            String jsonResponse = '''
-            {
-                "reviews": {
-                    "reviews": [
-                        {
-                            "id": 1,
-                            "rating": 5,
-                            "author_name": "John Doe",
-                            "review_time": "01/01/2024",
-                            "original_formatted_review": "<p>Great product!</p>"
-                        },
-                        {
-                            "id": 2,
-                            "rating": 4,
-                            "author_name": "Jane Smith",
-                            "review_time": "02/01/2024",
-                            "original_formatted_review": "<p>Good value</p>"
-                        }
-                    ]
-                }
-            }
-            '''
-
-        and: "second page returns empty reviews"
-            String emptyResponse = '''
-            {
-                "reviews": {
-                    "reviews": []
-                }
-            }
-            '''
-
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(jsonResponse))
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(emptyResponse))
-
-        when: "scrapeReviews is called"
-            List<ReviewsApiResponseDto.ReviewDto> reviews = reviewsScraper.scrapeReviews(productUrl)
-
-        then: "reviews are fetched and returned"
-            reviews.size() == 2
-            reviews[0].authorName == "John Doe"
-            reviews[0].rating == 5
-            reviews[1].authorName == "Jane Smith"
-            reviews[1].rating == 4
-
-        and: "logs indicate success"
-            assertLog(Level.INFO, "Scraping reviews for")
-            assertLog(Level.INFO, "Total reviews fetched: 2")
-    }
-
-    def "Happy path, scrape reviews from multiple pages"() {
-        given: "a product URL"
-            String productUrl = mockWebServer.url("/product").toString()
-
-        and: "first page with reviews"
-            String firstPageResponse = '''
-            {
-                "reviews": {
-                    "reviews": [
-                        {"id": 1, "rating": 5, "author_name": "User1"},
-                        {"id": 2, "rating": 4, "author_name": "User2"}
-                    ]
-                }
-            }
-            '''
-
-        and: "second page with more reviews"
-            String secondPageResponse = '''
-            {
-                "reviews": {
-                    "reviews": [
-                        {"id": 3, "rating": 3, "author_name": "User3"}
-                    ]
-                }
-            }
-            '''
-
-        and: "third page empty"
-            String emptyResponse = '''
-            {
-                "reviews": {
-                    "reviews": []
-                }
-            }
-            '''
-
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(firstPageResponse))
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(secondPageResponse))
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(emptyResponse))
-
-        when: "scrapeReviews is called"
-            List<ReviewsApiResponseDto.ReviewDto> reviews = reviewsScraper.scrapeReviews(productUrl)
-
-        then: "all reviews from all pages are returned"
-            reviews.size() == 3
-            reviews*.authorName == ["User1", "User2", "User3"]
-
-        and: "logs indicate total count"
-            assertLog(Level.INFO, "Total reviews fetched: 3")
-    }
-
-    def "Happy path, product URL with .html extension"() {
-        given: "a product URL with .html extension"
-            String productUrl = mockWebServer.url("/product.html").toString()
-            String emptyResponse = '''
-            {
-                "reviews": {
-                    "reviews": []
-                }
-            }
-            '''
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(emptyResponse))
-
-        when: "scrapeReviews is called"
-            List<ReviewsApiResponseDto.ReviewDto> reviews = reviewsScraper.scrapeReviews(productUrl)
-
-        then: "URL is correctly transformed to reviews.json"
-            reviews.isEmpty()
-            def request = mockWebServer.takeRequest()
-            request.path.contains("/product/reviews.json")
-    }
-
-    def "Happy path, no reviews available"() {
-        given: "a product URL with no reviews"
-            String productUrl = mockWebServer.url("/product").toString()
-            String emptyResponse = '''
-            {
-                "reviews": {
-                    "reviews": []
-                }
-            }
-            '''
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(emptyResponse))
-
-        when: "scrapeReviews is called"
-            List<ReviewsApiResponseDto.ReviewDto> reviews = reviewsScraper.scrapeReviews(productUrl)
-
-        then: "empty list is returned"
-            reviews.isEmpty()
-
-        and: "logs indicate zero reviews"
-            assertLog(Level.INFO, "Total reviews fetched: 0")
-    }
 
     def "fetchReviewPage returns response successfully"() {
         given: "a valid API URL"
@@ -246,7 +79,7 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
             ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
 
         and: "error is logged"
-            assertLog(Level.ERROR, "Error fetching review data from URL:")
+            assertLog(Level.ERROR, "Error fetching reviews from URL:")
 
         where:
             statusCode | statusName
@@ -272,7 +105,7 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
             ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
 
         and: "error is logged"
-            assertLog(Level.ERROR, "Error fetching review data from URL:")
+            assertLog(Level.ERROR, "Error fetching reviews from URL:")
     }
 
     def "fetchReviewPage handles malformed JSON response"() {
@@ -291,7 +124,7 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
             ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
 
         and: "error is logged"
-            assertLog(Level.ERROR, "Error fetching review data from URL:")
+            assertLog(Level.ERROR, "Error fetching reviews from URL:")
     }
 
     def "fetchReviewPage handles connection timeout"() {
@@ -308,7 +141,7 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
             ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
 
         and: "error is logged"
-            assertLog(Level.ERROR, "Error fetching review data from URL:")
+            assertLog(Level.ERROR, "Error fetching reviews from URL:")
     }
 
     def "fetchReviewPage handles network disconnect during response"() {
@@ -325,7 +158,7 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
             ex.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
 
         and: "error is logged"
-            assertLog(Level.ERROR, "Error fetching review data from URL:")
+            assertLog(Level.ERROR, "Error fetching reviews from URL:")
     }
 
     def "fetchReviewPage handles slow response within timeout"() {
@@ -352,68 +185,6 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
         then: "request succeeds despite delay"
             response != null
             response.reviews.reviews.size() == 1
-    }
-
-    def "scrapeReviews accumulates offset correctly"() {
-        given: "a product URL"
-            String productUrl = mockWebServer.url("/product").toString()
-
-        and: "responses that return varying page sizes"
-            String firstPageResponse = '''
-            {
-                "reviews": {
-                    "reviews": [
-                        {"id": 1, "rating": 5, "author_name": "User1"},
-                        {"id": 2, "rating": 4, "author_name": "User2"},
-                        {"id": 3, "rating": 3, "author_name": "User3"}
-                    ]
-                }
-            }
-            '''
-            String secondPageResponse = '''
-            {
-                "reviews": {
-                    "reviews": [
-                        {"id": 4, "rating": 2, "author_name": "User4"},
-                        {"id": 5, "rating": 1, "author_name": "User5"}
-                    ]
-                }
-            }
-            '''
-            String emptyResponse = '''
-            {
-                "reviews": {
-                    "reviews": []
-                }
-            }
-            '''
-
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(firstPageResponse))
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(secondPageResponse))
-            mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(200)
-                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody(emptyResponse))
-
-        when: "scrapeReviews is called"
-            List<ReviewsApiResponseDto.ReviewDto> reviews = reviewsScraper.scrapeReviews(productUrl)
-
-        then: "all reviews are accumulated"
-            reviews.size() == 5
-
-        and: "correct offsets are used in requests"
-            def request1 = mockWebServer.takeRequest()
-            def request2 = mockWebServer.takeRequest()
-            def request3 = mockWebServer.takeRequest()
-            request1.path.contains("offset=0")
-            request2.path.contains("offset=3")
-            request3.path.contains("offset=5")
     }
 
     def "fetchReviewPage handles complex nested review data"() {
@@ -470,5 +241,123 @@ class ReviewsScraperSpec extends WithLoggingBaseSpec {
                 reviews.mergedReviewNotices != null
                 reviews.mergedReviewNotices["notice1"] == "Some notice"
             }
+    }
+
+    def "fetchReviewPage retries on 403 Forbidden and succeeds on first retry"() {
+        given: "a URL that returns 403 Forbidden on first attempt and succeeds on retry"
+            String url = mockWebServer.url("/reviews.json").toString()
+            String jsonResponse = '''
+            {
+                "reviews": {
+                    "reviews": [
+                        {"id": 1, "rating": 5, "author_name": "Retry User"}
+                    ]
+                }
+            }
+            '''
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("{\"error\": \"Forbidden\"}"))
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
+
+        when: "fetchReviewPage is called"
+            ReviewsApiResponseDto response = reviewsScraper.fetchReviewPage(url)
+
+        then: "request is retried and eventually succeeds"
+            response != null
+            response.reviews.reviews.size() == 1
+            response.reviews.reviews[0].authorName == "Retry User"
+
+        and: "logs indicate retry attempt"
+            assertLog(Level.ERROR, "Error fetching reviews. Status: 403 FORBIDDEN")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 1/3 after backoff...")
+
+        and: "mock server received two requests"
+            mockWebServer.requestCount == 2
+    }
+
+    def "fetchReviewPage retries on 403 Forbidden and succeeds on second retry"() {
+        given: "a URL that returns 403 Forbidden on first two attempts and succeeds on third attempt"
+            String url = mockWebServer.url("/reviews.json").toString()
+            String jsonResponse = '''
+            {
+                "reviews": {
+                    "reviews": [
+                        {"id": 1, "rating": 5, "author_name": "Retry User"}
+                    ]
+                }
+            }
+            '''
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("{\"error\": \"Forbidden\"}"))
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("{\"error\": \"Forbidden\"}"))
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
+
+        when: "fetchReviewPage is called"
+            ReviewsApiResponseDto response = reviewsScraper.fetchReviewPage(url)
+
+        then: "request is retried twice and eventually succeeds"
+            response != null
+            response.reviews.reviews.size() == 1
+            response.reviews.reviews[0].authorName == "Retry User"
+
+        and: "logs indicate retry attempts"
+            assertLog(Level.ERROR, "Error fetching reviews. Status: 403 FORBIDDEN")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 1/3 after backoff...")
+            assertLog(Level.ERROR, "Error fetching reviews. Status: 403 FORBIDDEN")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 2/3 after backoff...")
+
+        and: "mock server received three requests"
+            mockWebServer.requestCount == 3
+    }
+
+    def "fetchReviewPage retries on 403 Forbidden and fails after max retries"() {
+        given: "a URL that returns 403 Forbidden on all retry attempts"
+            String url = mockWebServer.url("/reviews.json").toString()
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("{\"error\": \"Forbidden\"}"))
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("{\"error\": \"Forbidden\"}"))
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("{\"error\": \"Forbidden\"}"))
+
+        when: "fetchReviewPage is called"
+            reviewsScraper.fetchReviewPage(url)
+
+        then: "request is retried the maximum number of times and eventually fails"
+            ResponseStatusException ex = thrown(ResponseStatusException)
+            with(ex) {
+                statusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                message.contains("Failed to fetch reviews")
+            }
+
+        and: "logs indicate all retry attempts"
+            assertLog(Level.ERROR, "Error fetching reviews. Status: 403 FORBIDDEN")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 1/3 after backoff...")
+            assertLog(Level.ERROR, "Error fetching reviews. Status: 403 FORBIDDEN")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 2/3 after backoff...")
+            assertLog(Level.ERROR, "Error fetching reviews. Status: 403 FORBIDDEN")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 3/3 after backoff...")
+
+        and: "mock server received four requests (1 initial + 3 retries)"
+            mockWebServer.requestCount == 4
     }
 }

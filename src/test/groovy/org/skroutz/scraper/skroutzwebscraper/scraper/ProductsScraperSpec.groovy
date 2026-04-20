@@ -31,7 +31,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
                 .baseUrl(mockWebServer.url("/").toString())
                 .build()
 
-        productsScraper = new ProductsScraper(webClient, 1) // 1 second timeout for tests
+        productsScraper = new ProductsScraper(webClient, 1, 3) // 1 second timeout for tests
     }
 
     def cleanup() {
@@ -83,8 +83,8 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "logs indicate success"
-            assertLog(Level.INFO, "Fetching product data from URL:")
-            assertLog(Level.WARN, "Successfully fetched product page data")
+            assertLog(Level.INFO, "Fetching products data from URL:")
+            assertLog(Level.INFO, "Successfully fetched products")
 
         and: "mock server received the request"
             mockWebServer.requestCount == 1
@@ -109,7 +109,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.INFO, "Fetching products data from URL:")
             assertLog(Level.ERROR, "Error fetching products. Status:")
             assertLog(Level.ERROR, "Error fetching products from URL:")
 
@@ -136,7 +136,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.INFO, "Fetching products data from URL:")
             assertLog(Level.ERROR, "Error fetching products. Status:")
             assertLog(Level.ERROR, "Error fetching products from URL:")
     }
@@ -160,7 +160,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.INFO, "Fetching products data from URL:")
             assertLog(Level.ERROR, "Error fetching products. Status:")
             assertLog(Level.ERROR, "Error fetching products from URL:")
     }
@@ -184,7 +184,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.INFO, "Fetching products data from URL:")
             assertLog(Level.ERROR, "Error fetching products. Status:")
             assertLog(Level.ERROR, "Error fetching products from URL:")
     }
@@ -208,7 +208,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.INFO, "Fetching products data from URL:")
             assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
@@ -231,7 +231,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.INFO, "Fetching products data from URL:")
             assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
@@ -252,7 +252,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.INFO, "Fetching products data from URL:")
             assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
@@ -273,7 +273,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
+            assertLog(Level.INFO, "Fetching products data from URL:")
             assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
@@ -313,8 +313,8 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "logs indicate success"
-            assertLog(Level.INFO, "Fetching product data from URL:")
-            assertLog(Level.WARN, "Successfully fetched product page data")
+            assertLog(Level.INFO, "Fetching products data from URL:")
+            assertLog(Level.INFO, "Successfully fetched products")
     }
 
     def "fetchProductsPage handles null response"() {
@@ -332,12 +332,12 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             def exception = thrown(ResponseStatusException)
             with(exception) {
                 statusCode == HttpStatus.INTERNAL_SERVER_ERROR
-                message.contains("Failed to fetch products: null response")
+                message.contains("Null response for products")
             }
 
         and: "error is logged"
-            assertLog(Level.INFO, "Fetching product data from URL:")
-            assertLog(Level.ERROR, "Received null response from products API")
+            assertLog(Level.INFO, "Fetching products data from URL:")
+            assertLog(Level.ERROR, "Error fetching products from URL:")
     }
 
     def "fetchProductsPage handles complex nested product data"() {
@@ -431,7 +431,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "logs indicate success"
-            assertLog(Level.WARN, "Successfully fetched product page data")
+            assertLog(Level.INFO, "Successfully fetched products")
     }
 
     def "fetchProductsPage retries on 403 Forbidden and succeeds on first retry"() {
@@ -468,7 +468,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
 
         and: "retry log is present"
             assertLog(Level.ERROR, "Error fetching products. Status:")
-            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 1/3 after 2 seconds...")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 1/3 after backoff...")
 
         and: "mock server received 2 requests"
             mockWebServer.requestCount == 2
@@ -512,8 +512,8 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             result.items.size() == 1
 
         and: "retry logs are present"
-            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 1/3 after 2 seconds...")
-            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 2/3 after 2 seconds...")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 1/3 after backoff...")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 1/3 after backoff...")
 
         and: "mock server received 3 requests"
             mockWebServer.requestCount == 3
@@ -540,21 +540,21 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "all retry logs are present"
-            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 1/3 after 2 seconds...")
-            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 2/3 after 2 seconds...")
-            assertLog(Level.WARN, "Received 403 Forbidden. Retrying attempt 3/3 after 2 seconds...")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 1/3 after backoff...")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 2/3 after backoff...")
+            assertLog(Level.WARN, "Received 403 FORBIDDEN. Retrying attempt 3/3 after backoff...")
             assertLog(Level.ERROR, "Max retries (3) exhausted for URL:")
 
         and: "mock server received 4 requests (initial + 3 retries)"
             mockWebServer.requestCount == 4
     }
 
-    def "fetchProductsPage does not retry on non-403 errors"() {
-        given: "mock server returns 500"
+    def "fetchProductsPage does not retry on non-retryable 4xx errors"() {
+        given: "mock server returns 404"
             mockWebServer.enqueue(new MockResponse()
-                    .setResponseCode(500)
+                    .setResponseCode(404)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .setBody('{"error": "Internal Server Error"}'))
+                    .setBody('{"error": "Not Found"}'))
 
         when: "fetching products"
             String url = mockWebServer.url("/api/products").toString()
@@ -564,10 +564,91 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
             def exception = thrown(ResponseStatusException)
             exception.statusCode == HttpStatus.INTERNAL_SERVER_ERROR
 
-        and: "no retry logs are present"
-            !assertLog(Level.WARN, "Retrying attempt")
-
         and: "mock server received only 1 request"
             mockWebServer.requestCount == 1
+    }
+
+    def "fetchProductsPage retries on 500 Internal Server Error"() {
+        given: "mock server returns 500 twice then 200"
+            String jsonResponse = '''
+            {
+                "skus": [
+                    {
+                        "id": 123,
+                        "name": "Test Product"
+                    }
+                ],
+                "page": {}
+            }
+            '''
+
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(500)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Internal Server Error"}'))
+
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(500)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Internal Server Error"}'))
+
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
+
+        when: "fetching products"
+            String url = mockWebServer.url("/api/products").toString()
+            ProductApiResponseDto result = productsScraper.fetchProductsPage(url)
+
+        then: "request succeeds after retries"
+            result != null
+            result.items.size() == 1
+
+        and: "retry logs are present"
+            assertLog(Level.WARN, "Received 500 INTERNAL_SERVER_ERROR. Retrying attempt 1/3 after backoff...")
+            assertLog(Level.WARN, "Received 500 INTERNAL_SERVER_ERROR. Retrying attempt 2/3 after backoff...")
+
+        and: "mock server received 3 requests"
+            mockWebServer.requestCount == 3
+    }
+
+    def "fetchProductsPage retries on 503 Service Unavailable"() {
+        given: "mock server returns 503 then 200"
+            String jsonResponse = '''
+            {
+                "skus": [
+                    {
+                        "id": 123,
+                        "name": "Test Product"
+                    }
+                ],
+                "page": {}
+            }
+            '''
+
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(503)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Service Unavailable"}'))
+
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
+
+        when: "fetching products"
+            String url = mockWebServer.url("/api/products").toString()
+            ProductApiResponseDto result = productsScraper.fetchProductsPage(url)
+
+        then: "request succeeds after retry"
+            result != null
+            result.items.size() == 1
+
+        and: "retry log is present"
+            assertLog(Level.WARN, "Received 503 SERVICE_UNAVAILABLE. Retrying attempt 1/3 after backoff...")
+
+        and: "mock server received 2 requests"
+            mockWebServer.requestCount == 2
     }
 }

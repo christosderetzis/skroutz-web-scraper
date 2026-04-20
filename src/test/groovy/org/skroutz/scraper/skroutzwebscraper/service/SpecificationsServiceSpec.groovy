@@ -39,7 +39,7 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
 
         then: "specifications should be scraped from the product URL"
             1 * productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(_ as Pageable) >> page
-            1 * specificationsScraper.scrapeSpecifications(product.url + "?lang=en") >> jsonNode
+            1 * specificationsScraper.scrapeSpecifications(product.url + "?lang=en") >> Optional.of(jsonNode)
             1 * productRepository.saveAll({ List<Product> products ->
                 products.size() == 1 &&
                 products[0].specifications == jsonNode &&
@@ -137,8 +137,8 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
 
         where:
             scenario | specifications
-            "null"   | null
-            "empty"  | new ObjectMapper().readTree('{}')
+            "null"   | Optional.empty()
+            "empty"  | Optional.of(new ObjectMapper().readTree('{}'))
     }
 
     def "Happy path, should process multiple products in batch"() {
@@ -161,8 +161,8 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
 
         then: "specifications should be scraped from both product URLs"
             1 * productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(_ as Pageable) >> page
-            1 * specificationsScraper.scrapeSpecifications(product1.url + "?lang=en") >> jsonNode1
-            1 * specificationsScraper.scrapeSpecifications(product2.url + "?lang=en") >> jsonNode2
+            1 * specificationsScraper.scrapeSpecifications(product1.url + "?lang=en") >> Optional.of(jsonNode1)
+            1 * specificationsScraper.scrapeSpecifications(product2.url + "?lang=en") >> Optional.of(jsonNode2)
             1 * productRepository.saveAll({ List<Product> products ->
                 products.size() == 2 &&
                 products[0].specifications == jsonNode1 &&

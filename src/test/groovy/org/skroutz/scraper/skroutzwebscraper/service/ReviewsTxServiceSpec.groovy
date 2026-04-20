@@ -30,7 +30,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
         given: "a product"
             Product product = Product.builder()
                     .id(1L)
-                    .url("http://example.com/product.html")
+                    .url("https://example.com/product.html")
                     .title("Test Product")
                     .reviewsParsed(false)
                     .build()
@@ -61,8 +61,13 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "reviews are scraped, mapped, and saved"
-            1 * reviewsScraper.scrapeReviews(product.url) >> reviewDtos
-            1 * reviewsMapper.mapToReviews(reviewDtos) >> reviews
+            2 * reviewsScraper.fetchReviewPage(_ as String) >>> [
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: reviewDtos)),
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
+            ]
+            1 * reviewsMapper.mapToReviews({ List<ReviewsApiResponseDto.ReviewDto> dtos ->
+                dtos.size() == 2 && dtos*.authorName == ["John Doe", "Jane Smith"]
+            }) >> reviews
             1 * reviewRepository.saveAll({ List<Review> savedReviews ->
                 savedReviews.size() == 2 &&
                         savedReviews.every { it.productId == 1L && it.product == product }
@@ -79,7 +84,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
         given: "a product"
             Product product = Product.builder()
                     .id(1L)
-                    .url("http://example.com/product.html")
+                    .url("https://example.com/product.html")
                     .title("Test Product")
                     .reviewsParsed(false)
                     .build()
@@ -94,8 +99,10 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "no reviews are saved but product is marked as parsed"
-            1 * reviewsScraper.scrapeReviews(product.url) >> reviewDtos
-            1 * reviewsMapper.mapToReviews(reviewDtos) >> reviews
+            1 * reviewsScraper.fetchReviewPage(_ as String) >> new ReviewsApiResponseDto(
+                    reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: [])
+            )
+            1 * reviewsMapper.mapToReviews([]) >> reviews
             0 * reviewRepository.saveAll(_)
             1 * productRepository.save({ it.reviewsParsed == true })
             0 * _
@@ -108,7 +115,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
         given: "a product with specific ID"
             Product product = Product.builder()
                     .id(42L)
-                    .url("http://example.com/product.html")
+                    .url("https://example.com/product.html")
                     .title("Test Product")
                     .reviewsParsed(false)
                     .build()
@@ -129,8 +136,13 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "review has correct productId and product reference"
-            1 * reviewsScraper.scrapeReviews(product.url) >> reviewDtos
-            1 * reviewsMapper.mapToReviews(reviewDtos) >> [review]
+            2 * reviewsScraper.fetchReviewPage(_ as String) >>> [
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: reviewDtos)),
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
+            ]
+            1 * reviewsMapper.mapToReviews({ List<ReviewsApiResponseDto.ReviewDto> dtos ->
+                dtos.size() == 1 && dtos[0].authorName == "Test User"
+            }) >> [review]
             1 * reviewRepository.saveAll({ List<Review> savedReviews ->
                 savedReviews[0].productId == 42L &&
                         savedReviews[0].product == product
@@ -143,7 +155,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
         given: "a product that is not yet parsed"
             Product product = Product.builder()
                     .id(1L)
-                    .url("http://example.com/product.html")
+                    .url("https://example.com/product.html")
                     .title("Test Product")
                     .reviewsParsed(false)
                     .build()
@@ -152,8 +164,10 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "product reviewsParsed is set to true and saved"
-            1 * reviewsScraper.scrapeReviews(_) >> []
-            1 * reviewsMapper.mapToReviews(_) >> []
+            1 * reviewsScraper.fetchReviewPage(_ as String) >> new ReviewsApiResponseDto(
+                    reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: [])
+            )
+            1 * reviewsMapper.mapToReviews([]) >> []
             1 * productRepository.save({ Product p ->
                 p.reviewsParsed == true && p.id == 1L
             })
@@ -164,7 +178,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
         given: "a product"
             Product product = Product.builder()
                     .id(1L)
-                    .url("http://example.com/product.html")
+                    .url("https://example.com/product.html")
                     .title("Test Product")
                     .reviewsParsed(false)
                     .build()
@@ -187,8 +201,13 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "single review is saved"
-            1 * reviewsScraper.scrapeReviews(product.url) >> reviewDtos
-            1 * reviewsMapper.mapToReviews(reviewDtos) >> reviews
+            2 * reviewsScraper.fetchReviewPage(_ as String) >>> [
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: reviewDtos)),
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
+            ]
+            1 * reviewsMapper.mapToReviews({ List<ReviewsApiResponseDto.ReviewDto> dtos ->
+                dtos.size() == 1
+            }) >> reviews
             1 * reviewRepository.saveAll({ it.size() == 1 })
             1 * productRepository.save(_)
             0 * _
@@ -201,7 +220,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
         given: "a product"
             Product product = Product.builder()
                     .id(1L)
-                    .url("http://example.com/product.html")
+                    .url("https://example.com/product.html")
                     .title("Test Product")
                     .reviewsParsed(false)
                     .build()
@@ -224,13 +243,129 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "all reviews are saved"
-            1 * reviewsScraper.scrapeReviews(product.url) >> reviewDtos
-            1 * reviewsMapper.mapToReviews(reviewDtos) >> reviews
+            2 * reviewsScraper.fetchReviewPage(_ as String) >>> [
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: reviewDtos)),
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
+            ]
+            1 * reviewsMapper.mapToReviews({ List<ReviewsApiResponseDto.ReviewDto> dtos ->
+                dtos.size() == 100
+            }) >> reviews
             1 * reviewRepository.saveAll({ it.size() == 100 })
             1 * productRepository.save(_)
             0 * _
 
         and: "correct count is logged"
             assertLog(Level.INFO, "Saved 100 reviews for product ID: 1")
+    }
+
+    def "scrapeReviews handles multiple pages correctly"() {
+        given: "a product"
+            Product product = Product.builder()
+                    .id(1L)
+                    .url("https://example.com/product")
+                    .reviewsParsed(false)
+                    .build()
+
+        and: "first page review DTOs"
+            def firstPageDtos = [
+                    new ReviewsApiResponseDto.ReviewDto(id: 1L, rating: 5, authorName: "User1"),
+                    new ReviewsApiResponseDto.ReviewDto(id: 2L, rating: 4, authorName: "User2")
+            ]
+
+        and: "second page review DTOs"
+            def secondPageDtos = [
+                    new ReviewsApiResponseDto.ReviewDto(id: 3L, rating: 3, authorName: "User3")
+            ]
+
+        and: "mapped reviews"
+            def allReviews = [
+                    Review.builder().reviewerName("User1").reviewerRating(5).build(),
+                    Review.builder().reviewerName("User2").reviewerRating(4).build(),
+                    Review.builder().reviewerName("User3").reviewerRating(3).build()
+            ]
+
+        when: "processSingleProduct is called"
+            reviewsTxService.processSingleProduct(product)
+
+        then: "multiple pages are fetched"
+            1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=0") >>
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: firstPageDtos))
+            1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=2") >>
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: secondPageDtos))
+            1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=3") >>
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
+
+        and: "all reviews are mapped and saved"
+            1 * reviewsMapper.mapToReviews({ List<ReviewsApiResponseDto.ReviewDto> dtos ->
+                dtos.size() == 3 && dtos*.authorName == ["User1", "User2", "User3"]
+            }) >> allReviews
+            1 * reviewRepository.saveAll({ it.size() == 3 })
+            1 * productRepository.save(_)
+            0 * _
+
+        and: "logs indicate total count"
+            assertLog(Level.INFO, "Scraping reviews for")
+            assertLog(Level.INFO, "Total reviews fetched: 3")
+    }
+
+    def "scrapeReviews handles product URL with .html extension"() {
+        given: "a product with .html in URL"
+            Product product = Product.builder()
+                    .id(1L)
+                    .url("https://example.com/product.html")
+                    .reviewsParsed(false)
+                    .build()
+
+        when: "processSingleProduct is called"
+            reviewsTxService.processSingleProduct(product)
+
+        then: "URL is transformed correctly (without .html)"
+            1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=0") >>
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
+            1 * reviewsMapper.mapToReviews([]) >> []
+            1 * productRepository.save(_)
+            0 * _
+    }
+
+    def "scrapeReviews accumulates offset correctly across pages"() {
+        given: "a product"
+            Product product = Product.builder()
+                    .id(1L)
+                    .url("https://example.com/product")
+                    .reviewsParsed(false)
+                    .build()
+
+        and: "varying page sizes"
+            def page1 = [
+                    new ReviewsApiResponseDto.ReviewDto(id: 1L, rating: 5, authorName: "User1"),
+                    new ReviewsApiResponseDto.ReviewDto(id: 2L, rating: 4, authorName: "User2"),
+                    new ReviewsApiResponseDto.ReviewDto(id: 3L, rating: 3, authorName: "User3")
+            ]
+            def page2 = [
+                    new ReviewsApiResponseDto.ReviewDto(id: 4L, rating: 2, authorName: "User4"),
+                    new ReviewsApiResponseDto.ReviewDto(id: 5L, rating: 1, authorName: "User5")
+            ]
+
+        and: "mapped reviews"
+            def allReviews = (1..5).collect { Review.builder().build() }
+
+        when: "processSingleProduct is called"
+            reviewsTxService.processSingleProduct(product)
+
+        then: "correct offsets are used"
+            1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=0") >>
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: page1))
+            1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=3") >>
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: page2))
+            1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=5") >>
+                    new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
+
+        and: "all reviews are saved"
+            1 * reviewsMapper.mapToReviews({ List<ReviewsApiResponseDto.ReviewDto> dtos ->
+                dtos.size() == 5
+            }) >> allReviews
+            1 * reviewRepository.saveAll({ it.size() == 5 })
+            1 * productRepository.save(_)
+            0 * _
     }
 }

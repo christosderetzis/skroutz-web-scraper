@@ -98,17 +98,19 @@ public class SpecificationsService {
 
             // Add a short delay to avoid overwhelming the target server
             Thread.sleep(500);
-            JsonNode specifications = specificationsScraper.scrapeSpecifications(formattedUrl);
 
-            if (specifications == null || specifications.isEmpty()) {
-                log.warn("No specifications found for product: {}", product.getId());
-                return false;
-            }
-
-            product.setSpecifications(specifications);
-            product.setSpecificationsSkipped(false); // Reset flag on successful parse
-            log.info("Successfully parsed specifications for product: {}", product.getTitle());
-            return true;
+            return specificationsScraper.scrapeSpecifications(formattedUrl)
+                    .filter(specifications -> !specifications.isEmpty())
+                    .map(specifications -> {
+                        product.setSpecifications(specifications);
+                        product.setSpecificationsSkipped(false); // Reset flag on successful parse
+                        log.info("Successfully parsed specifications for product: {}", product.getTitle());
+                        return true;
+                    })
+                    .orElseGet(() -> {
+                        log.warn("No specifications found for product: {}", product.getId());
+                        return false;
+                    });
         } catch (Exception e) {
             log.error("Error parsing specifications for product {}: {}", product.getId(), e.getMessage(), e);
             return false;
