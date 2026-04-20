@@ -51,9 +51,33 @@ jobs:
         cache-read-only: false
 
     - name: Cache Docker images
-      uses: ScribeMD/docker-cache@0.5.0
+      id: cache-docker
+      uses: actions/cache@v4
       with:
-        key: docker-${{ runner.os }}-${{ hashFiles('docker-compose-functional-tests.yml') }}
+        path: /tmp/docker-images
+        key: docker-images-${{ hashFiles('docker-compose-functional-tests.yml') }}
+
+    - name: Load cached Docker images
+      if: steps.cache-docker.outputs.cache-hit == 'true'
+      run: |
+        docker load -i /tmp/docker-images/postgres.tar
+        docker load -i /tmp/docker-images/elasticsearch.tar
+        docker load -i /tmp/docker-images/nginx.tar
+        docker load -i /tmp/docker-images/wiremock.tar
+
+    - name: Pull and save Docker images
+      if: steps.cache-docker.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p /tmp/docker-images
+        docker pull postgres:15
+        docker pull docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+        docker pull nginx:alpine
+        docker pull wiremock/wiremock:latest
+        docker save postgres:15 -o /tmp/docker-images/postgres.tar
+        docker save docker.elastic.co/elasticsearch/elasticsearch:9.3.0 -o /tmp/docker-images/elasticsearch.tar
+        docker save nginx:alpine -o /tmp/docker-images/nginx.tar
+        docker save wiremock/wiremock:latest -o /tmp/docker-images/wiremock.tar
+
     - name: Make gradlew executable
       run: chmod +x ./gradlew
 
