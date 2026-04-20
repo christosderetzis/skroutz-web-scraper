@@ -8,6 +8,7 @@ import org.skroutz.scraper.skroutzwebscraper.mapper.ReviewsMapper;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository;
 import org.skroutz.scraper.skroutzwebscraper.scraper.ReviewsScraper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +23,18 @@ public class ReviewsTxService {
     private final ReviewsMapper reviewsMapper;
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
+    private final long reviewPageDelayMs;
 
     public ReviewsTxService(ReviewsScraper reviewsScraper,
                             ReviewsMapper reviewsMapper,
                             ReviewRepository reviewRepository,
-                            ProductRepository productRepository) {
+                            ProductRepository productRepository,
+                            @Value("${scraper.delays.review-page-ms:100}") long reviewPageDelayMs) {
         this.reviewsScraper = reviewsScraper;
         this.reviewsMapper = reviewsMapper;
         this.reviewRepository = reviewRepository;
         this.productRepository = productRepository;
+        this.reviewPageDelayMs = reviewPageDelayMs;
     }
 
     @Transactional
@@ -64,7 +68,7 @@ public class ReviewsTxService {
         String reviewUrl = buildReviewUrl(url, offset);
 
         do {
-            Thread.sleep(100);
+            Thread.sleep(reviewPageDelayMs);
             ReviewsApiResponseDto response = reviewsScraper.fetchReviewPage(reviewUrl);
             List<ReviewsApiResponseDto.ReviewDto> reviewPageItems = response.getReviews().getReviews();
             reviewDtos.addAll(reviewPageItems);

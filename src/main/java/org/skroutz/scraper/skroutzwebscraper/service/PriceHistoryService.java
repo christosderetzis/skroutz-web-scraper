@@ -13,15 +13,14 @@ public class PriceHistoryService {
 
     private final PriceHistoryTxService priceHistoryTxService;
     private final ProductRepository productRepository;
-
-    // Configurable delay between products
-    @Value("${price-history.delay-ms:1000}")
-    private long delayMs;
+    private final long delayMs;
 
     public PriceHistoryService(PriceHistoryTxService priceHistoryTxService,
-                                  ProductRepository productRepository) {
+                               ProductRepository productRepository,
+                               @Value("${scraper.delays.price-history-ms:1000}") long delayMs) {
         this.priceHistoryTxService = priceHistoryTxService;
         this.productRepository = productRepository;
+        this.delayMs = delayMs;
     }
 
     public void fetchPriceHistoryForProducts() {

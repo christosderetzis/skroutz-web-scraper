@@ -23,13 +23,18 @@ public class SpecificationsService {
     private final SpecificationsScraper specificationsScraper;
     private final ProductSearchService productSearchService;
     private final Integer batchSize;
+    private final long specificationsDelayMs;
 
-    public SpecificationsService(ProductRepository productRepository, SpecificationsScraper specificationsScraper, ProductSearchService productSearchService,
-                                 @Value("${scraper.specifications.batch-size:30}") Integer size) {
+    public SpecificationsService(ProductRepository productRepository,
+                                 SpecificationsScraper specificationsScraper,
+                                 ProductSearchService productSearchService,
+                                 @Value("${scraper.specifications.batch-size:30}") Integer batchSize,
+                                 @Value("${scraper.delays.specifications-ms:500}") long specificationsDelayMs) {
         this.productRepository = productRepository;
         this.specificationsScraper = specificationsScraper;
         this.productSearchService = productSearchService;
-        this.batchSize = size;
+        this.batchSize = batchSize;
+        this.specificationsDelayMs = specificationsDelayMs;
     }
 
     public void parseSpecifications() {
@@ -96,8 +101,7 @@ public class SpecificationsService {
             log.info("Parsing specifications for product: {}", product.getId());
             String formattedUrl = url.contains("?") ? url + "&lang=en" : url + "?lang=en";
 
-            // Add a short delay to avoid overwhelming the target server
-            Thread.sleep(500);
+            Thread.sleep(specificationsDelayMs);
 
             return specificationsScraper.scrapeSpecifications(formattedUrl)
                     .filter(specifications -> !specifications.isEmpty())

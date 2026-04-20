@@ -13,11 +13,7 @@ class ReviewsServiceSpec extends WithLoggingBaseSpec {
     ReviewsTxService reviewsTxService = Mock()
 
     @Subject
-    ReviewsService reviewsService = new ReviewsService(reviewsTxService, productRepository)
-
-    def setup() {
-        reviewsService.@delayMs = 0L
-    }
+    ReviewsService reviewsService = new ReviewsService(reviewsTxService, productRepository, 0)
 
     def "Happy path, parse reviews successfully for single product"() {
         given: "a product with valid URL"

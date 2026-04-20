@@ -34,6 +34,18 @@ scraper:
   base-url: https://www.skroutz.gr
   timeout-seconds: 30
   max-retries: 3
+
+  # Delay configurations to control scraping speed and avoid rate limiting
+  delays:
+    # Delay between review page requests to avoid overwhelming the server
+    review-page-ms: 100
+    # Delay between product requests when scraping specifications
+    specifications-ms: 500
+    # Delay between products when scraping reviews
+    reviews-ms: 2000
+    # Delay between products when scraping price history
+    price-history-ms: 1000
+
   specifications:
     batch-size: 30
 

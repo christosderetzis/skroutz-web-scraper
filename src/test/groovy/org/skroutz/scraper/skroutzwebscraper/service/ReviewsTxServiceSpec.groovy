@@ -23,7 +23,8 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsScraper,
             reviewsMapper,
             reviewRepository,
-            productRepository
+            productRepository,
+            0
     )
 
     def "Happy path, process single product with reviews"() {

@@ -19,7 +19,7 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
     ProductSearchService productSearchService = Mock(ProductSearchService)
 
     @Subject
-    SpecificationsService service = new SpecificationsService(productRepository, specificationsScraper, productSearchService, 10)
+    SpecificationsService service = new SpecificationsService(productRepository, specificationsScraper, productSearchService, 10, 0)
 
     def "Happy path, should call specificationsScraper.scrapeSpecifications()"() {
         given: "a product object"
