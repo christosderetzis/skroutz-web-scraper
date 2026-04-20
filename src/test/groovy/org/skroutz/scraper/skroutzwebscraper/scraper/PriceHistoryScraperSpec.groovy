@@ -33,7 +33,7 @@ class PriceHistoryScraperSpec extends WithLoggingBaseSpec {
                 .baseUrl(mockWebServer.url("/").toString())
                 .build()
 
-        priceHistoryScraper = new PriceHistoryScraper(webClient, 1) // 1 second timeout for tests
+        priceHistoryScraper = new PriceHistoryScraper(webClient, 1, 3) // 1 second timeout for tests
     }
 
     def cleanup() {
@@ -80,7 +80,7 @@ class PriceHistoryScraperSpec extends WithLoggingBaseSpec {
 
         and: "logs indicate success"
             assertLog(Level.INFO, "Fetching price history data from URL:")
-            assertLog(Level.INFO, "Successfully fetched price history data")
+            assertLog(Level.INFO, "Successfully fetched price history")
 
         and: "mock server received the request"
             mockWebServer.requestCount == 1
@@ -296,7 +296,7 @@ class PriceHistoryScraperSpec extends WithLoggingBaseSpec {
 
         and: "logs indicate success"
             assertLog(Level.INFO, "Fetching price history data from URL:")
-            assertLog(Level.INFO, "Successfully fetched price history data")
+            assertLog(Level.INFO, "Successfully fetched price history")
     }
 
     def "fetchPriceHistory handles complex nested price history data"() {
@@ -360,6 +360,43 @@ class PriceHistoryScraperSpec extends WithLoggingBaseSpec {
             }
 
         and: "logs indicate success"
-            assertLog(Level.INFO, "Successfully fetched price history data")
+            assertLog(Level.INFO, "Successfully fetched price history")
+    }
+
+    def "fetchPriceHistory retries on 403 Forbidden and succeeds on first retry"() {
+        given: "a URL that returns 403 Forbidden on first attempt and succeeds on retry"
+            PriceHistoryResponseDto expectedResponse = PriceHistoryResponseDto.builder()
+                    .minPrice(PriceHistoryResponseDto.MetricDataDto.builder()
+                            .min(new BigDecimal("100.00"))
+                            .max(new BigDecimal("200.00"))
+                            .build())
+                    .build()
+
+            String jsonResponse = objectMapper.writeValueAsString(expectedResponse)
+
+        and: "mock server first returns 403, then succeeds"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(403)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"error": "Forbidden"}'))
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody(jsonResponse))
+
+        when: "fetching price history"
+            String url = mockWebServer.url("/api/price-history/123").toString()
+            PriceHistoryResponseDto result = priceHistoryScraper.fetchPriceHistory(url)
+
+        then: "request is retried and eventually succeeds"
+            result != null
+            result.minPrice.min == new BigDecimal("100.00")
+            result.minPrice.max == new BigDecimal("200.00")
+
+        and: "logs indicate retry attempt"
+            assertLog(Level.ERROR, "Error fetching price history. Status: 403 FORBIDDEN")
+
+        and: "mock server received both requests"
+            mockWebServer.requestCount == 2
     }
 }

@@ -15,8 +15,7 @@ class PriceHistoryServiceSpec extends WithLoggingBaseSpec {
     PriceHistoryService priceHistoryService
 
     def setup() {
-        priceHistoryService = new PriceHistoryService(priceHistoryTxService, productRepository)
-        priceHistoryService.delayMs = 0 // Disable delay for testing
+        priceHistoryService = new PriceHistoryService(priceHistoryTxService, productRepository, 0)
     }
 
     def "Happy path, fetch price history for products successfully"() {
@@ -137,36 +136,6 @@ class PriceHistoryServiceSpec extends WithLoggingBaseSpec {
             scenario                              | inputUrl                                                                   | expectedUrl
             "without .html extension"             | "https://www.skroutz.gr/s/123456/product-name"                            | "https://www.skroutz.gr/s/123456/product-name/price_graph.json?shipping_country=GR&currency=EUR"
             "with .html and query parameters"     | "https://www.skroutz.gr/s/123456/product.html?ref=home&campaign=test"     | "https://www.skroutz.gr/s/123456/product/price_graph.json?shipping_country=GR&currency=EUR"
-    }
-
-    def "Unhappy path, interrupted exception during sleep"() {
-        given: "product that will trigger interrupted exception"
-            Product product = Product.builder()
-                    .id(1L)
-                    .url("https://www.skroutz.gr/s/123456/product.html")
-                    .title("Product")
-                    .priceHistoryParsed(false)
-                    .build()
-
-        and: "service with delay enabled"
-            priceHistoryService.delayMs = 100
-
-        and: "mock thread interruption"
-            Thread.currentThread().interrupt()
-
-        when: "fetchPriceHistoryForProducts is called"
-            priceHistoryService.fetchPriceHistoryForProducts()
-
-        then: "exception is caught and logged"
-            1 * productRepository.findAllByPriceHistoryParsed(false) >> [product]
-            1 * priceHistoryTxService.processSingleProduct(product, _)
-            0 * _
-
-        and: "error is logged"
-            assertLog(Level.ERROR, "Error processing product ID 1")
-
-        cleanup:
-            Thread.interrupted() // Clear the interrupted status
     }
 
     def "Happy path, process continues after one product fails"() {

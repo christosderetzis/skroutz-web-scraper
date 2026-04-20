@@ -23,13 +23,18 @@ public class SpecificationsService {
     private final SpecificationsScraper specificationsScraper;
     private final ProductSearchService productSearchService;
     private final Integer batchSize;
+    private final long specificationsDelayMs;
 
-    public SpecificationsService(ProductRepository productRepository, SpecificationsScraper specificationsScraper, ProductSearchService productSearchService,
-                                 @Value("${scraper.specifications.batch-size:30}") Integer size) {
+    public SpecificationsService(ProductRepository productRepository,
+                                 SpecificationsScraper specificationsScraper,
+                                 ProductSearchService productSearchService,
+                                 @Value("${scraper.specifications.batch-size:30}") Integer batchSize,
+                                 @Value("${scraper.delays.specifications-ms:500}") long specificationsDelayMs) {
         this.productRepository = productRepository;
         this.specificationsScraper = specificationsScraper;
         this.productSearchService = productSearchService;
-        this.batchSize = size;
+        this.batchSize = batchSize;
+        this.specificationsDelayMs = specificationsDelayMs;
     }
 
     public void parseSpecifications() {
@@ -96,19 +101,20 @@ public class SpecificationsService {
             log.info("Parsing specifications for product: {}", product.getId());
             String formattedUrl = url.contains("?") ? url + "&lang=en" : url + "?lang=en";
 
-            // Add a short delay to avoid overwhelming the target server
-            Thread.sleep(500);
-            JsonNode specifications = specificationsScraper.scrapeSpecifications(formattedUrl);
+            Thread.sleep(specificationsDelayMs);
 
-            if (specifications == null || specifications.isEmpty()) {
-                log.warn("No specifications found for product: {}", product.getId());
-                return false;
-            }
-
-            product.setSpecifications(specifications);
-            product.setSpecificationsSkipped(false); // Reset flag on successful parse
-            log.info("Successfully parsed specifications for product: {}", product.getTitle());
-            return true;
+            return specificationsScraper.scrapeSpecifications(formattedUrl)
+                    .filter(specifications -> !specifications.isEmpty())
+                    .map(specifications -> {
+                        product.setSpecifications(specifications);
+                        product.setSpecificationsSkipped(false); // Reset flag on successful parse
+                        log.info("Successfully parsed specifications for product: {}", product.getTitle());
+                        return true;
+                    })
+                    .orElseGet(() -> {
+                        log.warn("No specifications found for product: {}", product.getId());
+                        return false;
+                    });
         } catch (Exception e) {
             log.error("Error parsing specifications for product {}: {}", product.getId(), e.getMessage(), e);
             return false;

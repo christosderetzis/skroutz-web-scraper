@@ -33,6 +33,12 @@ scraper:
 
   base-url: https://www.skroutz.gr
   timeout-seconds: 30
+  max-retries: 3
+  delays:
+    review-page-ms: 100
+    specifications-ms: 500
+    reviews-ms: 2000
+    price-history-ms: 1000
   specifications:
     batch-size: 30
 

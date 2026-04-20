@@ -53,7 +53,8 @@ public interface ProductMapper {
         }
 
         try {
-            return new BigDecimal(value.trim());
+            String normalized = value.trim().replace(",", ".");
+            return new BigDecimal(normalized);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid rating string: " + value, e);
         }

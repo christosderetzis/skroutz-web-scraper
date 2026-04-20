@@ -13,6 +13,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,7 +27,7 @@ public class SpecificationsScraper {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public JsonNode scrapeSpecifications(String url) {
+    public Optional<JsonNode> scrapeSpecifications(String url) {
         try {
              Document document = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
                     "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
@@ -38,14 +39,13 @@ public class SpecificationsScraper {
                     .timeout(10000)
                     .get();
 
-
-            return parseSpecifications(document);
+            return Optional.of(parseSpecifications(document));
         } catch (HttpStatusException e) {
             log.warn("HTTP error fetching URL {}: {}", url, e.getStatusCode());
         } catch (Exception e) {
             log.error("Error scraping specifications from URL {}: {}", url, e.getMessage());
         }
-        return null;
+        return Optional.empty();
     }
 
     private JsonNode parseSpecifications(Document document) {

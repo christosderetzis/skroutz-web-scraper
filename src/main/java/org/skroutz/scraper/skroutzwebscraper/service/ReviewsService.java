@@ -14,14 +14,14 @@ public class ReviewsService {
 
     private final ReviewsTxService reviewsTxService;
     private final ProductRepository productRepository;
-
-    @Value("${reviews.delay-ms:2000}")
-    private long delayMs;
+    private final long delayMs;
 
     public ReviewsService(ReviewsTxService reviewsTxService,
-                          ProductRepository productRepository) {
+                          ProductRepository productRepository,
+                          @Value("${scraper.delays.reviews-ms:2000}") long delayMs) {
         this.reviewsTxService = reviewsTxService;
         this.productRepository = productRepository;
+        this.delayMs = delayMs;
     }
 
     public void parseReviews() {
