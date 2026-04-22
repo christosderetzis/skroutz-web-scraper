@@ -1,5 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto;
@@ -8,12 +9,14 @@ import org.skroutz.scraper.skroutzwebscraper.service.ProductsService;
 import org.skroutz.scraper.skroutzwebscraper.service.ReviewsService;
 import org.skroutz.scraper.skroutzwebscraper.service.SpecificationsService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
 @RequestMapping("/scraper")
 @RequiredArgsConstructor
+@Validated
 public class ScraperController {
 
     private final SpecificationsService specificationsService;
@@ -43,7 +46,7 @@ public class ScraperController {
     }
 
     @PostMapping("/products")
-    public ResponseEntity<Void> scrapeProducts(@RequestBody ScraperRequestDto request,
+    public ResponseEntity<Void> scrapeProducts(@Valid @RequestBody ScraperRequestDto request,
                                                 @RequestParam boolean multiple) {
         log.info("Received request to scrape products from URL: {}, multiple: {}", request.getUrl(), multiple);
         productsService.scrapeProducts(request, multiple);

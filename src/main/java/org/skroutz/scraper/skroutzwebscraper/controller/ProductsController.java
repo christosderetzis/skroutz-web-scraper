@@ -1,11 +1,14 @@
 package org.skroutz.scraper.skroutzwebscraper.controller;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductSuggestionDto;
 import org.skroutz.scraper.skroutzwebscraper.service.ProductSearchService;
 import org.skroutz.scraper.skroutzwebscraper.service.ProductsService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +16,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/products")
+@Validated
 public class ProductsController {
 
     private final ProductsService productsService;
@@ -31,8 +35,8 @@ public class ProductsController {
 
     @GetMapping("/autocomplete")
     public List<ProductSuggestionDto> autocomplete(
-            @RequestParam String q,
-            @RequestParam(defaultValue = "5") int limit) {
+            @RequestParam @NotBlank(message = "Search query is required") String q,
+            @RequestParam(defaultValue = "5") @Min(value = 1, message = "Limit must be at least 1") int limit) {
 
         return productSearchService.getProductSuggestions(q, limit);
     }

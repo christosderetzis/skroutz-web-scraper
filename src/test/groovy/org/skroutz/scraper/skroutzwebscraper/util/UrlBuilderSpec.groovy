@@ -145,4 +145,88 @@ class UrlBuilderSpec extends Specification {
             "blank string" | "   "
             "whitespace"   | "\t\n"
     }
+
+    // buildReviewsApiUrl tests
+    @Unroll
+    def "buildReviewsApiUrl constructs correct URL for #scenario"() {
+        when: "building reviews API URL"
+            def result = urlBuilder.buildReviewsApiUrl(productUrl, offset)
+
+        then: "correct API URL is returned"
+            result == expected
+
+        where:
+            scenario                          | productUrl                                                    | offset || expected
+            "simple .html URL"                | "https://www.skroutz.gr/s/123/product.html"                  | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0"
+            "URL without extension"           | "https://www.skroutz.gr/s/123/product"                       | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0"
+            "URL with query string"           | "https://www.skroutz.gr/s/123/product.html?ref=home"         | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0"
+            "non-zero offset"                 | "https://www.skroutz.gr/s/123/product.html"                  | 10     || "https://www.skroutz.gr/s/123/product/reviews.json?offset=10"
+            "large offset"                    | "https://www.skroutz.gr/s/123/product.html"                  | 1000   || "https://www.skroutz.gr/s/123/product/reviews.json?offset=1000"
+            "complex path with .html"         | "https://www.skroutz.gr/s/123/product-name-here.html"        | 5      || "https://www.skroutz.gr/s/123/product-name-here/reviews.json?offset=5"
+            "URL with fragment"               | "https://www.skroutz.gr/s/123/product.html#section"          | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0"
+    }
+
+    @Unroll
+    def "buildReviewsApiUrl throws exception for invalid input: #scenario"() {
+        when: "building reviews API URL with invalid input"
+            urlBuilder.buildReviewsApiUrl(productUrl, offset)
+
+        then: "IllegalArgumentException is thrown"
+            def exception = thrown(IllegalArgumentException)
+            exception.message.contains(expectedMessage)
+
+        where:
+            scenario           | productUrl                          | offset || expectedMessage
+            "null URL"         | null                                | 0      || "cannot be null or blank"
+            "blank URL"        | "   "                               | 0      || "cannot be null or blank"
+            "empty URL"        | ""                                  | 0      || "cannot be null or blank"
+            "negative offset"  | "https://www.skroutz.gr/s/123.html" | -1     || "must be non-negative"
+            "URL without path" | "https://www.skroutz.gr"            | 0      || "must have a path component"
+            "invalid URL"      | "not a valid url"                   | 0      || "Invalid product URL"
+    }
+
+    // buildPriceGraphApiUrl tests
+    @Unroll
+    def "buildPriceGraphApiUrl constructs correct URL for #scenario"() {
+        when: "building price graph API URL"
+            def result = urlBuilder.buildPriceGraphApiUrl(productUrl)
+
+        then: "correct API URL is returned"
+            result == expected
+
+        where:
+            scenario                          | productUrl                                                    || expected
+            "simple .html URL"                | "https://www.skroutz.gr/s/123/product.html"                  || "https://www.skroutz.gr/s/123/product/price_graph.json?shipping_country=GR&currency=EUR"
+            "URL without extension"           | "https://www.skroutz.gr/s/123/product"                       || "https://www.skroutz.gr/s/123/product/price_graph.json?shipping_country=GR&currency=EUR"
+            "URL with query string"           | "https://www.skroutz.gr/s/123/product.html?ref=home"         || "https://www.skroutz.gr/s/123/product/price_graph.json?shipping_country=GR&currency=EUR"
+            "complex path with .html"         | "https://www.skroutz.gr/s/123/product-name-here.html"        || "https://www.skroutz.gr/s/123/product-name-here/price_graph.json?shipping_country=GR&currency=EUR"
+            "URL with fragment"               | "https://www.skroutz.gr/s/123/product.html#section"          || "https://www.skroutz.gr/s/123/product/price_graph.json?shipping_country=GR&currency=EUR"
+            "URL with multiple query params"  | "https://www.skroutz.gr/s/123/product.html?a=1&b=2"          || "https://www.skroutz.gr/s/123/product/price_graph.json?shipping_country=GR&currency=EUR"
+    }
+
+    @Unroll
+    def "buildPriceGraphApiUrl throws exception for invalid input: #scenario"() {
+        when: "building price graph API URL with invalid input"
+            urlBuilder.buildPriceGraphApiUrl(productUrl)
+
+        then: "IllegalArgumentException is thrown"
+            def exception = thrown(IllegalArgumentException)
+            exception.message.contains(expectedMessage)
+
+        where:
+            scenario           | productUrl                || expectedMessage
+            "null URL"         | null                      || "cannot be null or blank"
+            "blank URL"        | "   "                     || "cannot be null or blank"
+            "empty URL"        | ""                        || "cannot be null or blank"
+            "URL without path" | "https://www.skroutz.gr"  || "must have a path component"
+            "invalid URL"      | "not a valid url"         || "Invalid product URL"
+    }
+
+    def "stripHtmlExtension only strips .html suffix"() {
+        when: "building API URL with .html in the middle of path"
+            def result = urlBuilder.buildReviewsApiUrl("https://www.skroutz.gr/s/123/product.html.backup", 0)
+
+        then: "only trailing .html would be stripped, .backup remains"
+            result == "https://www.skroutz.gr/s/123/product.html.backup/reviews.json?offset=0"
+    }
 }

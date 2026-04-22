@@ -1,6 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.skroutz.scraper.skroutzwebscraper.controllerAdvice.RestResponseEntityExceptionHandler
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
 import org.skroutz.scraper.skroutzwebscraper.service.PriceHistoryService
 import org.skroutz.scraper.skroutzwebscraper.service.ProductsService
@@ -15,12 +16,14 @@ import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
 
+import static org.hamcrest.Matchers.containsInAnyOrder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest
-@ContextConfiguration(classes = [ScraperController])
+@ContextConfiguration(classes = [ScraperController, RestResponseEntityExceptionHandler])
 class ScraperControllerSpec extends Specification {
 
     @Autowired
@@ -80,5 +83,39 @@ class ScraperControllerSpec extends Specification {
         then: "should call price history service and return OK"
             result.andExpect(status().isOk())
             1 * priceHistoryService.fetchPriceHistoryForProducts()
+    }
+
+    def "should return 400 when request validation fails: #scenario"() {
+        given: "a scraper request with invalid data"
+            def scraperRequestDto = new ScraperRequestDto(url: url, category: category)
+            def requestBody = objectMapper.writeValueAsString(scraperRequestDto)
+
+        when: "performing POST request"
+            def result = mockMvc.perform(post("/scraper/products")
+                    .param("multiple", "false")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+
+        then: "should return 400 Bad Request with validation error"
+            result.andExpect(status().isBadRequest())
+                    .andExpect(jsonPath('$.status').value(400))
+
+            if (expectedErrors.size() == 1) {
+                result.andExpect(jsonPath('$.errors[0]').value(expectedErrors[0]))
+            } else {
+                result.andExpect(jsonPath('$.errors.length()').value(expectedErrors.size()))
+                        .andExpect(jsonPath('$.errors', containsInAnyOrder(expectedErrors as Object[])))
+            }
+
+            0 * productsService.scrapeProducts(_, _)
+
+        where:
+            scenario                          | url                  | category      || expectedErrors
+            "URL is null"                     | null                 | "electronics" || ["url: URL is required"]
+            "URL is blank"                    | "  "                 | "electronics" || ["url: URL is required", "url: URL must be a valid HTTP or HTTPS URL"]
+            "URL is invalid format"           | "not-a-url"          | "electronics" || ["url: URL must be a valid HTTP or HTTPS URL"]
+            "category is null"                | "https://example.com"| null          || ["category: Category is required"]
+            "category is blank"               | "https://example.com"| "  "          || ["category: Category is required"]
+            "both URL and category are null"  | null                 | null          || ["category: Category is required", "url: URL is required"]
     }
 }

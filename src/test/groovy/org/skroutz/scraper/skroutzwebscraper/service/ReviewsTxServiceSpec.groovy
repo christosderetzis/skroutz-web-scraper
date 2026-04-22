@@ -9,6 +9,7 @@ import org.skroutz.scraper.skroutzwebscraper.mapper.ReviewsMapper
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.scraper.ReviewsScraper
+import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder
 import spock.lang.Subject
 
 class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
@@ -17,6 +18,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
     ReviewsMapper reviewsMapper = Mock()
     ReviewRepository reviewRepository = Mock()
     ProductRepository productRepository = Mock()
+    UrlBuilder urlBuilder = Mock()
 
     @Subject
     ReviewsTxService reviewsTxService = new ReviewsTxService(
@@ -24,6 +26,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsMapper,
             reviewRepository,
             productRepository,
+            urlBuilder,
             0
     )
 
@@ -62,6 +65,8 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "reviews are scraped, mapped, and saved"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 0) >> "https://example.com/product/reviews.json?offset=0"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 2) >> "https://example.com/product/reviews.json?offset=2"
             2 * reviewsScraper.fetchReviewPage(_ as String) >>> [
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: reviewDtos)),
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
@@ -100,6 +105,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "no reviews are saved but product is marked as parsed"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 0) >> "https://example.com/product/reviews.json?offset=0"
             1 * reviewsScraper.fetchReviewPage(_ as String) >> new ReviewsApiResponseDto(
                     reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: [])
             )
@@ -137,6 +143,8 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "review has correct productId and product reference"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 0) >> "https://example.com/product/reviews.json?offset=0"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 1) >> "https://example.com/product/reviews.json?offset=1"
             2 * reviewsScraper.fetchReviewPage(_ as String) >>> [
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: reviewDtos)),
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
@@ -165,6 +173,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "product reviewsParsed is set to true and saved"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 0) >> "https://example.com/product/reviews.json?offset=0"
             1 * reviewsScraper.fetchReviewPage(_ as String) >> new ReviewsApiResponseDto(
                     reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: [])
             )
@@ -202,6 +211,8 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "single review is saved"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 0) >> "https://example.com/product/reviews.json?offset=0"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 1) >> "https://example.com/product/reviews.json?offset=1"
             2 * reviewsScraper.fetchReviewPage(_ as String) >>> [
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: reviewDtos)),
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
@@ -244,6 +255,8 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "all reviews are saved"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 0) >> "https://example.com/product/reviews.json?offset=0"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 100) >> "https://example.com/product/reviews.json?offset=100"
             2 * reviewsScraper.fetchReviewPage(_ as String) >>> [
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: reviewDtos)),
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
@@ -289,6 +302,9 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "multiple pages are fetched"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product", 0) >> "https://example.com/product/reviews.json?offset=0"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product", 2) >> "https://example.com/product/reviews.json?offset=2"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product", 3) >> "https://example.com/product/reviews.json?offset=3"
             1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=0") >>
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: firstPageDtos))
             1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=2") >>
@@ -321,6 +337,7 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "URL is transformed correctly (without .html)"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product.html", 0) >> "https://example.com/product/reviews.json?offset=0"
             1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=0") >>
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: []))
             1 * reviewsMapper.mapToReviews([]) >> []
@@ -354,6 +371,9 @@ class ReviewsTxServiceSpec extends WithLoggingBaseSpec {
             reviewsTxService.processSingleProduct(product)
 
         then: "correct offsets are used"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product", 0) >> "https://example.com/product/reviews.json?offset=0"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product", 3) >> "https://example.com/product/reviews.json?offset=3"
+            1 * urlBuilder.buildReviewsApiUrl("https://example.com/product", 5) >> "https://example.com/product/reviews.json?offset=5"
             1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=0") >>
                     new ReviewsApiResponseDto(reviews: new ReviewsApiResponseDto.ReviewsWrapper(reviews: page1))
             1 * reviewsScraper.fetchReviewPage("https://example.com/product/reviews.json?offset=3") >>

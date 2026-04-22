@@ -3,6 +3,9 @@ package org.skroutz.scraper.skroutzwebscraper.util;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 @Component
 public class UrlBuilder {
 
@@ -50,5 +53,64 @@ public class UrlBuilder {
         String cleanUrl = partialUrl.startsWith("/") ? partialUrl.substring(1) : partialUrl;
 
         return baseUrl + "/" + cleanUrl;
+    }
+
+    public String buildReviewsApiUrl(String productUrl, int offset) {
+        if (productUrl == null || productUrl.isBlank()) {
+            throw new IllegalArgumentException("Product URL cannot be null or blank");
+        }
+
+        if (offset < 0) {
+            throw new IllegalArgumentException("Offset must be non-negative");
+        }
+
+        try {
+            URI uri = new URI(productUrl);
+            String path = uri.getPath();
+
+            if (path == null || path.isEmpty()) {
+                throw new IllegalArgumentException("Product URL must have a path component");
+            }
+
+            String basePath = stripHtmlExtension(path);
+            String newPath = basePath + "/reviews.json";
+            String newQuery = "offset=" + offset;
+
+            URI apiUri = new URI(uri.getScheme(), uri.getAuthority(), newPath, newQuery, null);
+            return apiUri.toString();
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid product URL: " + productUrl, e);
+        }
+    }
+
+    public String buildPriceGraphApiUrl(String productUrl) {
+        if (productUrl == null || productUrl.isBlank()) {
+            throw new IllegalArgumentException("Product URL cannot be null or blank");
+        }
+
+        try {
+            URI uri = new URI(productUrl);
+            String path = uri.getPath();
+
+            if (path == null || path.isEmpty()) {
+                throw new IllegalArgumentException("Product URL must have a path component");
+            }
+
+            String basePath = stripHtmlExtension(path);
+            String newPath = basePath + "/price_graph.json";
+            String newQuery = "shipping_country=GR&currency=EUR";
+
+            URI apiUri = new URI(uri.getScheme(), uri.getAuthority(), newPath, newQuery, null);
+            return apiUri.toString();
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid product URL: " + productUrl, e);
+        }
+    }
+
+    private String stripHtmlExtension(String path) {
+        if (path.endsWith(".html")) {
+            return path.substring(0, path.length() - 5);
+        }
+        return path;
     }
 }
