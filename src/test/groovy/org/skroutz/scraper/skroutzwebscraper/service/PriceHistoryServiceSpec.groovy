@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
-import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder
 import spock.lang.Subject
 
 class PriceHistoryServiceSpec extends WithLoggingBaseSpec {

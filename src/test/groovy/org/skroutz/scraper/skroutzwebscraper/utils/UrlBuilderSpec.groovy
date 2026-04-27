@@ -1,4 +1,5 @@
-package org.skroutz.scraper.skroutzwebscraper.util
+package org.skroutz.scraper.skroutzwebscraper.utils
+
 
 import spock.lang.Specification
 import spock.lang.Subject

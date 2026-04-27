@@ -9,7 +9,7 @@ import org.skroutz.scraper.skroutzwebscraper.mapper.ReviewsMapper
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.scraper.ReviewsScraper
-import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder
 import spock.lang.Subject
 
 class ReviewsTxServiceSpec extends WithLoggingBaseSpec {

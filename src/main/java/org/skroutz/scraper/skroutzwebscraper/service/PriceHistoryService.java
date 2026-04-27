@@ -3,7 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.service;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
-import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.List;

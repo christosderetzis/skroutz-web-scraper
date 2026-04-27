@@ -9,7 +9,7 @@ import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.mapper.ProductMapper;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.scraper.ProductsScraper;
-import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
