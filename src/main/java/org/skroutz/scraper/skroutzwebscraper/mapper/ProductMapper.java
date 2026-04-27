@@ -6,7 +6,7 @@ import org.mapstruct.Named;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductApiResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
-import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder;
 
 import java.math.BigDecimal;
 

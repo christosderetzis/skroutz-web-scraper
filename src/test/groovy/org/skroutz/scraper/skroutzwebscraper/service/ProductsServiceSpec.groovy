@@ -1,7 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.service
 
 import ch.qos.logback.classic.Level
-import org.mapstruct.Mapping
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductApiResponseDto
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
@@ -9,9 +8,8 @@ import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.mapper.ProductMapper
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.scraper.ProductsScraper
-import org.skroutz.scraper.skroutzwebscraper.util.UrlBuilder
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder
 import spock.lang.Subject
-import spock.lang.Unroll
 
 class ProductsServiceSpec extends WithLoggingBaseSpec {
 

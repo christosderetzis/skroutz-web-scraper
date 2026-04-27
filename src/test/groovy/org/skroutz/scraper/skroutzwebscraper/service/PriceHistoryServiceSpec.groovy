@@ -4,18 +4,20 @@ import ch.qos.logback.classic.Level
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder
 import spock.lang.Subject
 
 class PriceHistoryServiceSpec extends WithLoggingBaseSpec {
 
     ProductRepository productRepository = Mock()
     PriceHistoryTxService priceHistoryTxService = Mock()
+    UrlBuilder urlBuilder = Mock()
 
     @Subject
     PriceHistoryService priceHistoryService
 
     def setup() {
-        priceHistoryService = new PriceHistoryService(priceHistoryTxService, productRepository, 0)
+        priceHistoryService = new PriceHistoryService(priceHistoryTxService, productRepository, urlBuilder, 0)
     }
 
     def "Happy path, fetch price history for products successfully"() {
@@ -39,6 +41,8 @@ class PriceHistoryServiceSpec extends WithLoggingBaseSpec {
 
         then: "products are fetched and processed"
             1 * productRepository.findAllByPriceHistoryParsed(false) >> [product1, product2]
+            1 * urlBuilder.buildPriceGraphApiUrl("https://www.skroutz.gr/s/123456/product-name.html") >> "https://www.skroutz.gr/s/123456/product-name/price_graph.json?shipping_country=GR&currency=EUR"
+            1 * urlBuilder.buildPriceGraphApiUrl("https://www.skroutz.gr/s/789012/another-product.html?param=value") >> "https://www.skroutz.gr/s/789012/another-product/price_graph.json?shipping_country=GR&currency=EUR"
             1 * priceHistoryTxService.processSingleProduct(product1, "https://www.skroutz.gr/s/123456/product-name/price_graph.json?shipping_country=GR&currency=EUR")
             1 * priceHistoryTxService.processSingleProduct(product2, "https://www.skroutz.gr/s/789012/another-product/price_graph.json?shipping_country=GR&currency=EUR")
             0 * _
@@ -107,6 +111,7 @@ class PriceHistoryServiceSpec extends WithLoggingBaseSpec {
 
         then: "only valid product is processed"
             1 * productRepository.findAllByPriceHistoryParsed(false) >> [validProduct, nullUrlProduct, blankUrlProduct]
+            1 * urlBuilder.buildPriceGraphApiUrl("https://www.skroutz.gr/s/123456/product.html") >> "https://www.skroutz.gr/s/123456/product/price_graph.json?shipping_country=GR&currency=EUR"
             1 * priceHistoryTxService.processSingleProduct(validProduct, _)
             0 * _
 
@@ -129,6 +134,7 @@ class PriceHistoryServiceSpec extends WithLoggingBaseSpec {
 
         then: "URL is formatted correctly"
             1 * productRepository.findAllByPriceHistoryParsed(false) >> [product]
+            1 * urlBuilder.buildPriceGraphApiUrl(inputUrl) >> expectedUrl
             1 * priceHistoryTxService.processSingleProduct(product, expectedUrl)
             0 * _
 
@@ -166,6 +172,9 @@ class PriceHistoryServiceSpec extends WithLoggingBaseSpec {
 
         then: "all products are attempted despite one failure"
             1 * productRepository.findAllByPriceHistoryParsed(false) >> [product1, product2, product3]
+            1 * urlBuilder.buildPriceGraphApiUrl("https://www.skroutz.gr/s/123/product1.html") >> "https://www.skroutz.gr/s/123/product1/price_graph.json?shipping_country=GR&currency=EUR"
+            1 * urlBuilder.buildPriceGraphApiUrl("https://www.skroutz.gr/s/456/product2.html") >> "https://www.skroutz.gr/s/456/product2/price_graph.json?shipping_country=GR&currency=EUR"
+            1 * urlBuilder.buildPriceGraphApiUrl("https://www.skroutz.gr/s/789/product3.html") >> "https://www.skroutz.gr/s/789/product3/price_graph.json?shipping_country=GR&currency=EUR"
             1 * priceHistoryTxService.processSingleProduct(product1, _)
             1 * priceHistoryTxService.processSingleProduct(product2, _) >> { throw new RuntimeException("Failed") }
             1 * priceHistoryTxService.processSingleProduct(product3, _)

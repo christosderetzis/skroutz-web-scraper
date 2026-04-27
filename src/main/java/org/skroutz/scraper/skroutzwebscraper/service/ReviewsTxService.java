@@ -8,6 +8,7 @@ import org.skroutz.scraper.skroutzwebscraper.mapper.ReviewsMapper;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository;
 import org.skroutz.scraper.skroutzwebscraper.scraper.ReviewsScraper;
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,17 +24,20 @@ public class ReviewsTxService {
     private final ReviewsMapper reviewsMapper;
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
+    private final UrlBuilder urlBuilder;
     private final long reviewPageDelayMs;
 
     public ReviewsTxService(ReviewsScraper reviewsScraper,
                             ReviewsMapper reviewsMapper,
                             ReviewRepository reviewRepository,
                             ProductRepository productRepository,
+                            UrlBuilder urlBuilder,
                             @Value("${scraper.delays.review-page-ms:100}") long reviewPageDelayMs) {
         this.reviewsScraper = reviewsScraper;
         this.reviewsMapper = reviewsMapper;
         this.reviewRepository = reviewRepository;
         this.productRepository = productRepository;
+        this.urlBuilder = urlBuilder;
         this.reviewPageDelayMs = reviewPageDelayMs;
     }
 
@@ -65,27 +69,18 @@ public class ReviewsTxService {
         Integer offset = 0;
         Integer pageSize;
         List<ReviewsApiResponseDto.ReviewDto> reviewDtos = new ArrayList<>();
-        String reviewUrl = buildReviewUrl(url, offset);
 
         do {
             Thread.sleep(reviewPageDelayMs);
+            String reviewUrl = urlBuilder.buildReviewsApiUrl(url, offset);
             ReviewsApiResponseDto response = reviewsScraper.fetchReviewPage(reviewUrl);
             List<ReviewsApiResponseDto.ReviewDto> reviewPageItems = response.getReviews().getReviews();
             reviewDtos.addAll(reviewPageItems);
             pageSize = reviewPageItems.size();
             offset += pageSize;
-            reviewUrl = buildReviewUrl(url, offset);
         } while (pageSize > 0);
 
         log.info("Total reviews fetched: {}", reviewDtos.size());
         return reviewDtos;
-    }
-
-    private String buildReviewUrl(String productUrl, Integer offset) {
-        int htmlIndex = productUrl.indexOf(".html");
-        if (htmlIndex != -1) {
-            productUrl = productUrl.substring(0, htmlIndex);
-        }
-        return "%s/reviews.json?offset=%d".formatted(productUrl, offset);
     }
 }

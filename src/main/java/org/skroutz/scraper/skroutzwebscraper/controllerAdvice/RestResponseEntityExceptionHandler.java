@@ -10,12 +10,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.skroutz.scraper.skroutzwebscraper.utils.ServletUtils;
 import org.slf4j.MDC;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -51,6 +56,29 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
                 .toArray(String[]::new);
 
         return logAndGetApiError(ex, request, HttpStatus.BAD_REQUEST, errors);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+                                                                   HttpHeaders headers,
+                                                                   HttpStatusCode status,
+                                                                   WebRequest request) {
+        String[] errors = ex.getBindingResult().getFieldErrors().stream()
+                .sorted(Comparator.comparing(FieldError::getField))
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .toArray(String[]::new);
+
+        HttpServletRequest servletRequest = ((ServletWebRequest) request).getRequest();
+        logException(ex);
+        ApiError apiError = ApiError.builder()
+                .traceId(getTraceId())
+                .status(status.value())
+                .errors(Arrays.asList(errors))
+                .path(ServletUtils.getPath(servletRequest))
+                .method(servletRequest.getMethod())
+                .build();
+
+        return new ResponseEntity<>(apiError, status);
     }
 
     private ResponseEntity<ApiError> logAndGetApiError(Exception ex, HttpServletRequest request, HttpStatusCode status, String... errors) {
