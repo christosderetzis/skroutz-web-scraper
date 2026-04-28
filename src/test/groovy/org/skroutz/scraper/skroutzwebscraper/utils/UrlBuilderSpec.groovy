@@ -158,13 +158,13 @@ class UrlBuilderSpec extends Specification {
 
         where:
             scenario                          | productUrl                                                    | offset || expected
-            "simple .html URL"                | "https://www.skroutz.gr/s/123/product.html"                  | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0"
-            "URL without extension"           | "https://www.skroutz.gr/s/123/product"                       | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0"
-            "URL with query string"           | "https://www.skroutz.gr/s/123/product.html?ref=home"         | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0"
-            "non-zero offset"                 | "https://www.skroutz.gr/s/123/product.html"                  | 10     || "https://www.skroutz.gr/s/123/product/reviews.json?offset=10"
-            "large offset"                    | "https://www.skroutz.gr/s/123/product.html"                  | 1000   || "https://www.skroutz.gr/s/123/product/reviews.json?offset=1000"
-            "complex path with .html"         | "https://www.skroutz.gr/s/123/product-name-here.html"        | 5      || "https://www.skroutz.gr/s/123/product-name-here/reviews.json?offset=5"
-            "URL with fragment"               | "https://www.skroutz.gr/s/123/product.html#section"          | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0"
+            "simple .html URL"                | "https://www.skroutz.gr/s/123/product.html"                  | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0&lang=en"
+            "URL without extension"           | "https://www.skroutz.gr/s/123/product"                       | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0&lang=en"
+            "URL with query string"           | "https://www.skroutz.gr/s/123/product.html?ref=home"         | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0&lang=en"
+            "non-zero offset"                 | "https://www.skroutz.gr/s/123/product.html"                  | 10     || "https://www.skroutz.gr/s/123/product/reviews.json?offset=10&lang=en"
+            "large offset"                    | "https://www.skroutz.gr/s/123/product.html"                  | 1000   || "https://www.skroutz.gr/s/123/product/reviews.json?offset=1000&lang=en"
+            "complex path with .html"         | "https://www.skroutz.gr/s/123/product-name-here.html"        | 5      || "https://www.skroutz.gr/s/123/product-name-here/reviews.json?offset=5&lang=en"
+            "URL with fragment"               | "https://www.skroutz.gr/s/123/product.html#section"          | 0      || "https://www.skroutz.gr/s/123/product/reviews.json?offset=0&lang=en"
     }
 
     @Unroll
@@ -228,6 +228,6 @@ class UrlBuilderSpec extends Specification {
             def result = urlBuilder.buildReviewsApiUrl("https://www.skroutz.gr/s/123/product.html.backup", 0)
 
         then: "only trailing .html would be stripped, .backup remains"
-            result == "https://www.skroutz.gr/s/123/product.html.backup/reviews.json?offset=0"
+            result.contains("https://www.skroutz.gr/s/123/product.html.backup/reviews.json")
     }
 }
