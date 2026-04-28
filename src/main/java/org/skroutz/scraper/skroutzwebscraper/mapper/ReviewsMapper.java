@@ -30,10 +30,13 @@ public class ReviewsMapper {
     }
 
     private Review mapToReview(ReviewsApiResponseDto.ReviewDto reviewDto) {
+        String reviewText = reviewDto.getTranslatedFormattedReview() != null && !reviewDto.getTranslatedFormattedReview().isBlank()
+                ? reviewDto.getTranslatedFormattedReview()
+                : reviewDto.getOriginalFormattedReview();
         String[] pros = extractListItems(reviewDto.getAggregatedReviewData(), "pros");
         String[] cons = extractListItems(reviewDto.getAggregatedReviewData(), "cons");
         String[] neutral = extractListItems(reviewDto.getAggregatedReviewData(), "so-so");
-        String extractedText = extractText(reviewDto.getOriginalFormattedReview());
+        String extractedText = extractText(reviewText);
         HelperVotes helperVotes = parseHelpfulVotes(reviewDto.getHelpfulnessMessage());
 
         return Review.builder()
