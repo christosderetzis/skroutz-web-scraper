@@ -74,7 +74,7 @@ public class UrlBuilder {
 
             String basePath = stripHtmlExtension(path);
             String newPath = basePath + "/reviews.json";
-            String newQuery = "offset=" + offset;
+            String newQuery = "offset=" + offset + "&lang=en";
 
             URI apiUri = new URI(uri.getScheme(), uri.getAuthority(), newPath, newQuery, null);
             return apiUri.toString();

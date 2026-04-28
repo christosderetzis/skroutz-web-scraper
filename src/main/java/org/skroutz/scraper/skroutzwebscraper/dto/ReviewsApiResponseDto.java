@@ -40,6 +40,9 @@ public class ReviewsApiResponseDto {
         @JsonProperty("original_formatted_review")
         private String originalFormattedReview;
 
+        @JsonProperty("translated_formatted_review")
+        private String translatedFormattedReview;
+
         @JsonProperty("helpful_votes_count")
         private Integer helpfulVotesCount;
 
