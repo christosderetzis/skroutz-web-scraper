@@ -90,6 +90,10 @@ dependencies {
     //text utils
     implementation 'org.apache.commons:commons-text:1.15.0'
 
+    // langchain4j
+    implementation 'dev.langchain4j:langchain4j:1.13.0'
+    implementation 'dev.langchain4j:langchain4j-open-ai:1.13.0'
+
     // testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
