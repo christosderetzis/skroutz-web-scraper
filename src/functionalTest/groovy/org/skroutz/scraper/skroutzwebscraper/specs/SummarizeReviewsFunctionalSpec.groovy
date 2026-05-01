@@ -88,6 +88,10 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                             .reviewerRating(5)
                             .reviewText(largeReviewText)
                             .isVerifiedPurchase(true)
+                            .helpfulVotes(5)
+                            .totalVotes(6)
+                            .pros(["Great battery life", "Fast performance"] as String[])
+                            .cons(["Camera quality could be better"] as String[])
                             .build(),
                     Review.builder()
                             .productId(product.id)
@@ -95,6 +99,10 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                             .reviewerRating(4)
                             .reviewText(largeReviewText)
                             .isVerifiedPurchase(true)
+                            .helpfulVotes(0)
+                            .totalVotes(0)
+                            .pros(["Good value for money"] as String[])
+                            .cons(["Screen brightness is low"] as String[])
                             .build(),
                     Review.builder()
                             .productId(product.id)
@@ -102,6 +110,10 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                             .reviewerRating(3)
                             .reviewText(largeReviewText)
                             .isVerifiedPurchase(false)
+                            .helpfulVotes(2)
+                            .totalVotes(5)
+                            .pros(["Decent performance"] as String[])
+                            .cons(["Average camera", "Battery drains fast"] as String[])
                             .build()
             ])
 
