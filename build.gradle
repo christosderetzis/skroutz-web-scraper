@@ -93,6 +93,7 @@ dependencies {
     // langchain4j
     implementation 'dev.langchain4j:langchain4j:1.13.0'
     implementation 'dev.langchain4j:langchain4j-open-ai:1.13.0'
+    implementation 'dev.langchain4j:langchain4j-http-client-jdk:1.13.0'
 
     // testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -289,6 +290,7 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
+                    '**/agent/**',
                     '**/config/**',
                     '**/entity/**',
                     '**/repository/**',
@@ -317,6 +319,7 @@ jacocoTestCoverageVerification {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
+                    '**/agent/**',
                     '**/config/**',
                     '**/entity/**',
                     '**/repository/**',
@@ -382,3 +385,9 @@ tasks.withType(Copy).configureEach {
 }
 
 dockerCompose.isRequiredBy(functionalTest)
+
+// Configure bootRun with JVM args for better WSL networking
+tasks.named('bootRun') {
+    systemProperty 'java.net.preferIPv4Stack', 'true'
+    systemProperty 'jdk.httpclient.keepalive.timeout', '300'
+}

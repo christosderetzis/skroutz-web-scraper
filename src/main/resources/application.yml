@@ -30,7 +30,6 @@ spring:
 
 # Scraper Configuration
 scraper:
-
   base-url: https://www.skroutz.gr
   timeout-seconds: 30
   max-retries: 3
@@ -41,6 +40,15 @@ scraper:
     price-history-ms: 1000
   specifications:
     batch-size: 30
+
+#LLM Configuration
+ai:
+  openai:
+    base-url: http://172.25.80.1:1234/v1
+    model: qwen/qwen3-vl-4b
+    max-tokens: 16000
+  summarization:
+    chunk-size: 12000
 
 # Swagger/OpenAPI Configuration
 springdoc:

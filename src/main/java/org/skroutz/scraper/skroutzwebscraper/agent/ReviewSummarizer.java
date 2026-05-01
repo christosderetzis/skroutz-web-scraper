@@ -1,22 +1,99 @@
 package org.skroutz.scraper.skroutzwebscraper.agent;
 
+import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
-import org.skroutz.scraper.skroutzwebscraper.dto.PartialSummary;
+import dev.langchain4j.service.V;
+import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummary;
 
 public interface ReviewSummarizer {
 
-    @UserMessage("""
-        Analyze these reviews.
+    @SystemMessage("""
+        You are a product review intelligence system.
 
-        STRICT RULES:
-        - summary: max 120 words
-        - pros: max 5 items
-        - cons: max 5 items
-        - sentiment: Positive, Mixed, or Negative
-        - Return ONLY valid JSON
+        Your job:
+        Analyze customer reviews and extract recurring patterns.
 
-        Reviews:
-        {{input}}
+        Prioritize:
+        - repeated themes
+        - highly rated strengths
+        - repeated complaints
+        - verified purchase reliability
+        - meaningful customer experience trends
+
+        Ignore:
+        - one-off niche complaints
+        - irrelevant reviewer details
+        - duplicate wording
+
+        Be concise, factual, and structured.
         """)
-    PartialSummary summarize(String input);
+    @UserMessage("""
+        PRODUCT TITLE:
+        {{productTitle}}
+
+        PRODUCT DESCRIPTION:
+        {{productDescription}}
+
+        CUSTOMER REVIEWS:
+        {{reviews}}
+
+        STRICT OUTPUT RULES:
+        - summary: maximum 100 words
+        - pros: maximum 5 recurring strengths
+        - cons: maximum 5 recurring weaknesses
+        - sentiment: Positive, Mixed, or Negative
+        - Focus only on repeated customer patterns
+        - Use product context when relevant
+        - Return ONLY valid JSON
+        """)
+    ReviewSummary summarizeChunk(
+            @V("reviews") String reviews,
+            @V("productTitle") String productTitle,
+            @V("productDescription") String productDescription
+    );
+
+    @SystemMessage("""
+        You are a senior product review synthesis system.
+
+        Your job:
+        Merge multiple chunk summaries into one final product intelligence report.
+
+        Prioritize:
+        - most frequent strengths
+        - most frequent weaknesses
+        - overall product satisfaction
+        - consistency across review groups
+
+        You must:
+        - remove duplicates
+        - rank by recurrence
+        - avoid overemphasizing edge cases
+        - produce final buyer-relevant conclusions
+
+        Be highly concise and decisive.
+        """)
+    @UserMessage("""
+        PRODUCT TITLE:
+        {{productTitle}}
+
+        PRODUCT DESCRIPTION:
+        {{productDescription}}
+
+        CHUNK SUMMARIES:
+        {{chunkSummaries}}
+
+        STRICT OUTPUT RULES:
+        - summary: maximum 150 words
+        - pros: maximum 5 ranked recurring strengths
+        - cons: maximum 5 ranked recurring weaknesses
+        - sentiment: Positive, Mixed, or Negative
+        - Prioritize repeated patterns across all summaries
+        - Remove duplicates
+        - Return ONLY valid JSON
+        """)
+    ReviewSummary summarizeFinal(
+            @V("chunkSummaries") String chunkSummaries,
+            @V("productTitle") String productTitle,
+            @V("productDescription") String productDescription
+    );
 }

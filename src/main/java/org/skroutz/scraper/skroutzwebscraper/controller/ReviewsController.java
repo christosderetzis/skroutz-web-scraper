@@ -1,8 +1,8 @@
 package org.skroutz.scraper.skroutzwebscraper.controller;
 
-import jakarta.websocket.server.PathParam;
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.service.ReviewsService;
+import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummary;
+import org.skroutz.scraper.skroutzwebscraper.service.ReviewsSummarizationService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,16 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/reviews")
 public class ReviewsController {
 
-    private final ReviewsService reviewsService;
+    private final ReviewsSummarizationService reviewsSummarizationService;
 
-    public ReviewsController(ReviewsService reviewsService) {
-        this.reviewsService = reviewsService;
+    public ReviewsController(ReviewsSummarizationService reviewsSummarizationService) {
+        this.reviewsSummarizationService = reviewsSummarizationService;
     }
 
     @PostMapping("{id}/summarize")
-    public void summarizeReviews(@PathVariable Long id) {
-        log.info("Starting reviews summarization task...");
-        reviewsService.summarizeReviews(id);
-        log.info("Reviews summarization task completed.");
+    public ReviewSummary summarizeReviews(@PathVariable Long id) {
+        return reviewsSummarizationService.summarizeReviews(id);
     }
 }

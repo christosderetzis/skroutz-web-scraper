@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_DB: skroutz_scraper
+      POSTGRES_USER: skroutz_user
+      POSTGRES_PASSWORD: skroutz_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - elastic
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.3.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - CSP_STRICT=false
+      - SERVER_PUBLICBASEURL=http://localhost:5601
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    networks:
+      - elastic
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports: [ "11434:11434" ]
+    volumes:
+      - ./model_files:/model_files  # Mount the directory with the trained mode
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    entrypoint: [ "/bin/sh", "/model_files/run_ollama.sh" ] # Loading the finetuned Mistral with the GGUF file
+
+    # Uncomment below to run on GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: ${OLLAMA_GPU_DRIVER-nvidia}
+    #           count: ${OLLAMA_GPU_COUNT-1}
+    #           capabilities:
+    #             - gpu
+
+  ollama-webui:
+    image: ghcr.io/ollama-webui/ollama-webui:main
+    container_name: ollama-webui
+    ports: [ "3000:8080" ]
+    volumes:
+      - ollama-webui:/app/backend/data
+    depends_on:
+      - ollama
+    environment:
+      - 'OLLAMA_API_BASE_URL=http://ollama:11434/api'
+    restart: unless-stopped
+
+volumes:
+  ollama: { }
+  ollama-webui: { }
+  postgres_data:
+  elasticsearch_data:
+    driver: local
+
+networks:
+  elastic:
