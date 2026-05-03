@@ -45,6 +45,8 @@ public interface ReviewSummarizer {
         - Focus only on repeated customer patterns
         - Use product context when relevant
         - Return ONLY valid JSON
+        - NEVER use literal double-quote characters (") inside JSON string values. Use 'in.' or 'inch' instead of the inch symbol.
+        /no_think
         """)
     ReviewSummary summarizeChunk(
             @V("reviews") String reviews,
@@ -90,6 +92,8 @@ public interface ReviewSummarizer {
         - Prioritize repeated patterns across all summaries
         - Remove duplicates
         - Return ONLY valid JSON
+        - NEVER use literal double-quote characters (") inside JSON string values. Use 'in.' or 'inch' instead of the inch symbol.
+        /no_think
         """)
     ReviewSummary summarizeFinal(
             @V("chunkSummaries") String chunkSummaries,

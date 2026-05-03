@@ -90,6 +90,10 @@ dependencies {
     //text utils
     implementation 'org.apache.commons:commons-text:1.15.0'
 
+    // dotenv
+    implementation platform('me.paulschwarz:spring-dotenv-bom:5.1.0')
+    developmentOnly 'me.paulschwarz:springboot4-dotenv'
+
     // langchain4j
     implementation 'dev.langchain4j:langchain4j:1.13.0'
     implementation 'dev.langchain4j:langchain4j-open-ai:1.13.0'

@@ -36,6 +36,7 @@ public class AiConfig {
                 .timeout(Duration.ofMinutes(5))
                 .maxTokens(maxTokens)
                 .temperature(0.3)
+                .logResponses(true)
                 .build();
     }
 

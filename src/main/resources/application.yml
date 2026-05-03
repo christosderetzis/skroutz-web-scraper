@@ -44,11 +44,11 @@ scraper:
 #LLM Configuration
 ai:
   openai:
-    base-url: http://172.25.80.1:1234/v1
-    model: qwen/qwen3-vl-4b
+    base-url: ${LLM_BASE_URL:http://localhost:11434/v1}
+    model: ${LLM_MODEL:qwen2.5:3b}
     max-tokens: 16000
   summarization:
-    chunk-size: 12000
+    chunk-size: 10000
 
 # Swagger/OpenAPI Configuration
 springdoc:
