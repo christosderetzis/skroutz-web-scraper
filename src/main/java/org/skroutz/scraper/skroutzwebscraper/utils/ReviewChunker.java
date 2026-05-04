@@ -12,7 +12,7 @@ public class ReviewChunker {
         for (String review : reviews) {
             if (review == null || review.isBlank()) continue;
 
-            if (current.length() + review.length() > maxChars) {
+            if (!current.isEmpty() && current.length() + review.length() > maxChars) {
                 chunks.add(current.toString());
                 current = new StringBuilder();
             }

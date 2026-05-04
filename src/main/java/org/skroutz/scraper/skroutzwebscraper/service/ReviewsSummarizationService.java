@@ -1,20 +1,28 @@
 package org.skroutz.scraper.skroutzwebscraper.service;
 
+
 import dev.langchain4j.internal.Json;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.agent.ReviewSummarizer;
-import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummary;
+import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummaryDto;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.entity.Review;
+import org.skroutz.scraper.skroutzwebscraper.entity.ReviewSummary;
+import org.skroutz.scraper.skroutzwebscraper.exception.ProductNotFoundException;
+import org.skroutz.scraper.skroutzwebscraper.mapper.ReviewSummaryMapper;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository;
+import org.skroutz.scraper.skroutzwebscraper.repository.ReviewSummaryRepository;
 import org.skroutz.scraper.skroutzwebscraper.utils.ReviewChunker;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -24,35 +32,50 @@ public class ReviewsSummarizationService {
     private final int chunkSize;
     private final ProductRepository productRepository;
     private final ReviewRepository reviewRepository;
+    private final ReviewSummaryRepository reviewSummaryRepository;
     private final ReviewSummarizer reviewSummarizer;
+    private final ReviewSummaryMapper reviewSummaryMapper;
 
     public ReviewsSummarizationService(
             @Value("${ai.summarization.chunk-size}") int chunkSize,
             ProductRepository productRepository,
             ReviewRepository reviewRepository,
-            ReviewSummarizer reviewSummarizer) {
+            ReviewSummaryRepository reviewSummaryRepository,
+            ReviewSummarizer reviewSummarizer,
+            ReviewSummaryMapper reviewSummaryMapper){
         this.chunkSize = chunkSize;
         this.productRepository = productRepository;
         this.reviewRepository = reviewRepository;
+        this.reviewSummaryRepository = reviewSummaryRepository;
         this.reviewSummarizer = reviewSummarizer;
+        this.reviewSummaryMapper = reviewSummaryMapper;
     }
 
-    public ReviewSummary summarizeReviews(Long productId) {
+    public ReviewSummaryDto summarizeReviews(Long productId) {
 
+        // Fetch the product to ensure it exists and to get its title and description for better summarization context
         Product product = productRepository.findById(productId)
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Product not found with ID: " + productId));
+                        new ProductNotFoundException(productId));
 
         if (!Boolean.TRUE.equals(product.getReviewsParsed())) {
             log.warn("Cannot summarize reviews for product ID {} because reviews have not been parsed yet.", productId);
-            return null;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot summarize reviews for product ID " + productId);
         }
 
+        // Check if a summarization already exists for this product and return it if found
+        Optional<ReviewSummary> existingSummary = reviewSummaryRepository.findByProductId(productId);
+        if (existingSummary.isPresent()) {
+            log.info("Existing summarization found for product ID {}. Returning cached summary.", productId);
+            return existingSummary.map(reviewSummaryMapper::toDto).orElse(null);
+        }
+
+        // Fetch all reviews with non-null review text for the product
         List<Review> reviews = reviewRepository.findAllByProductIdAndReviewTextIsNotNull(productId);
 
         if (reviews.isEmpty()) {
             log.info("No reviews with text found for product ID {}. Skipping summarization.", productId);
-            return null;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No reviews with text found for product ID " + productId);
         }
 
         // Filter out reviews with empty or null text and format them for the LLM
@@ -75,8 +98,7 @@ public class ReviewsSummarizationService {
 
         // If there's only one chunk, we can skip the final summarization step and return the summary directly
         if (chunks.size() == 1) {
-
-            ReviewSummary summary = reviewSummarizer.summarizeChunk(
+            ReviewSummaryDto summary = reviewSummarizer.summarizeChunk(
                     chunks.getFirst(),
                     safe(product.getTitle()),
                     safe(product.getDescription())
@@ -84,11 +106,12 @@ public class ReviewsSummarizationService {
 
             log.info("Single chunk summary for product ID {}: {}", productId, Json.toJson(summary));
 
+            saveSummarization(productId, summary);
             return summary;
         }
 
         // Summarize each chunk individually
-        List<ReviewSummary> chunkSummaries = chunks.stream()
+        List<ReviewSummaryDto> chunkSummaries = chunks.stream()
                 .map(chunk -> reviewSummarizer.summarizeChunk(
                         chunk,
                         safe(product.getTitle()),
@@ -102,7 +125,7 @@ public class ReviewsSummarizationService {
                 .collect(Collectors.joining("\n---\n"));
 
         // Summarize the chunk summaries into a final review report
-        ReviewSummary finalSummary = reviewSummarizer.summarizeFinal(
+        ReviewSummaryDto finalSummary = reviewSummarizer.summarizeFinal(
                 finalInput,
                 safe(product.getTitle()),
                 safe(product.getDescription())
@@ -110,9 +133,16 @@ public class ReviewsSummarizationService {
 
         log.info("Final summary for product ID {}: {}", productId, Json.toJson(finalSummary));
 
+        saveSummarization(productId, finalSummary);
         return finalSummary;
     }
 
+    private void saveSummarization(Long productId, ReviewSummaryDto summary) {
+        reviewSummaryRepository.save(
+                reviewSummaryMapper.toEntity(summary, productId)
+        );
+        log.info("Saved summarization for product ID {}", productId);
+    }
 
     private String formatReviewForLlm(Review review) {
 
@@ -145,7 +175,7 @@ public class ReviewsSummarizationService {
         );
     }
 
-    private String formatChunkSummaryForFinalPass(ReviewSummary summary) {
+    private String formatChunkSummaryForFinalPass(ReviewSummaryDto summary) {
         return """
                 Summary: %s
                 Pros: %s

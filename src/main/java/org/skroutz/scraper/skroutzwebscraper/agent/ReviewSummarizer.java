@@ -3,7 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.agent;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
-import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummary;
+import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummaryDto;
 
 public interface ReviewSummarizer {
 
@@ -48,7 +48,7 @@ public interface ReviewSummarizer {
         - NEVER use literal double-quote characters (") inside JSON string values. Use 'in.' or 'inch' instead of the inch symbol.
         /no_think
         """)
-    ReviewSummary summarizeChunk(
+    ReviewSummaryDto summarizeChunk(
             @V("reviews") String reviews,
             @V("productTitle") String productTitle,
             @V("productDescription") String productDescription
@@ -95,7 +95,7 @@ public interface ReviewSummarizer {
         - NEVER use literal double-quote characters (") inside JSON string values. Use 'in.' or 'inch' instead of the inch symbol.
         /no_think
         """)
-    ReviewSummary summarizeFinal(
+    ReviewSummaryDto summarizeFinal(
             @V("chunkSummaries") String chunkSummaries,
             @V("productTitle") String productTitle,
             @V("productDescription") String productDescription

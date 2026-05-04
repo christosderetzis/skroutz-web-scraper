@@ -1,7 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummary;
+import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummaryDto;
 import org.skroutz.scraper.skroutzwebscraper.service.ReviewsSummarizationService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +20,7 @@ public class ReviewsController {
     }
 
     @PostMapping("{id}/summarize")
-    public ReviewSummary summarizeReviews(@PathVariable Long id) {
+    public ReviewSummaryDto summarizeReviews(@PathVariable Long id) {
         return reviewsSummarizationService.summarizeReviews(id);
     }
 }

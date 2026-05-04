@@ -1,9 +1,10 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
 import org.skroutz.scraper.skroutzwebscraper.agent.ReviewSummarizer
-import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummary
+import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummaryDto
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.entity.Review
+import org.skroutz.scraper.skroutzwebscraper.entity.ReviewSummary
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.spockframework.spring.SpringBean
 import org.skyscreamer.jsonassert.JSONAssert
@@ -45,7 +46,7 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
             ])
 
         and: "The summarizer returns a fixed response"
-            reviewSummarizer.summarizeChunk(_, _, _) >> new ReviewSummary(
+            reviewSummarizer.summarizeChunk(_, _, _) >> new ReviewSummaryDto(
                     "Excellent mid-range phone with great battery.",
                     ["Battery life", "Value for money"],
                     ["Camera in low light"],
@@ -67,6 +68,16 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                     "sentiment": "Positive"
                 }
             """, body, JSONCompareMode.STRICT)
+
+        and: "the summary is saved in the database"
+            def savedSummary = reviewSummaryRepository.findByProductId(product.id).orElse(null)
+            with(savedSummary) {
+                summary == "Excellent mid-range phone with great battery."
+                pros == ["Battery life", "Value for money"].toArray()
+                cons == ["Camera in low light"].toArray()
+                sentiment == "Positive"
+                productId == product.id
+            }
     }
 
     def "Happy path - multi chunk summarization"() {
@@ -118,14 +129,14 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
             ])
 
         and: "The summarizer returns chunk summaries and a final summary"
-            reviewSummarizer.summarizeChunk(_, _, _) >> new ReviewSummary(
+            reviewSummarizer.summarizeChunk(_, _, _) >> new ReviewSummaryDto(
                     "Chunk summary",
                     ["Pro from chunk"],
                     ["Con from chunk"],
                     "Mixed"
             )
 
-            reviewSummarizer.summarizeFinal(_, _, _) >> new ReviewSummary(
+            reviewSummarizer.summarizeFinal(_, _, _) >> new ReviewSummaryDto(
                     "Final merged summary across all chunks.",
                     ["Top pro 1", "Top pro 2"],
                     ["Top con 1"],
@@ -147,6 +158,16 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                     "sentiment": "Positive"
                 }
             """, body, JSONCompareMode.STRICT)
+
+        and: "the final summary is saved in the database"
+            def savedSummary = reviewSummaryRepository.findByProductId(product.id).orElse(null)
+            with(savedSummary) {
+                summary == "Final merged summary across all chunks."
+                pros == ["Top pro 1", "Top pro 2"].toArray()
+                cons == ["Top con 1"].toArray()
+                sentiment == "Positive"
+                productId == product.id
+            }
     }
 
     def "Product not found returns error"() {
@@ -157,20 +178,19 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
             def response = webActor.summarizeReviews(nonExistingId)
 
         then: "The response is 500 with an error message"
-            response.expectStatus().is5xxServerError()
-
+            response.expectStatus().isNotFound()
             String body = response.expectBody(String).returnResult().getResponseBody()
             JSONAssert.assertEquals("""
                 {
-                    "status": 500,
+                    "status": 404,
                     "method": "POST",
-                    "errors": ["Internal server error"],
+                    "errors": ["Product not found with id: ${nonExistingId}"],
                     "path": "/reviews/${nonExistingId}/summarize"
                 }
             """, body, JSONCompareMode.LENIENT)
     }
 
-    def "Reviews not parsed returns null"() {
+    def "Reviews not parsed returns error"() {
         given: "A product with reviewsParsed=false"
             Product product = productRepository.saveAndFlush(Product.builder()
                     .title("Unparsed Product")
@@ -184,12 +204,20 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
         when: "We call the summarize endpoint"
             def response = webActor.summarizeReviews(product.id)
 
-        then: "The response is 200 with empty body"
-            response.expectStatus().isOk()
-            response.expectBody().isEmpty()
+        then: "The response is 400 with an error message"
+            response.expectStatus().isBadRequest()
+            String body = response.expectBody(String).returnResult().getResponseBody()
+            JSONAssert.assertEquals("""
+                {
+                    "status": 400,
+                    "method": "POST",
+                    "errors": ["Cannot summarize reviews for product ID ${product.id}"],
+                    "path": "/reviews/${product.id}/summarize"
+                }
+            """, body, JSONCompareMode.LENIENT)
     }
 
-    def "No reviews with text returns null"() {
+    def "No reviews with text returns error"() {
         given: "A product with reviewsParsed=true but no reviews in the database"
             Product product = productRepository.saveAndFlush(Product.builder()
                     .title("No Reviews Product")
@@ -203,8 +231,52 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
         when: "We call the summarize endpoint"
             def response = webActor.summarizeReviews(product.id)
 
-        then: "The response is 200 with empty body"
+        then: "The response is 400 with an error message"
+            response.expectStatus().isBadRequest()
+            String body = response.expectBody(String).returnResult().getResponseBody()
+            JSONAssert.assertEquals("""
+                    {
+                        "status": 400,
+                        "method": "POST",
+                        "errors": ["No reviews with text found for product ID ${product.id}"],
+                        "path": "/reviews/${product.id}/summarize"
+                    }
+                """, body, JSONCompareMode.LENIENT)
+    }
+
+    def "Summarization is returned for a given product if it exists in the database"() {
+        given: "A product with an existing summary in the database"
+            Product product = productRepository.saveAndFlush(Product.builder()
+                    .title("Existing Summary Product")
+                    .url("http://example.com/existing-summary")
+                    .description("Test product")
+                    .price(99.99)
+                    .rating(3.0)
+                    .reviewsParsed(true)
+                    .build())
+
+            reviewSummaryRepository.saveAndFlush(ReviewSummary.builder()
+                    .productId(product.id)
+                    .summary("Existing summary")
+                    .pros(["Existing pro"] as String[])
+                    .cons(["Existing con"] as String[])
+                    .sentiment("Neutral")
+                    .build())
+
+        when: "We call the summarize endpoint"
+            def response = webActor.summarizeReviews(product.id)
+
+        then: "The response is 200 with the existing summary"
             response.expectStatus().isOk()
-            response.expectBody().isEmpty()
+
+            String body = response.expectBody(String).returnResult().getResponseBody()
+            JSONAssert.assertEquals("""
+                {
+                    "summary": "Existing summary",
+                    "pros": ["Existing pro"],
+                    "cons": ["Existing con"],
+                    "sentiment": "Neutral"
+                }
+            """, body, JSONCompareMode.STRICT)
     }
 }

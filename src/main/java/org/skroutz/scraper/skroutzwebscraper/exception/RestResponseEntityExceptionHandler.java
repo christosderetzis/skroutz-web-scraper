@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.controllerAdvice;
+package org.skroutz.scraper.skroutzwebscraper.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -36,6 +36,11 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAnyOtherException(Exception ex, HttpServletRequest request) {
         return logAndGetApiError(ex, request, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ApiError> handleProductNotFoundException(ProductNotFoundException ex, HttpServletRequest request) {
+        return logAndGetApiError(ex, request, HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(HttpStatusCodeException.class)

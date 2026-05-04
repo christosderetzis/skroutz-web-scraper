@@ -10,6 +10,7 @@ import org.skroutz.scraper.skroutzwebscraper.repository.PriceHistoryRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductElasticsearchRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
+import org.skroutz.scraper.skroutzwebscraper.repository.ReviewSummaryRepository
 import org.skroutz.scraper.skroutzwebscraper.utils.actor.WebActor
 import org.skroutz.scraper.skroutzwebscraper.utils.config.TestWebClientConfig
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +50,9 @@ abstract class BaseFunctionalSpec extends Specification {
     ProductElasticsearchRepository productElasticsearchRepository
 
     @Autowired
+    ReviewSummaryRepository reviewSummaryRepository
+
+    @Autowired
     ProductDocumentMapper productDocumentMapper
 
     WebActor webActor
@@ -57,6 +61,7 @@ abstract class BaseFunctionalSpec extends Specification {
     ObjectMapper objectMapper = new ObjectMapper()
 
     def setup() {
+        reviewSummaryRepository.deleteAll()
         priceHistoryRepository.deleteAll()
         reviewRepository.deleteAll()
         productRepository.deleteAll()
@@ -64,6 +69,7 @@ abstract class BaseFunctionalSpec extends Specification {
     }
 
     def cleanup() {
+        reviewSummaryRepository.deleteAll()
         priceHistoryRepository.deleteAll()
         reviewRepository.deleteAll()
         productRepository.deleteAll()

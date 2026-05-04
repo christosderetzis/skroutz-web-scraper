@@ -110,7 +110,7 @@ dependencies {
         exclude group: 'org.yaml', module: 'snakeyaml'
     }
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
-
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
 
 apply plugin: 'docker-compose'
@@ -305,7 +305,7 @@ jacocoTestReport {
                     '**/utis/**',
                     '**/*Mapper*',
                     '**/ScraperController.class',
-                    '**/controllerAdvice/**'
+                    '**/exception/**'
             ])
         }))
     }
@@ -334,7 +334,7 @@ jacocoTestCoverageVerification {
                     '**/utils/**',
                     '**/*Mapper*',
                     '**/ScraperController.class',
-                    '**/controllerAdvice/**'
+                    '**/exception/**'
             ])
         }))
     }
@@ -382,6 +382,7 @@ tasks.register('functionalTest', Test) {
 
 test {
     exclude "**/*FunctionalSpec*"
+    jvmArgs("-XX:+EnableDynamicAgentLoading")
 }
 
 tasks.withType(Copy).configureEach {
