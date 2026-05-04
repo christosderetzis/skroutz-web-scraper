@@ -177,7 +177,7 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
         when: "We call the summarize endpoint"
             def response = webActor.summarizeReviews(nonExistingId)
 
-        then: "The response is 500 with an error message"
+        then: "The response is 404 with an error message"
             response.expectStatus().isNotFound()
             String body = response.expectBody(String).returnResult().getResponseBody()
             JSONAssert.assertEquals("""

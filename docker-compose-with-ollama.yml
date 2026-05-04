@@ -43,11 +43,11 @@ services:
       - elastic
 
   ollama:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.23.0
     container_name: ollama
     ports: [ "11434:11434" ]
     volumes:
-      - ./ollama:/model_files  # Mount the directory with the trained mode
+      - ./ollama:/model_files  # Mount the directory with the trained model
     pull_policy: always
     tty: true
     restart: unless-stopped

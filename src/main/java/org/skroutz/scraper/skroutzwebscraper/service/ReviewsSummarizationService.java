@@ -132,8 +132,6 @@ public class ReviewsSummarizationService {
                     safe(product.getDescription())
             );
 
-            log.info("Final summary for product ID {}: {}", productId, Json.toJson(finalSummary));
-
             saveSummarization(productId, finalSummary);
             return finalSummary;
         } catch (Exception e) {

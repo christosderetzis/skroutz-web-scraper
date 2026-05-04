@@ -1,10 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -14,9 +11,11 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "review_summary", schema = "scraper_schema")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 @Builder
 public class ReviewSummary {
 
