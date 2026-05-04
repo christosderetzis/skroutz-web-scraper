@@ -105,8 +105,6 @@ public class ReviewsSummarizationService {
                         safe(product.getDescription())
                 );
 
-                log.info("Single chunk summary for product ID {}: {}", productId, Json.toJson(summary));
-
                 saveSummarization(productId, summary);
                 return summary;
             }
