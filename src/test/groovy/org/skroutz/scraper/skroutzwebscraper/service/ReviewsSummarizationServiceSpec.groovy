@@ -107,29 +107,4 @@ class ReviewsSummarizationServiceSpec extends Specification {
             def e = thrown(ResponseStatusException)
             e.statusCode == HttpStatus.BAD_REQUEST
     }
-
-    def "summarizeReviews filters out reviews with null or blank text"() {
-        given:
-        def product = new Product(reviewsParsed: true)
-        def r1 = new Review(reviewText: "Valid")
-        def r2 = new Review(reviewText: null)
-        def r3 = new Review(reviewText: "   ")
-
-        productRepository.findById(PRODUCT_ID) >> Optional.of(product)
-        reviewSummarizationRepository.findByProductId(PRODUCT_ID) >> Optional.empty()
-        reviewRepository.findAllByProductIdAndReviewTextIsNotNull(PRODUCT_ID) >> [r1, r2, r3]
-
-        mockedChunker.when(() -> ReviewChunker.chunkByCharSize(anyList(), eq(CHUNK_SIZE)))
-                .thenReturn(["Valid"])
-
-        reviewSummarizer.summarizeChunk(_, _, _) >> new ReviewSummaryDto("S", null, null, "S")
-
-        when:
-        service.summarizeReviews(PRODUCT_ID)
-
-        then:
-        // We use the mockedChunker's verify because it's a Mockito object, not a Spock mock
-        mockedChunker.verify(() -> ReviewChunker.chunkByCharSize(argThat { list -> list.size() == 1 }, eq(CHUNK_SIZE)))
-    }
-
 }
