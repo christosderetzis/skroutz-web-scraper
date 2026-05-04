@@ -67,7 +67,7 @@ public class ReviewsSummarizationService {
         Optional<ReviewSummary> existingSummary = reviewSummaryRepository.findByProductId(productId);
         if (existingSummary.isPresent()) {
             log.info("Existing summarization found for product ID {}. Returning cached summary.", productId);
-            return existingSummary.map(reviewSummaryMapper::toDto).orElse(null);
+            return reviewSummaryMapper.toDto(existingSummary.get());
         }
 
         // Fetch all reviews with non-null review text for the product
@@ -78,11 +78,11 @@ public class ReviewsSummarizationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No reviews with text found for product ID " + productId);
         }
 
-        // Filter out reviews with empty or null text and format them for the LLM
+        // Format reviews for the LLM, skipping any that produce blank output
         List<String> formattedReviews = reviews.stream()
-                .filter(review -> review.getReviewText() != null && !review.getReviewText().isBlank())
+                .filter(review -> !review.getReviewText().isBlank())
                 .map(this::formatReviewForLlm)
-                .filter(review -> !review.isBlank())
+                .filter(formatted -> !formatted.isBlank())
                 .toList();
 
         // Chunk reviews into smaller pieces to fit within LLM context limits
@@ -96,45 +96,50 @@ public class ReviewsSummarizationService {
                 chunks.size()
         );
 
-        // If there's only one chunk, we can skip the final summarization step and return the summary directly
-        if (chunks.size() == 1) {
-            ReviewSummaryDto summary = reviewSummarizer.summarizeChunk(
-                    chunks.getFirst(),
+        try {
+            // If there's only one chunk, we can skip the final summarization step and return the summary directly
+            if (chunks.size() == 1) {
+                ReviewSummaryDto summary = reviewSummarizer.summarizeChunk(
+                        chunks.getFirst(),
+                        safe(product.getTitle()),
+                        safe(product.getDescription())
+                );
+
+                log.info("Single chunk summary for product ID {}: {}", productId, Json.toJson(summary));
+
+                saveSummarization(productId, summary);
+                return summary;
+            }
+
+            // Summarize each chunk individually
+            List<ReviewSummaryDto> chunkSummaries = chunks.stream()
+                    .map(chunk -> reviewSummarizer.summarizeChunk(
+                            chunk,
+                            safe(product.getTitle()),
+                            safe(product.getDescription())
+                    ))
+                    .toList();
+
+            // Combine chunk summaries into a final summary
+            String finalInput = chunkSummaries.stream()
+                    .map(this::formatChunkSummaryForFinalPass)
+                    .collect(Collectors.joining("\n---\n"));
+
+            // Summarize the chunk summaries into a final review report
+            ReviewSummaryDto finalSummary = reviewSummarizer.summarizeFinal(
+                    finalInput,
                     safe(product.getTitle()),
                     safe(product.getDescription())
             );
 
-            log.info("Single chunk summary for product ID {}: {}", productId, Json.toJson(summary));
+            log.info("Final summary for product ID {}: {}", productId, Json.toJson(finalSummary));
 
-            saveSummarization(productId, summary);
-            return summary;
+            saveSummarization(productId, finalSummary);
+            return finalSummary;
+        } catch (Exception e) {
+            log.error("AI summarization failed for product ID {}: {}", productId, e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "AI summarization service is unavailable. Please try again later.");
         }
-
-        // Summarize each chunk individually
-        List<ReviewSummaryDto> chunkSummaries = chunks.stream()
-                .map(chunk -> reviewSummarizer.summarizeChunk(
-                        chunk,
-                        safe(product.getTitle()),
-                        safe(product.getDescription())
-                ))
-                .toList();
-
-        // Combine chunk summaries into a final summary
-        String finalInput = chunkSummaries.stream()
-                .map(this::formatChunkSummaryForFinalPass)
-                .collect(Collectors.joining("\n---\n"));
-
-        // Summarize the chunk summaries into a final review report
-        ReviewSummaryDto finalSummary = reviewSummarizer.summarizeFinal(
-                finalInput,
-                safe(product.getTitle()),
-                safe(product.getDescription())
-        );
-
-        log.info("Final summary for product ID {}: {}", productId, Json.toJson(finalSummary));
-
-        saveSummarization(productId, finalSummary);
-        return finalSummary;
     }
 
     private void saveSummarization(Long productId, ReviewSummaryDto summary) {

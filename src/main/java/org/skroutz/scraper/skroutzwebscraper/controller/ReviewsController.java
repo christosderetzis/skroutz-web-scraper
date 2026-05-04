@@ -19,7 +19,7 @@ public class ReviewsController {
         this.reviewsSummarizationService = reviewsSummarizationService;
     }
 
-    @PostMapping("{id}/summarize")
+    @PostMapping("/{id}/summarize")
     public ReviewSummaryDto summarizeReviews(@PathVariable Long id) {
         return reviewsSummarizationService.summarizeReviews(id);
     }

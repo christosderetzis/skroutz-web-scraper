@@ -47,6 +47,7 @@ ai:
     base-url: ${LLM_BASE_URL:http://localhost:11434/v1}
     model: ${LLM_MODEL:qwen2.5:3b}
     max-tokens: 16000
+    log-responses: ${LLM_LOG_RESPONSES:false}
   summarization:
     chunk-size: 10000
 

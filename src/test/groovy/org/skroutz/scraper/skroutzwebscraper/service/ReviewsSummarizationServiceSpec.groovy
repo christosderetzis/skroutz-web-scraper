@@ -132,16 +132,4 @@ class ReviewsSummarizationServiceSpec extends Specification {
         mockedChunker.verify(() -> ReviewChunker.chunkByCharSize(argThat { list -> list.size() == 1 }, eq(CHUNK_SIZE)))
     }
 
-    private static Review review(String text) {
-        new Review(
-                reviewText: text,
-                reviewerRating: 5,
-                isVerifiedPurchase: true,
-                helpfulVotes: 1,
-                totalVotes: 2,
-                pros: ["good"],
-                cons: ["bad"],
-                neutral: ["ok"]
-        )
-    }
 }

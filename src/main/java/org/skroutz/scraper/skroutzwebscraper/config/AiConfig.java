@@ -21,22 +21,28 @@ public class AiConfig {
     @Value("${ai.openai.model}")
     private String modelName;
 
+    @Value("${ai.openai.api-key:dummy-key}")
+    private String apiKey;
+
     @Value("${ai.openai.max-tokens:16000}")
     private int maxTokens;
 
+    @Value("${ai.openai.log-responses:false}")
+    private boolean logResponses;
+
     @Bean
-    public OpenAiChatModel chatLanguageModel() {
+    public ChatModel chatLanguageModel() {
         return OpenAiChatModel.builder()
                 .httpClientBuilder(new JdkHttpClientBuilder()
                         .httpClientBuilder(HttpClient.newBuilder()
                                 .version(HttpClient.Version.HTTP_1_1)))
                 .baseUrl(baseUrl)
-                .apiKey("dummy-key")
+                .apiKey(apiKey)
                 .modelName(modelName)
                 .timeout(Duration.ofMinutes(5))
                 .maxTokens(maxTokens)
                 .temperature(0.3)
-                .logResponses(true)
+                .logResponses(logResponses)
                 .build();
     }
 
