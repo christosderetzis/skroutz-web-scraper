@@ -1,6 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.controller
 
-import org.skroutz.scraper.skroutzwebscraper.controllerAdvice.RestResponseEntityExceptionHandler
+import org.skroutz.scraper.skroutzwebscraper.exception.RestResponseEntityExceptionHandler
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductSuggestionDto
 import org.skroutz.scraper.skroutzwebscraper.service.ProductSearchService

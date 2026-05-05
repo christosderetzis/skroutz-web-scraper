@@ -54,6 +54,12 @@ class WebActor {
                 .exchange()
     }
 
+    WebTestClient.ResponseSpec summarizeReviews(Long productId) {
+        return webTestClient.post()
+                .uri("/reviews/{id}/summarize", productId)
+                .exchange()
+    }
+
     WebTestClient.ResponseSpec autocomplete(String query, Integer limit = null) {
         return webTestClient.get()
                 .uri(uriBuilder -> {

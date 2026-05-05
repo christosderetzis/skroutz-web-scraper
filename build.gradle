@@ -90,6 +90,15 @@ dependencies {
     //text utils
     implementation 'org.apache.commons:commons-text:1.15.0'
 
+    // dotenv
+    developmentOnly platform('me.paulschwarz:spring-dotenv-bom:5.1.0')
+    developmentOnly 'me.paulschwarz:springboot4-dotenv'
+
+    // langchain4j
+    implementation 'dev.langchain4j:langchain4j:1.13.0'
+    implementation 'dev.langchain4j:langchain4j-open-ai:1.13.0'
+    implementation 'dev.langchain4j:langchain4j-http-client-jdk:1.13.0'
+
     // testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
@@ -101,7 +110,7 @@ dependencies {
         exclude group: 'org.yaml', module: 'snakeyaml'
     }
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
-
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
 
 apply plugin: 'docker-compose'
@@ -285,6 +294,7 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
+                    '**/agent/**',
                     '**/config/**',
                     '**/entity/**',
                     '**/repository/**',
@@ -295,7 +305,7 @@ jacocoTestReport {
                     '**/utis/**',
                     '**/*Mapper*',
                     '**/ScraperController.class',
-                    '**/controllerAdvice/**'
+                    '**/exception/**'
             ])
         }))
     }
@@ -313,6 +323,7 @@ jacocoTestCoverageVerification {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
+                    '**/agent/**',
                     '**/config/**',
                     '**/entity/**',
                     '**/repository/**',
@@ -323,7 +334,7 @@ jacocoTestCoverageVerification {
                     '**/utils/**',
                     '**/*Mapper*',
                     '**/ScraperController.class',
-                    '**/controllerAdvice/**'
+                    '**/exception/**'
             ])
         }))
     }
@@ -371,6 +382,7 @@ tasks.register('functionalTest', Test) {
 
 test {
     exclude "**/*FunctionalSpec*"
+    jvmArgs("-XX:+EnableDynamicAgentLoading")
 }
 
 tasks.withType(Copy).configureEach {
@@ -378,3 +390,9 @@ tasks.withType(Copy).configureEach {
 }
 
 dockerCompose.isRequiredBy(functionalTest)
+
+// Configure bootRun with JVM args for better WSL networking
+tasks.named('bootRun') {
+    systemProperty 'java.net.preferIPv4Stack', 'true'
+    systemProperty 'jdk.httpclient.keepalive.timeout', '300'
+}
