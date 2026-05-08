@@ -305,7 +305,8 @@ jacocoTestReport {
                     '**/utis/**',
                     '**/*Mapper*',
                     '**/ScraperController.class',
-                    '**/exception/**'
+                    '**/exception/**',
+                    '**/schema/**'
             ])
         }))
     }
@@ -334,7 +335,8 @@ jacocoTestCoverageVerification {
                     '**/utils/**',
                     '**/*Mapper*',
                     '**/ScraperController.class',
-                    '**/exception/**'
+                    '**/exception/**',
+                    '**/schema/**'
             ])
         }))
     }

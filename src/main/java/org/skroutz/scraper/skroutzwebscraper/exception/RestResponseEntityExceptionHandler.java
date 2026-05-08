@@ -43,6 +43,16 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return logAndGetApiError(ex, request, HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(CategorySchemaNotFoundException.class)
+    public ResponseEntity<ApiError> handleCategorySchemaNotFoundException(CategorySchemaNotFoundException ex, HttpServletRequest request) {
+        return logAndGetApiError(ex, request, HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateCategoryException.class)
+    public ResponseEntity<ApiError> handleDuplicateCategoryException(DuplicateCategoryException ex, HttpServletRequest request) {
+        return logAndGetApiError(ex, request, HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(HttpStatusCodeException.class)
     public ResponseEntity<ApiError> handleLeakedClientErrors(HttpStatusCodeException ex, HttpServletRequest request) {
         return logAndGetApiError(ex, request, ex.getStatusCode(), ex.getMessage());
