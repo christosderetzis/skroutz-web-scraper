@@ -1,5 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.utils.actor
 
+import org.skroutz.scraper.skroutzwebscraper.dto.CategorySchemaCreateRequestDto
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -70,6 +71,19 @@ class WebActor {
                     }
                     builder.build()
                 })
+                .exchange()
+    }
+
+    WebTestClient.ResponseSpec createCategorySchema(CategorySchemaCreateRequestDto requestDto) {
+        return webTestClient.post()
+                .uri("/category-schemas")
+                .bodyValue(requestDto)
+                .exchange()
+    }
+
+    WebTestClient.ResponseSpec getCategorySchema(String category) {
+        return webTestClient.get()
+                .uri("/category-schemas/{category}", category)
                 .exchange()
     }
 }

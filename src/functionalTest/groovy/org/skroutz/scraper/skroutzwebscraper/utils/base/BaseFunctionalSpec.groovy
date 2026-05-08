@@ -6,6 +6,7 @@ import org.skroutz.scraper.skroutzwebscraper.SkroutzWebScraperApplication
 import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.mapper.ProductDocumentMapper
+import org.skroutz.scraper.skroutzwebscraper.repository.CategorySchemaRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.PriceHistoryRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductElasticsearchRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
@@ -55,12 +56,16 @@ abstract class BaseFunctionalSpec extends Specification {
     @Autowired
     ProductDocumentMapper productDocumentMapper
 
+    @Autowired
+    CategorySchemaRepository categorySchemaRepository
+
     WebActor webActor
 
     @Shared
     ObjectMapper objectMapper = new ObjectMapper()
 
     def setup() {
+        categorySchemaRepository.deleteAll()
         reviewSummaryRepository.deleteAll()
         priceHistoryRepository.deleteAll()
         reviewRepository.deleteAll()
@@ -69,6 +74,7 @@ abstract class BaseFunctionalSpec extends Specification {
     }
 
     def cleanup() {
+        categorySchemaRepository.deleteAll()
         reviewSummaryRepository.deleteAll()
         priceHistoryRepository.deleteAll()
         reviewRepository.deleteAll()
