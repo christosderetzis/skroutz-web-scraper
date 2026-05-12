@@ -18,7 +18,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(Pageable pageable);
 
-    List<Product> findAllByReviewsParsedAndRatingIsNotNull(boolean reviewsParsed);
+    Slice<Product> findAllByReviewsParsedAndRatingIsNotNull(boolean reviewsParsed, Pageable pageable);
 
     Slice<Product> findAllByPriceHistoryParsed(boolean priceHistoryParsed, Pageable pageable);
 }

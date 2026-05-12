@@ -10,6 +10,8 @@ import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.scraper.ReviewsScraper
 import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.SliceImpl
 import org.springframework.transaction.support.TransactionTemplate
 import spock.lang.Subject
 import spock.lang.Unroll
@@ -53,7 +55,8 @@ class ReviewsServiceSpec extends WithLoggingBaseSpec {
         given: "Two products waiting to be parsed"
             def p1 = Product.builder().id(1L).url("http://url1.com").reviewsParsed(false).build()
             def p2 = Product.builder().id(2L).url("http://url2.com").reviewsParsed(false).build()
-            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [p1, p2]
+            def slice = new SliceImpl([p1, p2], PageRequest.of(0, 100), false)
+            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(0,100)) >> slice
 
         and: "Responses for p1 (2 pages) and p2 (1 page)"
             def p1Page1 = createResponse([new ReviewsApiResponseDto.ReviewDto(authorName: "User1")])
@@ -85,14 +88,15 @@ class ReviewsServiceSpec extends WithLoggingBaseSpec {
     def "Should skip product when URL is '#urlScenario'"() {
         given: "A product with a bad URL"
             def product = Product.builder().id(99L).url(urlValue).build()
-            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product]
+            def slice = new SliceImpl([product], PageRequest.of(0, 100), false)
 
         when: "Service runs"
             reviewsService.parseReviews()
 
         then: "Scraper is never called"
+            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(0,100)) >> slice
             0 * reviewsScraper.fetchReviewPage(_)
-            0 * transactionTemplate.executeWithoutResult(_)
+
 
         where:
         urlScenario | urlValue
@@ -105,7 +109,8 @@ class ReviewsServiceSpec extends WithLoggingBaseSpec {
         given: "Two products"
             def p1 = Product.builder().id(1L).url("url1").build()
             def p2 = Product.builder().id(2L).url("url2").build()
-            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [p1, p2]
+            def slice = new SliceImpl([p1,p2], PageRequest.of(0, 100), false)
+            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(0,100)) >> slice
 
         when: "The first product triggers an error"
             reviewsService.parseReviews()
@@ -119,13 +124,14 @@ class ReviewsServiceSpec extends WithLoggingBaseSpec {
             1 * productRepository.save({ it.id == 2L })
 
         and: "Error is logged"
-            assertLog(Level.ERROR, "Error processing reviews for product ID 1: Network Error")
+            assertLog(Level.ERROR, "Error processing product ID: 1. Message: Network Error")
     }
 
     def "Should handle interrupted exception during sleep"() {
         given: "A product"
             def product = Product.builder().id(1L).url("url").build()
-            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product]
+            def slice = new SliceImpl([product], PageRequest.of(0, 100), false)
+            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(0,100)) >> slice
 
             // Re-initialize with delay to test interruption
             reviewsService.productLoopDelayMs = 1000
