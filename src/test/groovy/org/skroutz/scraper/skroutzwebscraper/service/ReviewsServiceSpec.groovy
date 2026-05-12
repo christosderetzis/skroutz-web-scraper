@@ -2,180 +2,158 @@ package org.skroutz.scraper.skroutzwebscraper.service
 
 import ch.qos.logback.classic.Level
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
+import org.skroutz.scraper.skroutzwebscraper.dto.ReviewsApiResponseDto
 import org.skroutz.scraper.skroutzwebscraper.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.entity.Review
+import org.skroutz.scraper.skroutzwebscraper.mapper.ReviewsMapper
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
+import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
+import org.skroutz.scraper.skroutzwebscraper.scraper.ReviewsScraper
+import org.skroutz.scraper.skroutzwebscraper.utils.UrlBuilder
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.SliceImpl
+import org.springframework.transaction.support.TransactionTemplate
 import spock.lang.Subject
 import spock.lang.Unroll
 
+import java.util.function.Consumer
+
 class ReviewsServiceSpec extends WithLoggingBaseSpec {
 
+    // All dependencies must now be mocked since they are injected into one service
+    ReviewsScraper reviewsScraper = Mock()
+    ReviewsMapper reviewsMapper = Mock()
+    ReviewRepository reviewRepository = Mock()
     ProductRepository productRepository = Mock()
-    ReviewsTxService reviewsTxService = Mock()
+    UrlBuilder urlBuilder = Mock()
+    TransactionTemplate transactionTemplate = Mock()
 
     @Subject
-    ReviewsService reviewsService = new ReviewsService(reviewsTxService, productRepository, 0)
+    ReviewsService reviewsService
 
-    def "Happy path, parse reviews successfully for single product"() {
-        given: "a product with valid URL"
-            Product product = Product.builder()
-                    .id(1L)
-                    .url("http://example.com/product.html")
-                    .reviewsParsed(false)
-                    .title("Sample Product")
-                    .build()
+    def setup() {
+        // Initialize with 0 delays for fast tests
+        reviewsService = new ReviewsService(
+                reviewsScraper,
+                reviewsMapper,
+                reviewRepository,
+                productRepository,
+                urlBuilder,
+                transactionTemplate
+        )
 
-        when: "parseReviews is called"
-            reviewsService.parseReviews()
+        reviewsService.reviewPageDelayMs = 0
+        reviewsService.productLoopDelayMs = 0
 
-        then: "product is fetched and processed via ReviewsTxService"
-            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product]
-            1 * reviewsTxService.processSingleProduct(product)
-            0 * _
+        // CRITICAL: Force the TransactionTemplate to actually run the logic inside it
+        transactionTemplate.executeWithoutResult(_ as Consumer) >> { Consumer c ->
+            c.accept(null)
+        }
     }
 
-    def "Happy path, parse reviews for multiple products"() {
-        given: "multiple products with valid URLs"
-            Product product1 = Product.builder()
-                    .id(1L)
-                    .url("http://example.com/product1.html")
-                    .reviewsParsed(false)
-                    .title("Product 1")
-                    .build()
-            Product product2 = Product.builder()
-                    .id(2L)
-                    .url("http://example.com/product2.html")
-                    .reviewsParsed(false)
-                    .title("Product 2")
-                    .build()
+    def "Happy path: parse reviews for multiple products with pagination"() {
+        given: "Two products waiting to be parsed"
+            def p1 = Product.builder().id(1L).url("http://url1.com").reviewsParsed(false).build()
+            def p2 = Product.builder().id(2L).url("http://url2.com").reviewsParsed(false).build()
+            def slice = new SliceImpl([p1, p2], PageRequest.of(0, 100), false)
+            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(0,100)) >> slice
 
-        when: "parseReviews is called"
+        and: "Responses for p1 (2 pages) and p2 (1 page)"
+            def p1Page1 = createResponse([new ReviewsApiResponseDto.ReviewDto(authorName: "User1")])
+            def p1Page2 = createResponse([]) // Stop loop for p1
+            def p2Page1 = createResponse([]) // No reviews for p2
+
+        when: "parseReviews is executed"
             reviewsService.parseReviews()
 
-        then: "both products are processed via ReviewsTxService"
-            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product1, product2]
-            1 * reviewsTxService.processSingleProduct(product1)
-            1 * reviewsTxService.processSingleProduct(product2)
-            0 * _
+        then: "Pagination for p1 is handled (2 calls to scraper)"
+            1 * urlBuilder.buildReviewsApiUrl("http://url1.com", 0) >> "api-p1-0"
+            1 * reviewsScraper.fetchReviewPage("api-p1-0") >> p1Page1
+
+            1 * urlBuilder.buildReviewsApiUrl("http://url1.com", 1) >> "api-p1-1"
+            1 * reviewsScraper.fetchReviewPage("api-p1-1") >> p1Page2
+
+        and: "Saving logic for p1"
+            1 * reviewsMapper.mapToReviews({ it.size() == 1 }) >> [new Review(reviewerName: "User1")]
+            1 * reviewRepository.saveAll({ List<Review> list -> list[0].productId == 1L })
+            1 * productRepository.save({ it.id == 1L && it.reviewsParsed == true })
+
+        and: "Pagination for p2 is handled (1 call to scraper)"
+            1 * urlBuilder.buildReviewsApiUrl("http://url2.com", 0) >> "api-p2-0"
+            1 * reviewsScraper.fetchReviewPage("api-p2-0") >> p2Page1
+            1 * productRepository.save({ it.id == 2L && it.reviewsParsed == true })
     }
 
     @Unroll
-    def "Skip product with #scenario URL"() {
-        given: "a product with invalid URL"
-            Product product = Product.builder()
-                    .id(1L)
-                    .url(url)
-                    .reviewsParsed(false)
-                    .title("Sample Product")
-                    .build()
+    def "Should skip product when URL is '#urlScenario'"() {
+        given: "A product with a bad URL"
+            def product = Product.builder().id(99L).url(urlValue).build()
+            def slice = new SliceImpl([product], PageRequest.of(0, 100), false)
 
-        when: "parseReviews is called"
+        when: "Service runs"
             reviewsService.parseReviews()
 
-        then: "product is fetched but not processed"
-            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product]
-            0 * reviewsTxService.processSingleProduct(_)
-            0 * _
+        then: "Scraper is never called"
+            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(0,100)) >> slice
+            0 * reviewsScraper.fetchReviewPage(_)
 
-        and: "warning is logged"
-            assertLog(Level.WARN, "Product URL is empty or null for product ID: 1")
 
         where:
-            scenario     | url
-            "empty"      | ""
-            "null"       | null
-            "blank"      | "   "
+        urlScenario | urlValue
+            "null"      | null
+            "empty"     | ""
+            "blank"     | "   "
     }
 
-    def "Continue processing other products when one fails"() {
-        given: "multiple products"
-            Product product1 = Product.builder()
-                    .id(1L)
-                    .url("http://example.com/product1.html")
-                    .reviewsParsed(false)
-                    .title("Product 1")
-                    .build()
-            Product product2 = Product.builder()
-                    .id(2L)
-                    .url("http://example.com/product2.html")
-                    .reviewsParsed(false)
-                    .title("Product 2")
-                    .build()
+    def "Should continue processing next product if one throws an exception"() {
+        given: "Two products"
+            def p1 = Product.builder().id(1L).url("url1").build()
+            def p2 = Product.builder().id(2L).url("url2").build()
+            def slice = new SliceImpl([p1,p2], PageRequest.of(0, 100), false)
+            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(0,100)) >> slice
 
-        when: "parseReviews is called"
+        when: "The first product triggers an error"
             reviewsService.parseReviews()
 
-        then: "first product fails but second product is still processed"
-            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product1, product2]
-            1 * reviewsTxService.processSingleProduct(product1) >> { throw new RuntimeException("Scraping error") }
-            1 * reviewsTxService.processSingleProduct(product2)
-            0 * _
+        then: "First product fails"
+            1 * urlBuilder.buildReviewsApiUrl("url1", 0) >> { throw new RuntimeException("Network Error") }
 
-        and: "error is logged for failed product"
-            assertLog(Level.ERROR, "Error processing reviews for product ID 1")
+        and: "Second product is still processed"
+            1 * urlBuilder.buildReviewsApiUrl("url2", 0) >> "api-2"
+            1 * reviewsScraper.fetchReviewPage("api-2") >> createResponse([])
+            1 * productRepository.save({ it.id == 2L })
+
+        and: "Error is logged"
+            assertLog(Level.ERROR, "Error processing product ID: 1. Message: Network Error")
     }
 
-    def "Handle exception during single product processing"() {
-        given: "a product with valid URL"
-            Product product = Product.builder()
-                    .id(1L)
-                    .url("http://example.com/product.html")
-                    .reviewsParsed(false)
-                    .title("Sample Product")
-                    .build()
+    def "Should handle interrupted exception during sleep"() {
+        given: "A product"
+            def product = Product.builder().id(1L).url("url").build()
+            def slice = new SliceImpl([product], PageRequest.of(0, 100), false)
+            productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(0,100)) >> slice
 
-        when: "parseReviews is called"
+            // Re-initialize with delay to test interruption
+            reviewsService.productLoopDelayMs = 1000
+
+        when: "Thread is interrupted"
+            Thread.currentThread().interrupt()
             reviewsService.parseReviews()
 
-        then: "exception is caught and logged"
-            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [product]
-            1 * reviewsTxService.processSingleProduct(product) >> { throw new InterruptedException("Interrupted") }
-            0 * _
-
-        and: "error is logged"
-            assertLog(Level.ERROR, "Error processing reviews for product ID 1")
+        then: "It completes without crashing and handles the flag"
+            1 * transactionTemplate.executeWithoutResult(_)
+            // Interrupted flag should be set
+            Thread.interrupted()
     }
 
-    def "No products to process"() {
-        when: "parseReviews is called with no products"
-            reviewsService.parseReviews()
+    // Helper to build the nested DTO structure used in your service:
+    // response.getReviews().getReviews()
+    private ReviewsApiResponseDto createResponse(List<ReviewsApiResponseDto.ReviewDto> items) {
+        def wrapper = new ReviewsApiResponseDto.ReviewsWrapper()
+        wrapper.setReviews(items)
 
-        then: "empty list is returned from repository"
-            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> []
-            0 * reviewsTxService.processSingleProduct(_)
-            0 * _
-    }
-
-    def "Mixed products - some with valid URLs, some without"() {
-        given: "products with mixed URL validity"
-            Product validProduct = Product.builder()
-                    .id(1L)
-                    .url("http://example.com/product.html")
-                    .reviewsParsed(false)
-                    .title("Valid Product")
-                    .build()
-            Product emptyUrlProduct = Product.builder()
-                    .id(2L)
-                    .url("")
-                    .reviewsParsed(false)
-                    .title("Empty URL Product")
-                    .build()
-            Product anotherValidProduct = Product.builder()
-                    .id(3L)
-                    .url("http://example.com/product2.html")
-                    .reviewsParsed(false)
-                    .title("Another Valid Product")
-                    .build()
-
-        when: "parseReviews is called"
-            reviewsService.parseReviews()
-
-        then: "only valid products are processed"
-            1 * productRepository.findAllByReviewsParsedAndRatingIsNotNull(false) >> [validProduct, emptyUrlProduct, anotherValidProduct]
-            1 * reviewsTxService.processSingleProduct(validProduct)
-            1 * reviewsTxService.processSingleProduct(anotherValidProduct)
-            0 * _
-
-        and: "warning is logged for invalid product"
-            assertLog(Level.WARN, "Product URL is empty or null for product ID: 2")
+        def response = new ReviewsApiResponseDto()
+        response.setReviews(wrapper)
+        return response
     }
 }

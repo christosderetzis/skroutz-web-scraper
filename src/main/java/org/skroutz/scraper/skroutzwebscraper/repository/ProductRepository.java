@@ -3,6 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.repository;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,7 +18,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Page<Product> findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(Pageable pageable);
 
-    List<Product> findAllByReviewsParsedAndRatingIsNotNull(boolean reviewsParsed);
+    Slice<Product> findAllByReviewsParsedAndRatingIsNotNull(boolean reviewsParsed, Pageable pageable);
 
-    List<Product> findAllByPriceHistoryParsed(boolean priceHistoryParsed);
+    Slice<Product> findAllByPriceHistoryParsed(boolean priceHistoryParsed, Pageable pageable);
 }
