@@ -15,12 +15,14 @@ import java.util.concurrent.TimeoutException;
 public abstract class BaseScraper {
 
     protected final WebClient webClient;
-    protected final int timeoutSeconds;
+    protected final long timeoutMillis;
+    protected final long retryDelayMillis;
     protected final int maxRetries;
 
-    protected BaseScraper(WebClient webClient, int timeoutSeconds, int maxRetries) {
+    protected BaseScraper(WebClient webClient, long timeoutMillis, int retryDelayMillis, int maxRetries) {
         this.webClient = webClient;
-        this.timeoutSeconds = timeoutSeconds;
+        this.timeoutMillis = timeoutMillis;
+        this.retryDelayMillis = retryDelayMillis;
         this.maxRetries = maxRetries;
     }
 
@@ -42,8 +44,8 @@ public abstract class BaseScraper {
                             }
                     )
                     .bodyToMono(responseType)
-                    .timeout(Duration.ofSeconds(timeoutSeconds))
-                    .retryWhen(Retry.backoff(maxRetries, Duration.ofSeconds(1))
+                    .timeout(Duration.ofMillis(timeoutMillis))
+                    .retryWhen(Retry.backoff(maxRetries, Duration.ofMillis(retryDelayMillis))
                             .maxBackoff(Duration.ofSeconds(10))
                             .filter(this::shouldRetry)
                             .doBeforeRetry(retrySignal -> {
@@ -54,7 +56,7 @@ public abstract class BaseScraper {
                                         maxRetries);
                             })
                             .onRetryExhaustedThrow((spec, signal) -> {
-                                String errorDetails = getErrorDetails(signal.failure(), url);
+                                String errorDetails = getErrorDetails(signal.failure());
                                 log.error("Max retries ({}) exhausted for URL: {}. {}",
                                         maxRetries, url, errorDetails);
                                 return signal.failure();
@@ -115,7 +117,7 @@ public abstract class BaseScraper {
         return "Error occurred.";
     }
 
-    private String getErrorDetails(Throwable throwable, String url) {
+    private String getErrorDetails(Throwable throwable) {
         if (throwable instanceof ResponseStatusException rse) {
             return "HTTP Status: " + rse.getStatusCode();
         }
@@ -123,7 +125,7 @@ public abstract class BaseScraper {
             return "HTTP Status: " + wcre.getStatusCode();
         }
         if (throwable instanceof TimeoutException) {
-            return "Timeout after " + timeoutSeconds + " seconds";
+            return "Timeout after " + timeoutMillis + " ms";
         }
         return "Error: " + throwable.getMessage();
     }

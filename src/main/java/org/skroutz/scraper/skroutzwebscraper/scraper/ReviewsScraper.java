@@ -9,9 +9,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class ReviewsScraper extends BaseScraper {
 
     public ReviewsScraper(WebClient webClient,
-                          @Value("${scraper.timeout-seconds:30}") int timeoutSeconds,
+                          @Value("${scraper.timeout-millis:30000}") long timeoutMillis,
+                          @Value("${scraper.retry-delay-ms:1000}") int retryDelayMillis,
                           @Value("${scraper.max-retries:3}") int maxRetries) {
-        super(webClient, timeoutSeconds, maxRetries);
+        super(webClient, timeoutMillis, retryDelayMillis, maxRetries);
     }
 
     public ReviewsApiResponseDto fetchReviewPage(String url) {

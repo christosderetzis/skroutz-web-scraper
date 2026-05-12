@@ -33,7 +33,7 @@ class PriceHistoryScraperSpec extends WithLoggingBaseSpec {
                 .baseUrl(mockWebServer.url("/").toString())
                 .build()
 
-        priceHistoryScraper = new PriceHistoryScraper(webClient, 1, 3) // 1 second timeout for tests
+        priceHistoryScraper = new PriceHistoryScraper(webClient, 500, 50, 3) // 500ms timeout for tests, 50ms retry delay, 3 max retries
     }
 
     def cleanup() {
