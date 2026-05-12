@@ -31,7 +31,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
                 .baseUrl(mockWebServer.url("/").toString())
                 .build()
 
-        productsScraper = new ProductsScraper(webClient, 1, 3) // 1 second timeout for tests
+        productsScraper = new ProductsScraper(webClient, 500, 50, 3) // 500ms timeout for tests, 50ms retry delay, 3 max retries
     }
 
     def cleanup() {

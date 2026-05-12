@@ -31,7 +31,8 @@ spring:
 # Scraper Configuration
 scraper:
   base-url: https://www.skroutz.gr
-  timeout-seconds: 30
+  timeout-millis: 30
+  retry-delay-ms: 1000
   max-retries: 3
   delays:
     review-page-ms: 100
