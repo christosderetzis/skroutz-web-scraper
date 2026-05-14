@@ -10,6 +10,7 @@ import org.skroutz.scraper.skroutzwebscraper.repository.CategorySchemaRepository
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.schema.CategoryMappingSchema
 import org.skroutz.scraper.skroutzwebscraper.scraper.SpecificationsScraper
+import org.skroutz.scraper.skroutzwebscraper.utils.SpecificationsNormalizerUtils
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
@@ -20,7 +21,7 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
     ProductRepository productRepository = Mock(ProductRepository)
     SpecificationsScraper specificationsScraper = Mock(SpecificationsScraper)
     ProductSearchService productSearchService = Mock(ProductSearchService)
-    SpecsNormalizerService specsNormalizerService = Mock(SpecsNormalizerService)
+    SpecificationsNormalizerUtils specsNormalizerService = Mock(SpecificationsNormalizerUtils)
     CategorySchemaRepository categorySchemaRepository = Mock(CategorySchemaRepository)
 
     @Subject

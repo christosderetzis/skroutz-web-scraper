@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.service
+package org.skroutz.scraper.skroutzwebscraper.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -12,10 +12,11 @@ import org.skyscreamer.jsonassert.JSONCompareMode
 import spock.lang.Specification
 import spock.lang.Subject
 
-class SpecsNormalizerServiceSpec extends Specification {
+class SpecificationsNormalizerUtilsSpec extends Specification {
+
 
     @Subject
-    SpecsNormalizerService service = new SpecsNormalizerService()
+    SpecificationsNormalizerUtils service = new SpecificationsNormalizerUtils()
 
     def "Happy Path, normalize specifications with valid input"() {
         given: "a JSON node with specifications"
@@ -150,7 +151,6 @@ class SpecsNormalizerServiceSpec extends Specification {
                 """
         ObjectMapper mapper = new ObjectMapper()
         JsonNode inputNode = mapper.readTree(rawSpecs)
-
 
     when: "normalizing specifications"
         String resultNode = service.normalize(inputNode, schema)

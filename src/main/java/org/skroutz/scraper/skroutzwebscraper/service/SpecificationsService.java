@@ -8,6 +8,7 @@ import org.skroutz.scraper.skroutzwebscraper.entity.CategorySchema;
 import org.skroutz.scraper.skroutzwebscraper.repository.CategorySchemaRepository;
 import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.scraper.SpecificationsScraper;
+import org.skroutz.scraper.skroutzwebscraper.utils.SpecificationsNormalizerUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ public class SpecificationsService {
     private final ProductRepository productRepository;
     private final SpecificationsScraper specificationsScraper;
     private final ProductSearchService productSearchService;
-    private final SpecsNormalizerService specsNormalizerService;
+    private final SpecificationsNormalizerUtils specsNormalizerUtils;
     private final CategorySchemaRepository categorySchemaRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Integer batchSize;
@@ -38,14 +39,14 @@ public class SpecificationsService {
     public SpecificationsService(ProductRepository productRepository,
                                  SpecificationsScraper specificationsScraper,
                                  ProductSearchService productSearchService,
-                                 SpecsNormalizerService specsNormalizerService,
+                                 SpecificationsNormalizerUtils specsNormalizerUtils,
                                  CategorySchemaRepository categorySchemaRepository,
                                  @Value("${scraper.specifications.batch-size:30}") Integer batchSize,
                                  @Value("${scraper.delays.specifications-ms:500}") long specificationsDelayMs) {
         this.productRepository = productRepository;
         this.specificationsScraper = specificationsScraper;
         this.productSearchService = productSearchService;
-        this.specsNormalizerService = specsNormalizerService;
+        this.specsNormalizerUtils = specsNormalizerUtils;
         this.categorySchemaRepository = categorySchemaRepository;
         this.batchSize = batchSize;
         this.specificationsDelayMs = specificationsDelayMs;
@@ -144,7 +145,7 @@ public class SpecificationsService {
         return Optional.ofNullable(schemasByCategory.get(product.getCategory()))
                 .map(categorySchema -> {
                     try {
-                        String json = specsNormalizerService.normalize(rawSpecs, categorySchema.getSchema());
+                        String json = specsNormalizerUtils.normalize(rawSpecs, categorySchema.getSchema());
                         return objectMapper.readTree(json);
                     } catch (Exception e) {
                         log.warn("Normalization failed for product {}", product.getId());

@@ -274,6 +274,102 @@ src/
 └── functionalTest/                 # Spock functional tests with Docker Compose
 ```
 
+### Category Schema
+
+Category schemas define how raw product specifications (JSON nodes) are mapped and normalized into the structured specification document stored in the database and indexed for search.
+
+Location
+- `src/main/java/org/skroutz/scraper/skroutzwebscraper/schema`
+- Main classes: `CategoryMappingSchema`, `DirectFieldMapping`, `FeatureExtraction`, `FeatureFieldMapping`, `FieldType`
+
+Purpose
+- Map raw JSON paths from scraped specification blobs to normalized keys and types.
+- Support direct field mappings (single values with optional types like `INTEGER` or `NUMERIC`) and array/feature mappings (multiple extraction modes).
+
+Extraction modes (via `FeatureExtraction`)
+- `VALUE`: take the raw text value.
+- `COMMA_SPLIT`: split comma-separated values into an array.
+- `YES_GROUP` / `YES_KEY`: extract flags represented as "Yes" values into arrays.
+
+How it is used
+- `SpecsNormalizerService.normalize(JsonNode rawSpecs, CategoryMappingSchema schema)` applies the schema to a raw JSON node and returns a normalized JSON object as a string.
+- Category schemas are loaded and applied during the specifications parsing flow so that product `specifications` and `elasticSearchSpecifications` fields are populated consistently.
+
+Adding or modifying a schema
+- Update or create mapping definitions in the `schema` package classes.
+- Persist the schema (the application reads category schemas at runtime) so the normalizer can apply them when parsing specifications.
+
+Example
+
+    // java
+    import com.fasterxml.jackson.databind.JsonNode;
+    import com.fasterxml.jackson.databind.ObjectMapper;
+    import org.skroutz.scraper.skroutzwebscraper.schema.CategoryMappingSchema;
+    import org.skroutz.scraper.skroutzwebscraper.schema.DirectFieldMapping;
+    import org.skroutz.scraper.skroutzwebscraper.schema.FeatureFieldMapping;
+    import org.skroutz.scraper.skroutzwebscraper.schema.FeatureExtraction;
+    import org.skroutz.scraper.skroutzwebscraper.schema.FieldType;
+    import org.skroutz.scraper.skroutzwebscraper.utils.SpecificationsNormalizerUtils;
+
+    import java.util.List;
+
+    public class SpecsNormalizerExample {
+        public static void main(String[] args) throws Exception {
+            ObjectMapper mapper = new ObjectMapper();
+
+            CategoryMappingSchema schema = CategoryMappingSchema.builder()
+                    .directFields(List.of(
+                            DirectFieldMapping.builder().path("Main Specifications.Colour").target("colour").type(FieldType.STRING).build(),
+                            DirectFieldMapping.builder().path("Main Specifications.Release Year").target("release_year").type(FieldType.INTEGER).build(),
+                            DirectFieldMapping.builder().path("Processor & Memory.RAM").target("ram_gb").type(FieldType.NUMERIC).build()
+                    ))
+                    .arrayFields(List.of(
+                            FeatureFieldMapping.builder().path("Main Specifications.SIM").target("features").type(FeatureExtraction.VALUE).build(),
+                            FeatureFieldMapping.builder().path("Network & Connectivity.Connectivity").target("features").type(FeatureExtraction.COMMA_SPLIT).build(),
+                            FeatureFieldMapping.builder().path("AI Features").target("ai_features").type(FeatureExtraction.YES_GROUP).build()
+                    ))
+                    .build();
+
+            String rawSpecs = """
+                {
+                  "Main Specifications": {
+                    "SIM": "eSIM",
+                    "Colour": "Black",
+                    "Release Year": "2024"
+                  },
+                  "Processor & Memory": {
+                    "RAM": "8 GB"
+                  },
+                  "Network & Connectivity": {
+                    "Connectivity": "Bluetooth, Wi-Fi, USB-C"
+                  },
+                  "AI Features": {
+                    "AI Photo Editing": "Yes",
+                    "AI Call/Speech Translation": "No",
+                    "AI Text Generation": "Yes"
+                  }
+                }
+                """;
+
+            JsonNode inputNode = mapper.readTree(rawSpecs);
+
+            SpecsNormalizerService normalizer = new SpecsNormalizerService(mapper);
+            String normalized = normalizer.normalize(inputNode, schema);
+
+            System.out.println("Normalized JSON:");
+            System.out.println(normalized);
+        }
+    }
+
+    // Expected (formatted) result example:
+    // {
+    //   "colour":"Black",
+    //   "release_year":2024,
+    //   "ram_gb":8,
+    //   "features":["eSIM","Bluetooth","Wi-Fi","USB-C"],
+    //   "ai_features":["AI Photo Editing","AI Text Generation"]
+    // }
+
 ## Development
 
 ### Running Unit Tests
