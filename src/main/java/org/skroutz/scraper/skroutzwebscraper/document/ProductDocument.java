@@ -53,7 +53,7 @@ public class ProductDocument {
     @Field(type = FieldType.Double)
     private BigDecimal rating;
 
-    @Field(type = FieldType.Flattened)
+    @Field(type = FieldType.Object)
     private Map<String, Object> specifications;
 
     @Field(type = FieldType.Date)

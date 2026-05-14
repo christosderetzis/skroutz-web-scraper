@@ -16,7 +16,7 @@ import java.util.Map;
 @Mapper(componentModel = "spring")
 public interface ProductDocumentMapper {
 
-    @Mapping(target = "specifications", source = "specifications", qualifiedByName = "jsonNodeToMap")
+    @Mapping(target = "specifications", source = "elasticSearchSpecifications", qualifiedByName = "jsonNodeToMap")
     @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "timestampToInstant")
     @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "timestampToInstant")
     ProductDocument toDocument(Product product);

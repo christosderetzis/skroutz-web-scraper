@@ -51,6 +51,10 @@ public class Product {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode specifications;
 
+    @Column(name = "elasticsearch_specifications", columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode elasticSearchSpecifications;
+
     @Column(name = "specifications_skipped", nullable = false)
     @Builder.Default
     private Boolean specificationsSkipped = false;

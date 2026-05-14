@@ -6,7 +6,7 @@ A Spring Boot application for scraping product information from Skroutz.gr using
 
 
 - **Product Scraping**: Automated product data extraction from Skroutz.gr (single or multi-page) with category classification
-- **Specifications Parsing**: Structured specification extraction with automatic numeric/unit detection (e.g. `174 gr` → `{value: 174, unit: "gr"}`)
+- **Specifications Parsing**: Structured specification extraction based on the category schema
 - **Reviews Scraping**: Paginated review fetching via Skroutz's JSON API
 - **Price History Scraping**: Historical price data extraction
 - **AI Review Summarization**: LLM-powered summarization of product reviews using a local Ollama model via LangChain4j; supports chunk-based processing for large review sets and caches results per product
@@ -192,31 +192,6 @@ Parameters:
 - `limit` (optional): Maximum number of suggestions to return (default: 5)
 
 Response includes matching products with title, price, rating, and category.
-
-## Specifications Format
-
-Specifications are stored as structured JSONB. Each category contains an array of key/value/unit objects:
-
-```json
-{
-  "Dimensions": [
-    {"key": "Length", "value": 146.7, "unit": "mm"},
-    {"key": "Width", "value": 71.5, "unit": "mm"}
-  ],
-  "Main Specifications": [
-    {"key": "Colour", "value": "Beige"},
-    {"key": "Weight", "value": 174, "unit": "gr"},
-    {"key": "Model", "value": "iPhone 13"}
-  ]
-}
-```
-
-- Numeric values with units: `174 gr` → `{value: 174, unit: "gr"}`
-- Decimal values: `3.22 GHz` → `{value: 3.22, unit: "GHz"}`
-- Comma decimals: `72,8 cfm` → `{value: 72.8, unit: "cfm"}`
-- Greek units: `3 τμχ` → `{value: 3, unit: "τμχ"}`
-- Plain strings: `iOS` → `{value: "iOS"}`
-- Complex values: `1920x1080`, `16:9` → kept as strings
 
 ## Configuration
 
