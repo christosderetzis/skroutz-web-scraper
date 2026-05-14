@@ -147,12 +147,12 @@ public class SpecificationsService {
                         String json = specsNormalizerService.normalize(rawSpecs, categorySchema.getSchema());
                         return objectMapper.readTree(json);
                     } catch (Exception e) {
-                        log.warn("Normalization failed for product {}, falling back to raw specs", product.getId());
+                        log.warn("Normalization failed for product {}", product.getId());
                         return null;
                     }
                 })
                 .orElseGet(() -> {
-                    log.debug("No schema found for category '{}', indexing raw specs", product.getCategory());
+                    log.debug("No schema found for category '{}'", product.getCategory());
                     return null;
                 });
     }

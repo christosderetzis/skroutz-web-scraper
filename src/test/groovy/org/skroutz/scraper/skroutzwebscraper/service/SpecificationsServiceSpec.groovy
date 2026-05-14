@@ -256,4 +256,85 @@ class SpecificationsServiceSpec extends WithLoggingBaseSpec {
         and: "log should contain completion message with zero counts"
             assertLog(Level.INFO, "Completed specifications parsing. Total processed: 0, Total successful: 0")
     }
+
+    def "Unhappy path, does not save applied schema if category schema does not exist for category"(){
+        given: "a product object"
+            Product product = new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "MOBILE_PHONES")
+
+        and: "we have a json node to return"
+            ObjectMapper mapper = new ObjectMapper()
+            JsonNode jsonNode = mapper.readTree("{\"key\":\"value\"}")
+
+        and: "a page with the product"
+            Pageable pageable = PageRequest.of(0, 100)
+            Page<Product> page = new PageImpl<>([product], pageable, 1)
+            Page<Product> emptyPage = new PageImpl<>([], pageable, 0)
+
+        and: "no category schema for the product category"
+
+
+        when: "parsing specifications for the product"
+            service.parseSpecifications()
+
+        then: "specifications should be scraped but not normalized or indexed"
+            1 * categorySchemaRepository.findAll() >> []
+            1 * productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(_ as Pageable) >> page
+            1 * specificationsScraper.scrapeSpecifications(product.url + "?lang=en") >> Optional.of(jsonNode)
+            1 * productRepository.saveAll({ List<Product> products ->
+                products.size() == 1 &&
+                products[0].specifications == jsonNode &&
+                products[0].elasticSearchSpecifications == null &&
+                products[0].specificationsSkipped == false
+            })
+            1 * productSearchService.indexProducts({ List<Product> products ->
+                products.size() == 1 &&
+                products[0].specifications == jsonNode &&
+                products[0].elasticSearchSpecifications == null
+            })
+            1 * productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(_ as Pageable) >> emptyPage
+            0 * _
+    }
+
+    def "Unhappy path, should log error and skip product if normalization throws exception"() {
+        given: "a product object"
+            Product product = new Product(title: "Product 1", price: 100, url: "http://example.com/product1", category: "MOBILE_PHONES")
+
+        and: "we have a json node to return"
+            ObjectMapper mapper = new ObjectMapper()
+            JsonNode jsonNode = mapper.readTree("{\"key\":\"value\"}")
+
+        and: "a page with the product"
+            Pageable pageable = PageRequest.of(0, 100)
+            Page<Product> page = new PageImpl<>([product], pageable, 1)
+            Page<Product> emptyPage = new PageImpl<>([], pageable, 0)
+
+        and: "a category schema for the product category"
+            CategorySchema categorySchema = CategorySchema.builder()
+                    .category("MOBILE_PHONES")
+                    .version(1)
+                    .schema(new CategoryMappingSchema())
+                    .build()
+
+        when: "parsing specifications for the product"
+            service.parseSpecifications()
+
+        then: "product is marked as skipped but specifications remain null"
+            1 * categorySchemaRepository.findAll() >> [categorySchema]
+            1 * productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(_ as Pageable) >> page
+            1 * specificationsScraper.scrapeSpecifications(product.url + "?lang=en") >> Optional.of(jsonNode)
+            1 * specsNormalizerService.normalize(jsonNode, categorySchema.schema) >> { throw new RuntimeException("Normalization error") }
+            1 * productRepository.saveAll({ List<Product> products ->
+                products.size() == 1 &&
+                        products[0].specifications == jsonNode &&
+                        products[0].elasticSearchSpecifications == null &&
+                        products[0].specificationsSkipped == false
+            })
+            1 * productSearchService.indexProducts({ List<Product> products ->
+                products.size() == 1 &&
+                        products[0].specifications == jsonNode &&
+                        products[0].elasticSearchSpecifications == null
+            })
+            1 * productRepository.findAllBySpecificationsIsNullAndSpecificationsSkippedIsFalseOrderByIdAsc(_ as Pageable) >> emptyPage
+            0 * _
+    }
 }

@@ -40,16 +40,20 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
 
         then:
             Product savedProduct = productRepository.findById(product.id).orElse(null)
-            JsonNode expectedRawSchema = JsonFileReader.readJsonFromResource("expected-specs.json")
-            JsonNode expectedNormalizedSchema = JsonFileReader.readJsonFromResource("expected-applied-specs.json")
+            JsonNode expectedRawSpecs = JsonFileReader.readJsonFromResource("expected-specs.json")
+            JsonNode expectedNormalizedSpecs = JsonFileReader.readJsonFromResource("expected-applied-specs.json")
             with(savedProduct) {
-                JSONAssert.assertEquals(expectedRawSchema.toString(), specifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
-                JSONAssert.assertEquals(expectedNormalizedSchema.toString(), elasticSearchSpecifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
+                JSONAssert.assertEquals(expectedRawSpecs.toString(), specifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
+                JSONAssert.assertEquals(expectedNormalizedSpecs.toString(), elasticSearchSpecifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
             }
 
         and: "Product is indexed in elasticsearch"
-            List<ProductDocument> productDocuments = productElasticsearchRepository.findAll()
+            def productDocuments = productElasticsearchRepository.findAll()
             assert productDocuments.size() == 1
+
+        and: "ElasticSearch specifications match the expected normalized schema"
+            JsonNode elasticSearchSpecs = objectMapper.convertValue(productDocuments[0].specifications, JsonNode.class)
+            assert elasticSearchSpecs == expectedNormalizedSpecs
     }
 
     def "Scrape specifications, blank url"() {
