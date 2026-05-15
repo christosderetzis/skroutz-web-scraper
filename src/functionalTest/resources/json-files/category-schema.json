@@ -1,0 +1,106 @@
+{
+  "directFields": [
+    {
+      "path": "Main Specifications.Mobile Phone Type",
+      "target": "mobile_phone_type",
+      "type": "STRING"
+    },
+    {
+      "path": "Main Specifications.Operating System",
+      "target": "operating_system",
+      "type": "STRING"
+    },
+    {
+      "path": "Main Specifications.Release Year",
+      "target": "release_year",
+      "type": "INTEGER"
+    },
+    {
+      "path": "Main Specifications.Colour",
+      "target": "colour",
+      "type": "STRING"
+    },
+    {
+      "path": "Processor & Memory.Processor Model",
+      "target": "processor_model",
+      "type": "STRING"
+    },
+    {
+      "path": "Processor & Memory.RAM",
+      "target": "ram_gb",
+      "type": "NUMERIC"
+    },
+    {
+      "path": "Processor & Memory.Capacity",
+      "target": "storage_gb",
+      "type": "NUMERIC"
+    },
+    {
+      "path": "Display.Size",
+      "target": "display_inches",
+      "type": "NUMERIC"
+    },
+    {
+      "path": "Display.Analysis",
+      "target": "display_analysis",
+      "type": "STRING"
+    },
+    {
+      "path": "Display.Refresh Rate",
+      "target": "refresh_rate_hz",
+      "type": "NUMERIC"
+    },
+    {
+      "path": "Display.Maximum Brightness",
+      "target": "maximum_brightness_nits",
+      "type": "NUMERIC"
+    },
+    {
+      "path": "Battery.Capacity",
+      "target": "battery_capacity_mah",
+      "type": "NUMERIC"
+    }
+  ],
+  "arrayFields": [
+    {
+      "path": "Main Specifications.SIM",
+      "target": "features",
+      "type": "VALUE"
+    },
+    {
+      "path": "Processor & Memory.Card Slot",
+      "target": "features",
+      "type": "YES_KEY"
+    },
+    {
+      "path": "Network & Connectivity.Network Connection",
+      "target": "features",
+      "type": "VALUE"
+    },
+    {
+      "path": "Network & Connectivity.Connectivity",
+      "target": "features",
+      "type": "COMMA_SPLIT"
+    },
+    {
+      "path": "Network & Connectivity.NFC",
+      "target": "features",
+      "type": "YES_KEY"
+    },
+    {
+      "path": "Battery.Fast Charging",
+      "target": "features",
+      "type": "YES_KEY"
+    },
+    {
+      "path": "Special Features.Protection",
+      "target": "features",
+      "type": "COMMA_SPLIT"
+    },
+    {
+      "path": "AI Features",
+      "target": "ai_features",
+      "type": "YES_GROUP"
+    }
+  ]
+}

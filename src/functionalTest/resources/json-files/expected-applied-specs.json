@@ -1,0 +1,24 @@
+{
+  "mobile_phone_type": "SmartPhone",
+  "operating_system": "iOS",
+  "release_year": 2021,
+  "colour": "Beige",
+  "processor_model": "Apple A15 Bionic",
+  "ram_gb": 4,
+  "storage_gb": 128,
+  "display_inches": 6,
+  "display_analysis": "2532 x 1170 pixels",
+  "battery_capacity_mah": 3240,
+  "features": [
+    "SIM + eSIM",
+    "5G",
+    "Bluetooth",
+    "Lightning",
+    "Wi-Fi",
+    "NFC",
+    "Fast Charging",
+    "Dust Resistant",
+    "Water Resistant"
+  ],
+  "ai_features": []
+}

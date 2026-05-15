@@ -2,7 +2,6 @@ package org.skroutz.scraper.skroutzwebscraper.scraper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,7 +56,7 @@ public class SpecificationsScraper {
             if (categoryElement == null) continue;
 
             String category = categoryElement.text();
-            ArrayNode categoryArray = mapper.createArrayNode();
+            ObjectNode categoryNode = mapper.createObjectNode();
 
             Elements dls = group.select("dl");
             for (Element dl : dls) {
@@ -70,37 +69,13 @@ public class SpecificationsScraper {
                     String dd = ddElement.text().replace("\"", "").trim();
                     if (dt.isEmpty() || dd.isEmpty()) continue;
 
-                    categoryArray.add(buildSpecNode(dt, dd));
+                    categoryNode.put(dt, dd);
                 } catch (Exception e) {
                     log.debug("Skipping malformed specification entry: {}", e.getMessage());
                 }
             }
-            rootNode.set(category, categoryArray);
+            rootNode.set(category, categoryNode);
         }
         return rootNode;
-    }
-
-    private ObjectNode buildSpecNode(String key, String value) {
-        ObjectNode node = mapper.createObjectNode();
-        node.put("key", key);
-
-        Matcher matcher = NUMERIC_WITH_UNIT.matcher(value);
-        if (matcher.matches()) {
-            String numericPart = matcher.group(1).replace(",", ".");
-            double numericValue = Double.parseDouble(numericPart);
-            if (numericValue == Math.floor(numericValue)) {
-                node.put("value", (long) numericValue);
-            } else {
-                node.put("value", numericValue);
-            }
-            String unit = matcher.group(2);
-            if (unit != null && !unit.isEmpty()) {
-                node.put("unit", unit);
-            }
-        } else {
-            node.put("value", value);
-        }
-
-        return node;
     }
 }
