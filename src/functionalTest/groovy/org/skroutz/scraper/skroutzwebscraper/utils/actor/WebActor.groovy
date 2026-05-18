@@ -1,6 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.utils.actor
 
 import org.skroutz.scraper.skroutzwebscraper.dto.CategorySchemaCreateRequestDto
+import org.skroutz.scraper.skroutzwebscraper.dto.search.ProductSearchRequest
 import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -84,6 +85,13 @@ class WebActor {
     WebTestClient.ResponseSpec getCategorySchema(String category) {
         return webTestClient.get()
                 .uri("/category-schemas/{category}", category)
+                .exchange()
+    }
+
+    WebTestClient.ResponseSpec searchProducts(ProductSearchRequest request) {
+        return webTestClient.post()
+                .uri("/products/search")
+                .bodyValue(request)
                 .exchange()
     }
 }

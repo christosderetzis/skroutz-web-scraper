@@ -88,11 +88,15 @@ abstract class BaseFunctionalSpec extends Specification {
     }
 
     protected Product createAndIndexProduct(String title) {
+        return createAndIndexProduct(title, "electronics", 999.99.toBigDecimal())
+    }
+
+    protected Product createAndIndexProduct(String title, String category, BigDecimal price) {
         Product product = Product.builder()
                 .title(title)
                 .url("http://example.com/${title.replaceAll(' ', '-').toLowerCase()}")
-                .category("electronics")
-                .price(999.99.toBigDecimal())
+                .category(category)
+                .price(price)
                 .imageUrl("http://example.com/image.jpg")
                 .description("Test product")
                 .rating(4.5.toBigDecimal())
@@ -120,6 +124,6 @@ abstract class BaseFunctionalSpec extends Specification {
     private void waitForElasticsearchRefresh() {
         // Elasticsearch needs time to index documents and make them searchable
         // In tests, we need to wait a bit for the index to refresh
-        Thread.sleep(1500)
+        Thread.sleep(700)
     }
 }

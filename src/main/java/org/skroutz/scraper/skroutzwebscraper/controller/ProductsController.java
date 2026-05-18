@@ -1,9 +1,12 @@
 package org.skroutz.scraper.skroutzwebscraper.controller;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.dto.search.ProductSearchRequest;
+import org.skroutz.scraper.skroutzwebscraper.dto.search.ProductSearchResponse;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductSuggestionDto;
 import org.skroutz.scraper.skroutzwebscraper.service.ProductSearchService;
 import org.skroutz.scraper.skroutzwebscraper.service.ProductsService;
@@ -39,5 +42,10 @@ public class ProductsController {
             @RequestParam(defaultValue = "5") @Min(value = 1, message = "Limit must be at least 1") int limit) {
 
         return productSearchService.getProductSuggestions(q, limit);
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<ProductSearchResponse> search(@Valid @RequestBody ProductSearchRequest request) {
+        return ResponseEntity.ok(productSearchService.search(request));
     }
 }
