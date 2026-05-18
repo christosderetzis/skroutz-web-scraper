@@ -262,66 +262,66 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
 
     def "Happy path - TERM filter returns only products matching the specification value"() {
         given: "two laptops with different brand specifications indexed directly in Elasticsearch"
-        def appleDoc = ProductDocument.builder()
-                .id(10001L)
-                .title("MacBook Pro")
-                .category("laptops")
-                .price(1999.99.toBigDecimal())
-                .specifications(["brand": "Apple"])
-                .build()
-        def dellDoc = ProductDocument.builder()
-                .id(10002L)
-                .title("XPS 15")
-                .category("laptops")
-                .price(1499.99.toBigDecimal())
-                .specifications(["brand": "Dell"])
-                .build()
+            def appleDoc = ProductDocument.builder()
+                    .id(10001L)
+                    .title("MacBook Pro")
+                    .category("laptops")
+                    .price(1999.99.toBigDecimal())
+                    .specifications(["brand": "Apple"])
+                    .build()
+            def dellDoc = ProductDocument.builder()
+                    .id(10002L)
+                    .title("XPS 15")
+                    .category("laptops")
+                    .price(1499.99.toBigDecimal())
+                    .specifications(["brand": "Dell"])
+                    .build()
 
-        productElasticsearchRepository.saveAll([appleDoc, dellDoc])
-        Thread.sleep(500)
+            productElasticsearchRepository.saveAll([appleDoc, dellDoc])
+            Thread.sleep(500)
 
         when: "searching for brand = Apple"
-        def filter = new FilterRequest(key: "brand", type: FilterType.TERM, values: ["Apple"])
-        def request = new ProductSearchRequest(category: "laptops", filters: [filter])
-        def response = webActor.searchProducts(request)
+            def filter = new FilterRequest(key: "brand", type: FilterType.TERM, values: ["Apple"])
+            def request = new ProductSearchRequest(category: "laptops", filters: [filter])
+            def response = webActor.searchProducts(request)
 
         then: "response is 200 OK"
-        response.expectStatus().isOk()
+            response.expectStatus().isOk()
 
         and: "the JSON response precisely matches the expected structural layout"
-        def body = response.expectBody(String).returnResult().getResponseBody()
+            def body = response.expectBody(String).returnResult().getResponseBody()
 
-        def expectedBody = """
-            {
-                "products": [
-                    {
-                        "id": 10001,
-                        "title": "MacBook Pro",
-                        "category": "laptops",
-                        "price": 1999.99
-                    }
-                ],
-                "filters": {
-                    "brand": [
+            def expectedBody = """
+                {
+                    "products": [
                         {
-                            "value": "Apple",
-                            "count": 1
+                            "id": 10001,
+                            "title": "MacBook Pro",
+                            "category": "laptops",
+                            "price": 1999.99
                         }
                     ],
-                    "operating_system": [],
-                    "ram": [],
-                    "display": [],
-                    "release_year": [],
-                    "features": []
-                },
-                "totalElements": 1,
-                "totalPages": 1,
-                "page": 0,
-                "size": 20
-            }
-            """
+                    "filters": {
+                        "brand": [
+                            {
+                                "value": "Apple",
+                                "count": 1
+                            }
+                        ],
+                        "operating_system": [],
+                        "ram": [],
+                        "display": [],
+                        "release_year": [],
+                        "features": []
+                    },
+                    "totalElements": 1,
+                    "totalPages": 1,
+                    "page": 0,
+                    "size": 20
+                }
+                """
 
-        JSONAssert.assertEquals(expectedBody, body, JSONCompareMode.LENIENT)
+            JSONAssert.assertEquals(expectedBody, body, JSONCompareMode.LENIENT)
     }
 
     @Unroll
