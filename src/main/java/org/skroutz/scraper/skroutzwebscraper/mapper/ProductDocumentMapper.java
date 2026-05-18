@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument;
 import org.skroutz.scraper.skroutzwebscraper.dto.ProductSuggestionDto;
+import org.skroutz.scraper.skroutzwebscraper.dto.search.ProductItemDto;
 import org.skroutz.scraper.skroutzwebscraper.entity.Product;
 
 import java.sql.Timestamp;
@@ -37,4 +38,6 @@ public interface ProductDocumentMapper {
     }
 
     ProductSuggestionDto toSuggestionDto(ProductDocument productDocument);
+
+    ProductItemDto toItemDto(ProductDocument productDocument);
 }
