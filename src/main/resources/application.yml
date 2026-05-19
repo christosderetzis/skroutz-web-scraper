@@ -5,9 +5,9 @@ spring:
   
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:${DB_PORT:5432}/skroutz_scraper
-    username: skroutz_user
-    password: skroutz_password
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/skroutz_scraper}
+    username: ${DB_USERNAME:skroutz_user}
+    password: ${DB_PASSWORD:skroutz_password}
     driver-class-name: org.postgresql.Driver
   
   # JPA/Hibernate Configuration
@@ -26,7 +26,7 @@ spring:
 
   # Elasticsearch Configuration
   elasticsearch:
-    uris: http://localhost:${ELASTICSEARCH_PORT:9200}
+    uris: ${ELASTICSEARCH_URL:http://localhost:9200}
 
 # Scraper Configuration
 scraper:

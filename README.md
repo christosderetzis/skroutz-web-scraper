@@ -53,37 +53,41 @@ A Spring Boot application for scraping product information from Skroutz.gr using
 
 ## Getting Started
 
-### 1. Start the Infrastructure
+### Option A: Full Stack via Docker (Recommended)
 
-**Without AI summarization:**
+Run the entire application — including the app itself — in Docker:
 
 ```bash
 docker-compose up -d
 ```
 
-This starts:
+This builds and starts:
+- **skroutz-web-scraper** (port 8082) — the application (built from source via `Dockerfile`)
 - **PostgreSQL** (port 5432) — product database
 - **Elasticsearch** (port 9200) — search engine
 - **Kibana** (port 5601) — Elasticsearch UI and visualization
-
-**With AI summarization (includes Ollama):**
-
-```bash
-docker-compose -f docker-compose-with-ollama.yml up -d
-```
-
-This additionally starts:
 - **Ollama** (port 11434) — local LLM inference server
 
-On first run, Ollama executes `model_files/run_ollama.sh` to pull and load the configured model.
+On first run, Ollama executes `model_files/run_ollama.sh` to pull and load the configured model. The application waits for all services to be healthy before starting.
 
-### 2. Build the Application
+The application will be available at `http://localhost:8082`.
+
+### Option B: Local Development (Infrastructure Only)
+
+Start only the infrastructure services and run the app locally with Gradle:
+
+**1. Start infrastructure:**
 
 ```bash
-./gradlew build
+docker-compose -f docker-compose-local.yml up -d
 ```
 
-### 3. Run the Application
+This starts:
+- **PostgreSQL** (port 5432)
+- **Elasticsearch** (port 9200)
+- **Kibana** (port 5601)
+
+**2. Build and run the application:**
 
 ```bash
 ./gradlew bootRun
@@ -91,154 +95,6 @@ On first run, Ollama executes `model_files/run_ollama.sh` to pull and load the c
 
 The application will start on `http://localhost:8082`.
 
-## API Endpoints
-
-### Scraper Controller (`/scraper`)
-
-#### Scrape Products
-
-**POST** `/scraper/products?multiple={boolean}`
-
-Scrapes product listings from a Skroutz category URL. Products are automatically categorized and indexed in Elasticsearch.
-
-```bash
-curl -X POST "http://localhost:8082/scraper/products?multiple=true" \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://www.skroutz.gr/c/40/kinhta-tilefwna.html", "category": "Mobile Phones"}'
-```
-
-- `multiple`: If `true`, scrapes all pages in the category
-- `category` (optional): Category name for classification (e.g., "Mobile Phones", "Laptops")
-
-#### Scrape Specifications
-
-**POST** `/scraper/specifications`
-
-Parses specifications for all products that haven't been parsed yet. Values are automatically structured into `{key, value, unit}` objects where applicable.
-
-```bash
-curl -X POST "http://localhost:8082/scraper/specifications"
-```
-
-#### Scrape Reviews
-
-**POST** `/scraper/reviews`
-
-Fetches reviews for all products that haven't been parsed yet.
-
-```bash
-curl -X POST "http://localhost:8082/scraper/reviews"
-```
-
-#### Scrape Price History
-
-**POST** `/scraper/price-history`
-
-Fetches price history for all products that haven't been parsed yet.
-
-```bash
-curl -X POST "http://localhost:8082/scraper/price-history"
-```
-
-### Reviews Controller (`/reviews`)
-
-#### Summarize Reviews
-
-**POST** `/reviews/{id}/summarize`
-
-Generates an AI-powered summary of all reviews for a product. Reviews are split into chunks if they exceed the configured character limit, each chunk is summarized individually, then a final summary is produced by merging the chunk summaries. The result is cached — subsequent calls for the same product return the stored summary immediately.
-
-Returns `400 Bad Request` if reviews have not been scraped yet or if no review text is available. Returns `503 Service Unavailable` if the AI backend is unreachable.
-
-```bash
-curl -X POST "http://localhost:8082/reviews/1/summarize"
-```
-
-Response:
-
-```json
-{
-  "summary": "The iPhone 13 is praised for its camera quality and battery life...",
-  "pros": ["Excellent camera", "Long battery life", "Smooth performance"],
-  "cons": ["No charger in box", "Heavy weight"],
-  "sentiment": "Positive"
-}
-```
-
-### Products Controller (`/products`)
-
-#### Get Product by ID
-
-**GET** `/products/{id}`
-
-Returns product details including specifications, price, category, and rating.
-
-```bash
-curl "http://localhost:8082/products/1"
-```
-
-#### Autocomplete Search
-
-**GET** `/products/autocomplete?q={query}&limit={limit}`
-
-Provides autocomplete suggestions for product search using Elasticsearch.
-
-```bash
-curl "http://localhost:8082/products/autocomplete?q=iphone&limit=5"
-```
-
-Parameters:
-- `q` (required): Search query string
-- `limit` (optional): Maximum number of suggestions to return (default: 5)
-
-Response includes matching products with title, price, rating, and category.
-
-## Configuration
-
-### Database Configuration
-
-| Setting  | Default         |
-|----------|-----------------|
-| Host     | localhost       |
-| Port     | 5432            |
-| Database | skroutz_scraper |
-| Username | skroutz_user    |
-| Password | skroutz_password|
-
-### Elasticsearch Configuration
-
-| Setting  | Default               |
-|----------|-----------------------|
-| Host     | localhost             |
-| Port     | 9200                  |
-| URI      | http://localhost:9200 |
-
-### Scraper Configuration
-
-| Setting                              | Default                  |
-|--------------------------------------|--------------------------|
-| Base URL                             | https://www.skroutz.gr   |
-| Timeout                              | 30 seconds               |
-| Max Retries                          | 3                        |
-| Delay — review page (ms)            | 100                      |
-| Delay — specifications (ms)         | 500                      |
-| Delay — reviews (ms)                | 2000                     |
-| Delay — price history (ms)          | 1000                     |
-| Specifications batch size            | 30                       |
-
-### AI / LLM Configuration
-
-| Setting                         | Env var              | Default                          |
-|---------------------------------|----------------------|----------------------------------|
-| LLM base URL                    | `LLM_BASE_URL`       | `http://localhost:11434/v1`      |
-| LLM model name                  | `LLM_MODEL`          | `qwen2.5:3b`                     |
-| Max tokens per response         | —                    | 16000                            |
-| Log LLM responses               | `LLM_LOG_RESPONSES`  | `false`                          |
-| Review chunk size (characters)  | —                    | 10000                            |
-
-The AI layer uses the OpenAI-compatible API, so any Ollama model (or any OpenAI-compatible endpoint) can be substituted by changing `LLM_BASE_URL` and `LLM_MODEL`.
-
-Configuration can be modified in `src/main/resources/application.yml`.
 
 ## API Documentation
 

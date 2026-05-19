@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+*.iml
+.vscode
+.classpath
+.project
+.settings
+
+# Build outputs
+build/
+target/
+out/
+bin/
+
+# Gradle
+.gradle
+gradle.properties
+!gradle/wrapper/gradle-wrapper.jar
+
+# Documentation
+README.md
+*.md
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Tests
+src/test/
+src/functionalTest/
+
+# Claude
+.claude/

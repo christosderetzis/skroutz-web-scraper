@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -39,19 +41,6 @@ services:
       - elasticsearch
     ports:
       - "5601:5601"
-    networks:
-      - elastic
-
-  ollama:
-    image: ollama/ollama:0.23.0
-    container_name: ollama
-    ports: [ "11434:11434" ]
-    volumes:
-      - ./ollama:/model_files  # Mount the directory with the trained model
-    pull_policy: always
-    tty: true
-    restart: unless-stopped
-    entrypoint: [ "/bin/sh", "/model_files/run_ollama.sh" ] # Loading the finetuned Mistral with the GGUF file
     networks:
       - elastic
 

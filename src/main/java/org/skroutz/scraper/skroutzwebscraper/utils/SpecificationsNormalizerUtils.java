@@ -107,6 +107,11 @@ public class SpecificationsNormalizerUtils {
 
     private void parseAndPutNumeric(ObjectNode result, String target, String raw) {
         Matcher matcher = NUMBER_PATTERN.matcher(raw.trim());
+
+        String cleanRaw = raw.trim();
+        if (cleanRaw.isEmpty() || "-".equals(cleanRaw) || "N/A".equalsIgnoreCase(cleanRaw)) {
+            return;
+        }
         if (matcher.find()) {
             try {
                 String val = matcher.group(1).replace(",", ".");
