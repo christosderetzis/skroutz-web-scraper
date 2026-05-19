@@ -27,8 +27,8 @@ import spock.lang.Specification
         classes = [SkroutzWebScraperApplication, TestWebClientConfig],
         properties = [
                 "spring.main.allow-bean-definition-overriding=true",
-                "DB_PORT=5434",
-                "ELASTICSEARCH_PORT=9201",
+                "DB_URL=jdbc:postgresql://localhost:5434/skroutz_scraper",
+                "ELASTICSEARCH_URL=http://localhost:9201",
                 "scraper.base-url=http://localhost:8081",
                 "scraper.delay-range-min=100",
         ]
