@@ -46,7 +46,7 @@ class SpecificationsNormalizerUtilsSpec extends Specification {
                             FeatureFieldMapping.builder().path("Special Features.Protection").target("features").type(FeatureExtraction.COMMA_SPLIT).build(),
                             FeatureFieldMapping.builder().path("AI Features").target("ai_features").type(FeatureExtraction.YES_GROUP).build()
                     ))
-                    .build();
+                    .build()
             String rawSpecs = """
                     {
                       "Camera": {

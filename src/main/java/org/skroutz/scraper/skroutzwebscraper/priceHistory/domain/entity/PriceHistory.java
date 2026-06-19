@@ -33,7 +33,7 @@ public class PriceHistory {
     @Column(name = "price_date", nullable = false, columnDefinition = "TIMESTAMPTZ")
     private Timestamp priceDate;
 
-    @Column(name = "store_name", length = 255)
+    @Column(name = "store_name")
     private String storeName;
 
     @ManyToOne(fetch = FetchType.LAZY)

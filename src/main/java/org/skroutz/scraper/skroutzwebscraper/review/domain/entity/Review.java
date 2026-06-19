@@ -29,7 +29,7 @@ public class Review {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    @Column(name = "reviewer_name", length = 255)
+    @Column(name = "reviewer_name")
     private String reviewerName;
 
     @Column(name = "reviewer_rating")

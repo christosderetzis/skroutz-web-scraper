@@ -3,7 +3,6 @@ package org.skroutz.scraper.skroutzwebscraper.product.application.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductsService;
 import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.dto.ProductDetailsResponseDto;
-import org.skroutz.scraper.skroutzwebscraper.search.application.service.ProductSearchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +15,7 @@ public class ProductsController {
 
     private final ProductsService productsService;
 
-    public ProductsController(ProductsService productsService, ProductSearchService productSearchService) {
+    public ProductsController(ProductsService productsService) {
         this.productsService = productsService;
     }
 

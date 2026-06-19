@@ -28,7 +28,7 @@ public class ReviewsScraperService {
         log.info("Scraping reviews via API for product ID: {}", productId);
 
         int offset = 0;
-        int pageSize = 0;
+        int pageSize;
         List<ReviewsApiResponseDto.ReviewDto> dtoList = new ArrayList<>();
 
         try {

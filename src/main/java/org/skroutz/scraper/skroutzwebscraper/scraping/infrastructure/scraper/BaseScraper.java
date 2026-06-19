@@ -91,10 +91,7 @@ public abstract class BaseScraper {
         if (throwable instanceof WebClientResponseException wcre) {
             return isRetryableStatus(wcre.getStatusCode().value());
         }
-        if (throwable instanceof TimeoutException) {
-            return true;
-        }
-        return false;
+        return throwable instanceof TimeoutException;
     }
 
     private boolean isRetryableStatus(int statusCode) {

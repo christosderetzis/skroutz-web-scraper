@@ -5,12 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException;
 import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository;
-import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductsService;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.chunker.ReviewChunker;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewRepository;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewSummaryRepository;
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer;
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto;
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.mapper.ReviewSummaryMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +32,7 @@ public class ReviewsSummarizationService {
     private final ProductRepository productRepository;
     private final ReviewRepository reviewRepository;
     private final ReviewSummaryRepository reviewSummaryRepository;
-    private final ProductsService.ReviewSummarizer reviewSummarizer;
+    private final ReviewSummarizer reviewSummarizer;
     private final ReviewSummaryMapper reviewSummaryMapper;
 
     public ReviewsSummarizationService(
@@ -40,7 +40,7 @@ public class ReviewsSummarizationService {
             ProductRepository productRepository,
             ReviewRepository reviewRepository,
             ReviewSummaryRepository reviewSummaryRepository,
-            ProductsService.ReviewSummarizer reviewSummarizer,
+            ReviewSummarizer reviewSummarizer,
             ReviewSummaryMapper reviewSummaryMapper){
         this.chunkSize = chunkSize;
         this.productRepository = productRepository;

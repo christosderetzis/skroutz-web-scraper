@@ -3,7 +3,6 @@ package org.skroutz.scraper.skroutzwebscraper.review
 import org.mockito.MockedStatic
 import org.mockito.Mockito
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductsService
 import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException
 import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.review.application.service.ReviewsSummarizationService
@@ -11,6 +10,7 @@ import org.skroutz.scraper.skroutzwebscraper.review.domain.chunker.ReviewChunker
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary
 import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewSummaryRepository
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.mapper.ReviewSummaryMapper
 import org.springframework.http.HttpStatus
@@ -23,7 +23,7 @@ class ReviewsSummarizationServiceSpec extends Specification {
     ProductRepository productRepository = Mock()
     ReviewRepository reviewRepository = Mock()
     ReviewSummaryRepository reviewSummarizationRepository = Mock()
-    ProductsService.ReviewSummarizer reviewSummarizer = Mock()
+    ReviewSummarizer reviewSummarizer = Mock()
     ReviewSummaryMapper reviewSummaryMapper = Mock()
 
     // System Under Test

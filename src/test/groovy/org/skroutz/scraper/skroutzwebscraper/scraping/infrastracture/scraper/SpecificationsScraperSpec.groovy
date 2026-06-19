@@ -1,6 +1,8 @@
 package org.skroutz.scraper.skroutzwebscraper.scraping.infrastracture.scraper
 
 import com.fasterxml.jackson.databind.JsonNode
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.SpecificationsScraper
@@ -12,6 +14,17 @@ class SpecificationsScraperSpec extends Specification {
 
     @Subject
     SpecificationsScraper scraper = new SpecificationsScraper()
+
+    MockWebServer server
+
+    def setup() {
+        server = new MockWebServer()
+        server.start()
+    }
+
+    def cleanup() {
+        server.shutdown()
+    }
 
     def "scrapeSpecifications should successfully parse specifications"() {
         given: "an HTML page with specification groups"
@@ -113,5 +126,33 @@ class SpecificationsScraperSpec extends Specification {
         "General"     | "Weight" | "2.5kg"
         "Technical"   | "Power"  | "100W"
         "Dimensions"  | "Size"   | "30x20x10cm"
+    }
+
+    def "scrapeSpecifications handles HttpStatusException gracefully and returns empty Optional"() {
+        given: "a mock server configured to return an HTTP error status code"
+            // Jsoup throws HttpStatusException for 4xx/5xx responses
+            server.enqueue(new MockResponse().setResponseCode(404).setBody("Not Found"))
+            String baseUrl = server.url("/test-product").toString()
+
+        when: "scraping a URL that returns an HTTP error code"
+            Optional<JsonNode> result = scraper.scrapeSpecifications(baseUrl)
+
+        then: "the exception is caught, logged as a warning, and an empty Optional is returned"
+            noExceptionThrown()
+            result.isEmpty()
+    }
+
+    def "scrapeSpecifications handles generic Exception gracefully and returns empty Optional"() {
+        given: "a malformed or unreachable URL that causes Jsoup to throw a generic Exception"
+            // For example, an invalid protocol or an unresolvable host
+            // will throw a java.net.MalformedURLException or java.net.UnknownHostException
+            String invalidUrl = "invalid-protocol://this.is.not.a.valid.url"
+
+        when: "scraping the bad URL"
+            Optional<JsonNode> result = scraper.scrapeSpecifications(invalidUrl)
+
+        then: "the generic exception is caught, logged as an error, and an empty Optional is returned"
+            noExceptionThrown()
+            result.isEmpty()
     }
 }

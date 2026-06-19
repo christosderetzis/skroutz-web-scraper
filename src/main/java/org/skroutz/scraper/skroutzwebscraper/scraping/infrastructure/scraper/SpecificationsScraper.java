@@ -13,15 +13,12 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 @NoArgsConstructor
 public class SpecificationsScraper {
 
-    private static final Pattern NUMERIC_WITH_UNIT = Pattern.compile("^(\\d+(?:[.,]\\d+)?)\\s*([a-zA-Zα-ωΑ-Ωά-ώΆ-Ώ]+)?$");
     public static final String SPECIFICATIONS = "#specs > div.specs-container.content.section > div.spec-groups > div.spec-details";
 
     private final ObjectMapper mapper = new ObjectMapper();

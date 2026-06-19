@@ -22,7 +22,7 @@ class ReviewsMapperSpec extends WithLoggingBaseSpec {
                         id: i.toLong(),
                         rating: (i % 5) + 1,
                         authorName: "User $i",
-                        reviewTime: "01/0$i/2024".take(10)
+                        reviewTime: "01/0$i/2024"
                 )
             }
 
@@ -32,7 +32,7 @@ class ReviewsMapperSpec extends WithLoggingBaseSpec {
         then: "all reviews are mapped"
             reviews.size() == 9
             with(reviews) {
-                it*.reviewerName == (1..9).collect { "User $it" }
+                it*.reviewerName == (1..9).collect { "User $it" as String }
                 it*.reviewerRating == (1..9).collect { (it % 5) + 1 }
                 it*.reviewDate == (1..9).collect { LocalDate.of(2024, it, 01) }
             }

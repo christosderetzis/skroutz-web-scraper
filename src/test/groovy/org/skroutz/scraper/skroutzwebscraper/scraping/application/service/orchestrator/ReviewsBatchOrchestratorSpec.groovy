@@ -18,7 +18,7 @@ class ReviewsBatchOrchestratorSpec extends Specification {
     ReviewsPersistenceService persistenceService = Mock()
 
     @Subject
-    ReviewsBatchOrchestrator reviewsBatchOrchestrator;
+    ReviewsBatchOrchestrator reviewsBatchOrchestrator
 
     def setup() {
         reviewsBatchOrchestrator = new ReviewsBatchOrchestrator(productRepository, reviewsScraperService, persistenceService)

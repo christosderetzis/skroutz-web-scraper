@@ -1,9 +1,8 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductsService
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
@@ -16,7 +15,7 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
     // Mock the ReviewSummarizer to return fixed summaries for testing, since LLMs are non-deterministic and we want consistent test results.
     // The summarization logic is tested separately in unit tests for the ReviewSummarizer.
     @SpringBean
-    ProductsService.ReviewSummarizer reviewSummarizer = Stub()
+    ReviewSummarizer reviewSummarizer = Stub()
 
     def "Happy path - single chunk summarization"() {
         given: "A product with parsed reviews"

@@ -4,7 +4,7 @@ import dev.langchain4j.http.client.jdk.JdkHttpClientBuilder;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;
-import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductsService;
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,7 +47,7 @@ public class AiConfig {
     }
 
     @Bean
-    public ProductsService.ReviewSummarizer reviewSummarizer(ChatModel model) {
-        return AiServices.create(ProductsService.ReviewSummarizer.class, model);
+    public ReviewSummarizer reviewSummarizer(ChatModel model) {
+        return AiServices.create(ReviewSummarizer.class, model);
     }
 }
