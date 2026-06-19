@@ -1,16 +1,15 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument
-import org.skroutz.scraper.skroutzwebscraper.dto.CategorySchemaCreateRequestDto
-import org.skroutz.scraper.skroutzwebscraper.dto.search.FilterRequest
-import org.skroutz.scraper.skroutzwebscraper.dto.search.FilterType
-import org.skroutz.scraper.skroutzwebscraper.dto.search.ProductSearchRequest
-import org.skroutz.scraper.skroutzwebscraper.dto.search.ProductSearchResponse
-import org.skroutz.scraper.skroutzwebscraper.schema.CategoryMappingSchema
-import org.skroutz.scraper.skroutzwebscraper.schema.DirectFieldMapping
-import org.skroutz.scraper.skroutzwebscraper.schema.FeatureExtraction
-import org.skroutz.scraper.skroutzwebscraper.schema.FeatureFieldMapping
-import org.skroutz.scraper.skroutzwebscraper.schema.FieldType
+import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument
+import org.skroutz.scraper.skroutzwebscraper.category.infrastructure.dto.CategorySchemaCreateRequestDto
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.FilterRequest
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.FilterType
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSearchRequest
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.CategoryMappingSchema
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.DirectFieldMapping
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.FeatureExtraction
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.FeatureFieldMapping
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.FieldType
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skyscreamer.jsonassert.JSONAssert
 import org.skyscreamer.jsonassert.JSONCompareMode
@@ -278,7 +277,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     .build()
 
             productElasticsearchRepository.saveAll([appleDoc, dellDoc])
-            Thread.sleep(500)
+            Thread.sleep(200)
 
         when: "searching for brand = Apple"
             def filter = new FilterRequest(key: "brand", type: FilterType.TERM, values: ["Apple"])
@@ -337,7 +336,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     .build()
 
             productElasticsearchRepository.saveAll([laptop1, laptop2])
-            Thread.sleep(500)
+            Thread.sleep(200)
 
         when: "executing the search request"
             def request = new ProductSearchRequest(category: "laptops", filters: targetFilters)
@@ -403,7 +402,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     .build()
 
             productElasticsearchRepository.saveAll([ram8, ram16, ram32])
-            Thread.sleep(500)
+            Thread.sleep(200)
 
             // Metadata map to dynamically construct the expected JSON text
             def productMetadata = [
@@ -515,7 +514,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     ]).build()
 
             productElasticsearchRepository.saveAll([apple16, apple8, dell16, dell32, lenovo16, lenovo8])
-            Thread.sleep(500)
+            Thread.sleep(200)
 
             // Metadata map to dynamically construct the expected JSON text
             def productMetadata = [

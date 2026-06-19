@@ -1,10 +1,9 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
 import com.fasterxml.jackson.databind.JsonNode
-import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument
-import org.skroutz.scraper.skroutzwebscraper.entity.CategorySchema
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.schema.CategoryMappingSchema
+import org.skroutz.scraper.skroutzwebscraper.category.domain.entity.CategorySchema
+import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.CategoryMappingSchema
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.helpers.JsonFileReader
 import org.skyscreamer.jsonassert.JSONAssert

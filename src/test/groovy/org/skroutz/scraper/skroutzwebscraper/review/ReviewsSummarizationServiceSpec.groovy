@@ -1,0 +1,108 @@
+package org.skroutz.scraper.skroutzwebscraper.review
+
+import org.mockito.MockedStatic
+import org.mockito.Mockito
+import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductsService
+import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException
+import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository
+import org.skroutz.scraper.skroutzwebscraper.review.application.service.ReviewsSummarizationService
+import org.skroutz.scraper.skroutzwebscraper.review.domain.chunker.ReviewChunker
+import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary
+import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewRepository
+import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewSummaryRepository
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.mapper.ReviewSummaryMapper
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
+import spock.lang.Specification
+
+class ReviewsSummarizationServiceSpec extends Specification {
+
+    // Mocks
+    ProductRepository productRepository = Mock()
+    ReviewRepository reviewRepository = Mock()
+    ReviewSummaryRepository reviewSummarizationRepository = Mock()
+    ProductsService.ReviewSummarizer reviewSummarizer = Mock()
+    ReviewSummaryMapper reviewSummaryMapper = Mock()
+
+    // System Under Test
+    ReviewsSummarizationService service
+
+    // Static Mocking helper
+    MockedStatic<ReviewChunker> mockedChunker
+
+    final int CHUNK_SIZE = 100
+    final Long PRODUCT_ID = 1L
+
+    def setup() {
+        service = new ReviewsSummarizationService(
+                CHUNK_SIZE, productRepository, reviewRepository,
+                reviewSummarizationRepository, reviewSummarizer, reviewSummaryMapper
+        )
+        // Mocking static method using Mockito within Spock lifecycle
+        mockedChunker = Mockito.mockStatic(ReviewChunker.class)
+    }
+
+    def cleanup() {
+        mockedChunker.close()
+    }
+
+    def "summarizeReviews throws ProductNotFoundException when product is not found"() {
+        given: "productRepository returns empty for given product ID"
+            productRepository.findById(PRODUCT_ID) >> Optional.empty()
+
+        when: "summarizeReviews is called with non-existent product ID"
+            service.summarizeReviews(PRODUCT_ID)
+
+        then: "ProductNotFoundException is thrown"
+            thrown(ProductNotFoundException)
+    }
+
+    def "summarizeReviews throws BadRequest when reviews have not been parsed"() {
+        given: "product exists but reviewsParsed is false"
+            def product = new Product(reviewsParsed: false)
+            productRepository.findById(PRODUCT_ID) >> Optional.of(product)
+
+        when: "summarizeReviews is called for product with unparsed reviews"
+            service.summarizeReviews(PRODUCT_ID)
+
+        then: "ResponseStatusException with BAD_REQUEST is thrown"
+            def e = thrown(ResponseStatusException)
+            e.statusCode == HttpStatus.BAD_REQUEST
+            e.reason.contains("Cannot summarize reviews for product ID 1")
+    }
+
+    def "summarizeReviews returns cached DTO when summary already exists"() {
+        given: "product exists with reviewsParsed true and summary already exists in repository"
+            def product = new Product(reviewsParsed: true)
+            def existingSummary = new ReviewSummary()
+            def expectedDto = new ReviewSummaryDto("Summary", ["P"], ["C"], "Pos")
+
+            productRepository.findById(PRODUCT_ID) >> Optional.of(product)
+            reviewSummarizationRepository.findByProductId(PRODUCT_ID) >> Optional.of(existingSummary)
+            reviewSummaryMapper.toDto(existingSummary) >> expectedDto
+
+        when: "summarizeReviews is called for product with existing summary"
+            def result = service.summarizeReviews(PRODUCT_ID)
+
+        then: "cached summary DTO is returned without querying reviews"
+            result == expectedDto
+            0 * reviewRepository.findAllByProductIdAndReviewTextIsNotNull(_)
+    }
+
+    def "summarizeReviews throws BadRequest when no reviews with text are found"() {
+        given: "product exists with reviewsParsed true but no reviews with non-null text are found"
+            def product = new Product(reviewsParsed: true)
+            productRepository.findById(PRODUCT_ID) >> Optional.of(product)
+            reviewSummarizationRepository.findByProductId(PRODUCT_ID) >> Optional.empty()
+            reviewRepository.findAllByProductIdAndReviewTextIsNotNull(PRODUCT_ID) >> []
+
+        when: "summarizeReviews is called for product with no valid reviews"
+            service.summarizeReviews(PRODUCT_ID)
+
+        then: "ResponseStatusException with BAD_REQUEST is thrown indicating no reviews to summarize"
+            def e = thrown(ResponseStatusException)
+            e.statusCode == HttpStatus.BAD_REQUEST
+    }
+}

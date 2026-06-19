@@ -1,6 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-import org.skroutz.scraper.skroutzwebscraper.dto.ProductSuggestionDto
+import org.skroutz.scraper.skroutzwebscraper.search.ProductSuggestionDto
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 
 class ProductsAutocompleteFunctionalSpec extends BaseFunctionalSpec {

@@ -1,7 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.entity.Review
+import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 
 import java.time.LocalDate
@@ -90,6 +90,34 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
         and: "The product is marked as parsed"
         def updatedProduct = productRepository.findById(product.getId()).get()
         assert updatedProduct.reviewsParsed == true
+    }
+
+    def "Scrape reviews with empty data, happy path"() {
+        given: "A product with a URL pointing to empty reviews data"
+            Product product = Product.builder()
+                    .title("Gaming Laptop")
+                    .price(329.99)
+                    .imageUrl("http://example.com/image.jpg")
+                    .url("http://localhost:8081/product-without-reviews.html")
+                    .description("High performance gaming laptop")
+                    .rating(4.5)
+                    .reviewsParsed(false)
+                    .priceHistoryParsed(false)
+                    .build()
+            productRepository.save(product)
+
+        when: "we call the API for reviews"
+            webActor.scrapeReviews()
+
+        then: "Product reviewsParsed is true"
+            Product savedProduct = productRepository.findAll().getFirst()
+            with(savedProduct) {
+                reviewsParsed == true
+            }
+
+        and: "No review records are saved"
+            List<Review> reviews = reviewRepository.findAll().sort { it.reviewDate }
+            assert reviews.size() == 0
     }
 
     def "Scrape reviews handles API errors gracefully"() {

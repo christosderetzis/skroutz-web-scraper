@@ -165,7 +165,7 @@ Example
     import org.skroutz.scraper.skroutzwebscraper.schema.FeatureFieldMapping;
     import org.skroutz.scraper.skroutzwebscraper.schema.FeatureExtraction;
     import org.skroutz.scraper.skroutzwebscraper.schema.FieldType;
-    import org.skroutz.scraper.skroutzwebscraper.utils.SpecificationsNormalizerUtils;
+    import org.skroutz.scraper.skroutzwebscraper.scraping.utils.SpecificationsNormalizerUtils;
 
     import java.util.List;
 

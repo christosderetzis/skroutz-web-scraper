@@ -1,8 +1,8 @@
 package org.skroutz.scraper.skroutzwebscraper.utils.actor
 
-import org.skroutz.scraper.skroutzwebscraper.dto.CategorySchemaCreateRequestDto
-import org.skroutz.scraper.skroutzwebscraper.dto.search.ProductSearchRequest
-import org.skroutz.scraper.skroutzwebscraper.dto.ScraperRequestDto
+import org.skroutz.scraper.skroutzwebscraper.category.infrastructure.dto.CategorySchemaCreateRequestDto
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSearchRequest
+import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.ScraperRequestDto
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
