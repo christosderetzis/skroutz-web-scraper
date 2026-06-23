@@ -1,7 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-import org.skroutz.scraper.skroutzwebscraper.dto.ProductDetailsResponseDto
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.dto.ProductDetailsResponseDto
+import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.creators.ProductCreator
 import org.skyscreamer.jsonassert.JSONAssert

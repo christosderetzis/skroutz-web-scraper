@@ -1,10 +1,10 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-import org.skroutz.scraper.skroutzwebscraper.agent.ReviewSummarizer
-import org.skroutz.scraper.skroutzwebscraper.dto.ReviewSummaryDto
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.entity.Review
-import org.skroutz.scraper.skroutzwebscraper.entity.ReviewSummary
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto
+import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review
+import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.spockframework.spring.SpringBean
 import org.skyscreamer.jsonassert.JSONAssert

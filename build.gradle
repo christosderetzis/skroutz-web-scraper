@@ -126,13 +126,8 @@ dockerCompose {
 
     useComposeFiles = [dockerComposeFilePath]
 
-    // Wait for database services to be ready
     waitForTcpPorts = true
-
-    // Remove volumes after stopping (clean state for each test run)
     removeVolumes = true
-
-    // Force recreation of containers to ensure clean state
     forceRecreate = true
 }
 
@@ -150,7 +145,6 @@ def coloredStatus = { def resultType ->
             status = "$ansiRed $resultType $ansiRed"
             break
         default:
-            // TestResult.ResultType.SKIPPED
             status = "$ansiYellow $resultType $ansiReset"
             break
     }
@@ -163,7 +157,6 @@ tasks.withType(Test).configureEach { Test testTask ->
     def taskName = testTask.name
 
     useJUnitPlatform()
-    // Failfast on first failure by using -PfailFast='true'
     failFast = project.hasProperty('failFast') && project.property('failFast') == 'true'
 
     testLogging {
@@ -175,14 +168,12 @@ tasks.withType(Test).configureEach { Test testTask ->
 
         beforeSuite { desc ->
             if (!desc.parent) {
-                // Reset class results tracking and print header
                 testClassResults[taskName] = [:]
             }
         }
 
         afterSuite { desc, result ->
             if (!desc.parent) {
-                // Root suite - print accumulated class results then overall summary
                 def classResults = testClassResults[taskName]
                 String ansiCyan = "\u001B[36m"
                 String ansiReset = "\u001B[0m"
@@ -197,25 +188,21 @@ tasks.withType(Test).configureEach { Test testTask ->
                 logger.quiet "  $ansiCyan├────────────────────────────────────────────────────┼──────────┼──────────┼──────────┤$ansiReset"
 
                 if (classResults) {
-                    // Get unique classes and sort them
                     def sortedClasses = classResults.keySet().sort()
 
                     sortedClasses.each { fullClassName ->
                         def data = classResults[fullClassName]
                         String className = fullClassName.split('\\.')[-1]
 
-                        // Format values first, then apply colors
                         def passedVal = data.passed
                         def failedVal = data.failed
                         def timeVal = String.format('%,d', data.duration)
 
-                        // Apply padding to plain text
                         String classCol = className.padRight(50)
                         String passedCol = passedVal.toString().padLeft(8)
                         String failedCol = failedVal.toString().padLeft(8)
                         String timeCol = (timeVal + "ms").padLeft(8)
 
-                        // Apply colors after padding
                         if (data.resultType == TestResult.ResultType.FAILURE) {
                             passedCol = ansiRed + passedCol + ansiReset
                             failedCol = ansiRed + failedCol + ansiReset
@@ -233,7 +220,6 @@ tasks.withType(Test).configureEach { Test testTask ->
                     }
                 }
 
-                // Print overall summary
                 if (result.testCount > 0) {
                     def totalDuration = result.endTime - result.startTime
                     def successRate = result.testCount > 0 ? (result.successfulTestCount / result.testCount * 100) : 0
@@ -247,7 +233,6 @@ tasks.withType(Test).configureEach { Test testTask ->
                 return
             }
 
-            // Track and accumulate results by class
             if (desc.className) {
                 String className = desc.className
                 def classResults = testClassResults[taskName]
@@ -262,13 +247,11 @@ tasks.withType(Test).configureEach { Test testTask ->
                     ]
                 }
 
-                // Accumulate results
                 classResults[className].passed += result.successfulTestCount
                 classResults[className].failed += result.failedTestCount
                 classResults[className].skipped += result.skippedTestCount
                 classResults[className].duration += (result.endTime - result.startTime)
 
-                // Update result type (FAILURE takes precedence)
                 if (result.resultType == TestResult.ResultType.FAILURE) {
                     classResults[className].resultType = TestResult.ResultType.FAILURE
                 }
@@ -280,11 +263,10 @@ tasks.withType(Test).configureEach { Test testTask ->
         testClassesDirs = sourceSets.functionalTest.output.classesDirs
         classpath = sourceSets.functionalTest.runtimeClasspath
         include "**/*FunctionalSpec*"
-        finalizedBy jacocoTestReport, jacocoTestCoverageVerification // Generate JaCoCo report after tests
+        finalizedBy jacocoTestReport, jacocoTestCoverageVerification
     }
 }
 
-// JaCoCo Configuration
 jacoco {
     toolVersion = "0.8.14"
 }
@@ -301,8 +283,8 @@ jacocoTestReport {
                     '**/dto/**',
                     '**/SkroutzWebScraperApplication.class',
                     '**/Abstract*',
-                    '**/HtmlFields.class',
-                    '**/utis/**',
+                    '**/utils/**',
+                    '**/ReviewChunker.class',
                     '**/*Mapper*',
                     '**/ScraperController.class',
                     '**/exception/**',
@@ -331,8 +313,8 @@ jacocoTestCoverageVerification {
                     '**/dto/**',
                     '**/SkroutzWebScraperApplication.class',
                     '**/Abstract*',
-                    '**/HtmlFields.class',
                     '**/utils/**',
+                    '**/ReviewChunker.class',
                     '**/*Mapper*',
                     '**/ScraperController.class',
                     '**/exception/**',
@@ -382,6 +364,10 @@ tasks.register('functionalTest', Test) {
     include "**/*FunctionalSpec*"
 }
 
+tasks.register('functionalTestNoDeps', Test) {
+    include "**/*FunctionalSpec*"
+}
+
 test {
     exclude "**/*FunctionalSpec*"
     jvmArgs("-XX:+EnableDynamicAgentLoading")
@@ -393,7 +379,6 @@ tasks.withType(Copy).configureEach {
 
 dockerCompose.isRequiredBy(functionalTest)
 
-// Configure bootRun with JVM args for better WSL networking
 tasks.named('bootRun') {
     systemProperty 'java.net.preferIPv4Stack', 'true'
     systemProperty 'jdk.httpclient.keepalive.timeout', '300'

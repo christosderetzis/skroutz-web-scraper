@@ -3,15 +3,16 @@ package org.skroutz.scraper.skroutzwebscraper.utils.base
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
 import org.skroutz.scraper.skroutzwebscraper.SkroutzWebScraperApplication
-import org.skroutz.scraper.skroutzwebscraper.document.ProductDocument
-import org.skroutz.scraper.skroutzwebscraper.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.mapper.ProductDocumentMapper
-import org.skroutz.scraper.skroutzwebscraper.repository.CategorySchemaRepository
-import org.skroutz.scraper.skroutzwebscraper.repository.PriceHistoryRepository
-import org.skroutz.scraper.skroutzwebscraper.repository.ProductElasticsearchRepository
-import org.skroutz.scraper.skroutzwebscraper.repository.ProductRepository
-import org.skroutz.scraper.skroutzwebscraper.repository.ReviewRepository
-import org.skroutz.scraper.skroutzwebscraper.repository.ReviewSummaryRepository
+import org.skroutz.scraper.skroutzwebscraper.search.domain.repository.ProductElasticsearchRepository
+import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument
+import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.mapper.ProductDocumentMapper
+import org.skroutz.scraper.skroutzwebscraper.category.domain.repository.CategorySchemaRepository
+import org.skroutz.scraper.skroutzwebscraper.priceHistory.domain.repository.PriceHistoryRepository
+
+import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository
+import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewRepository
+import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewSummaryRepository
 import org.skroutz.scraper.skroutzwebscraper.utils.actor.WebActor
 import org.skroutz.scraper.skroutzwebscraper.utils.config.TestWebClientConfig
 import org.springframework.beans.factory.annotation.Autowired
@@ -124,6 +125,6 @@ abstract class BaseFunctionalSpec extends Specification {
     private void waitForElasticsearchRefresh() {
         // Elasticsearch needs time to index documents and make them searchable
         // In tests, we need to wait a bit for the index to refresh
-        Thread.sleep(700)
+        Thread.sleep(200)
     }
 }

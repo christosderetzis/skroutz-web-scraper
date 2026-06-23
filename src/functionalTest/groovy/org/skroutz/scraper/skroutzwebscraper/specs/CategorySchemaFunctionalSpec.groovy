@@ -1,9 +1,9 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
-import org.skroutz.scraper.skroutzwebscraper.dto.CategorySchemaCreateRequestDto
-import org.skroutz.scraper.skroutzwebscraper.schema.CategoryMappingSchema
-import org.skroutz.scraper.skroutzwebscraper.schema.DirectFieldMapping
-import org.skroutz.scraper.skroutzwebscraper.schema.FieldType
+import org.skroutz.scraper.skroutzwebscraper.category.infrastructure.dto.CategorySchemaCreateRequestDto
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.CategoryMappingSchema
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.DirectFieldMapping
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.FieldType
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skyscreamer.jsonassert.JSONAssert
 import org.skyscreamer.jsonassert.JSONCompareMode
