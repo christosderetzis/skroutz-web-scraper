@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.search;
+package org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

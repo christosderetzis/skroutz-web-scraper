@@ -11,7 +11,8 @@ import org.skroutz.scraper.skroutzwebscraper.category.domain.repository.Category
 import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.FieldType;
 import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.mapper.ProductDocumentMapper;
-import org.skroutz.scraper.skroutzwebscraper.search.ProductSuggestionDto;
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSuggestionDto;
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.SimilarProductsResponse;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
@@ -52,6 +53,48 @@ public class ProductSearchService {
         return searchResults.stream()
                 .map(productDocumentMapper::toSuggestionDto)
                 .toList();
+    }
+
+    public SimilarProductsResponse findSimilar(Long productId, int limit) {
+        ProductDocument sourceDoc = elasticsearchOperations.get(String.valueOf(productId), ProductDocument.class);
+        if (sourceDoc == null) {
+            return SimilarProductsResponse.builder()
+                    .sourceProductId(productId)
+                    .products(List.of())
+                    .totalElements(0)
+                    .build();
+        }
+
+        NativeQuery nativeQuery = NativeQuery.builder()
+                .withQuery(Query.of(q -> q
+                        .moreLikeThis(mlt -> mlt
+                                .fields("title", "description")
+                                .like(l -> l.document(d -> d.id(String.valueOf(productId))))
+                                .minTermFreq(1)
+                                .maxQueryTerms(25)
+                                .minDocFreq(2)
+                        )
+                ))
+                .withFilter(Query.of(q -> q.bool(b -> {
+                    b.must(m -> m.term(t -> t.field("category").value(FieldValue.of(sourceDoc.getCategory()))));
+                    b.mustNot(mn -> mn.term(t -> t.field("id").value(FieldValue.of(productId))));
+                    return b;
+                })))
+                .withMaxResults(limit)
+                .build();
+
+        SearchHits<ProductDocument> searchHits = elasticsearchOperations.search(nativeQuery, ProductDocument.class);
+
+        List<ProductItemDto> products = searchHits.getSearchHits().stream()
+                .map(SearchHit::getContent)
+                .map(productDocumentMapper::toItemDto)
+                .toList();
+
+        return SimilarProductsResponse.builder()
+                .sourceProductId(productId)
+                .products(products)
+                .totalElements((int) searchHits.getTotalHits())
+                .build();
     }
 
     public ProductSearchResponse search(ProductSearchRequest request) {
