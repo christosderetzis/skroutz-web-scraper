@@ -32,6 +32,10 @@ import spock.lang.Specification
                 "ELASTICSEARCH_URL=http://localhost:9201",
                 "scraper.base-url=http://localhost:8081",
                 "scraper.delay-range-min=100",
+                "scraper.delays.review-page-ms=5",
+                "scraper.delays.specifications-ms=5",
+                "scraper.delays.price-history-ms=5",
+                "scraper.delays.reviews-ms=5"
         ]
 )
 abstract class BaseFunctionalSpec extends Specification {
@@ -125,6 +129,6 @@ abstract class BaseFunctionalSpec extends Specification {
     private void waitForElasticsearchRefresh() {
         // Elasticsearch needs time to index documents and make them searchable
         // In tests, we need to wait a bit for the index to refresh
-        Thread.sleep(200)
+        Thread.sleep(20)
     }
 }

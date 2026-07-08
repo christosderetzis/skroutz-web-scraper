@@ -1,7 +1,5 @@
 package org.skroutz.scraper.skroutzwebscraper.product.infrastructure.dto;
 
-import com.fasterxml.jackson.annotation.JsonRawValue;
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +20,5 @@ public class ProductDetailsResponseDto {
     private String description;
     private BigDecimal price;
     private BigDecimal rating;
-    @JsonRawValue
     private String specifications;
 }

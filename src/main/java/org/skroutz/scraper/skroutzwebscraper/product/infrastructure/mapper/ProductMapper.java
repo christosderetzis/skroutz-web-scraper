@@ -1,5 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.product.infrastructure.mapper;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
+    @Mapping(target = "specifications", source="specifications", qualifiedByName = "mapJsonNodeToString")
     ProductDetailsResponseDto toProductResponseDto(Product product);
 
     @Mapping(target = "id", ignore = true)
@@ -58,5 +60,10 @@ public interface ProductMapper {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid rating string: " + value, e);
         }
+    }
+
+    @Named("mapJsonNodeToString")
+    default String mapJsonNodeToString(JsonNode value) {
+        return value != null ? value.toString() : null;
     }
 }

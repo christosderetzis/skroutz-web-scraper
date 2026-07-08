@@ -36,9 +36,9 @@ scraper:
   max-retries: 3
   delays:
     review-page-ms: 100
-    specifications-ms: 500
-    reviews-ms: 2000
-    price-history-ms: 1000
+    specifications-ms: 150
+    reviews-ms: 150
+    price-history-ms: 50
   specifications:
     batch-size: 30
 
