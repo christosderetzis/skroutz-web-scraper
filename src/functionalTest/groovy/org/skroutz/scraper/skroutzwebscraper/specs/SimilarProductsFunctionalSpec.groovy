@@ -173,50 +173,60 @@ class SimilarProductsFunctionalSpec extends BaseFunctionalSpec {
 
     def "Happy path - similar products indexed directly in Elasticsearch with shared terms"() {
         given: "products indexed directly in Elasticsearch with overlapping title terms"
-        def doc1 = ProductDocument.builder()
-                .id(30001L)
-                .title("Gaming Laptop RGB")
-                .category("laptops")
-                .price(1500.00.toBigDecimal())
-                .description("High performance gaming laptop with RGB keyboard")
-                .build()
-        def doc2 = ProductDocument.builder()
-                .id(30002L)
-                .title("Gaming Laptop Pro")
-                .category("laptops")
-                .price(2000.00.toBigDecimal())
-                .description("Professional gaming laptop with RGB lighting")
-                .build()
-        def doc3 = ProductDocument.builder()
-                .id(30003L)
-                .title("Macbook Pro 16-inch M5")
-                .category("laptops")
-                .price(2500.00.toBigDecimal())
-                .description("Premium Apple device running macOS with advanced silicon architecture")
-                .build()
-        def doc4 = ProductDocument.builder()
-                .id(30004L)
-                .title("Office Desktop PC")
-                .category("desktops")
-                .price(800.00.toBigDecimal())
-                .description("Standard office desktop computer")
-                .build()
+            def doc1 = ProductDocument.builder()
+                    .id(30001L)
+                    .title("Gaming Laptop RGB")
+                    .category("laptops")
+                    .price(1500.00.toBigDecimal())
+                    .description("High performance gaming laptop with RGB keyboard")
+                    .build()
+            def doc2 = ProductDocument.builder()
+                    .id(30002L)
+                    .title("Gaming Laptop Pro")
+                    .category("laptops")
+                    .price(2000.00.toBigDecimal())
+                    .description("Professional gaming laptop with RGB lighting")
+                    .build()
+            def doc3 = ProductDocument.builder()
+                    .id(30003L)
+                    .title("Macbook Pro 16-inch M5")
+                    .category("laptops")
+                    .price(2500.00.toBigDecimal())
+                    .description("Premium Apple device running macOS with advanced silicon architecture")
+                    .build()
+            def doc4 = ProductDocument.builder()
+                    .id(30004L)
+                    .title("Office Desktop PC")
+                    .category("desktops")
+                    .price(800.00.toBigDecimal())
+                    .description("Standard office desktop computer")
+                    .build()
 
-        productElasticsearchRepository.saveAll([doc1, doc2, doc3, doc4])
-        Thread.sleep(200)
+            productElasticsearchRepository.saveAll([doc1, doc2, doc3, doc4])
+            Thread.sleep(200)
 
         when: "requesting similar products for doc1"
-        def response = webActor.findSimilar(30001L)
+            def response = webActor.findSimilar(30001L)
 
         then: "response is 200 OK"
-        response.expectStatus().isOk()
+            response.expectStatus().isOk()
 
         and: "returns gaming laptop with shared terms, not the office desktop"
-        def body = response.expectBody(String).returnResult().getResponseBody()
-        def products = objectMapper.readTree(body).get("products")
-        def productIds = products.collect { it.get("id").longValue() } as Set
-        assert productIds.contains(doc2.id)
-        assert !productIds.contains(doc3.id)
-        assert !productIds.contains(doc4.id)
+            def body = response.expectBody(String).returnResult().getResponseBody()
+            def expectedBody = """
+                    {
+                        "sourceProductId": ${doc1.id},
+                        "products": [
+                            {
+                                "id": ${doc2.id},
+                                "title": "Gaming Laptop Pro",
+                                "category": "laptops",
+                                "price": 2000.00
+                            }
+                        ],
+                        "totalElements": 1
+                    }
+                    """
+            JSONAssert.assertEquals(expectedBody, body, JSONCompareMode.LENIENT)
     }
 }

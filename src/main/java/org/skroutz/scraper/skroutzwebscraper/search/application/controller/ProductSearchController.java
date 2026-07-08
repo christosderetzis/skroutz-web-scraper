@@ -44,6 +44,6 @@ public class ProductSearchController {
     public ResponseEntity<SimilarProductsResponse> findSimilar(
             @PathVariable Long id,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "Limit must be at least 1") int limit) {
-        return ResponseEntity.ok(productSearchService.findSimilar(id, limit));
+        return ResponseEntity.ok(productSearchService.findSimilarProducts(id, limit));
     }
 }

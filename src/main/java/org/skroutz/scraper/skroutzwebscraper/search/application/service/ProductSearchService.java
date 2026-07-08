@@ -1,7 +1,5 @@
 package org.skroutz.scraper.skroutzwebscraper.search.application.service;
 
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +13,7 @@ import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.SimilarPr
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.*;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.es.ProductAggregationProcessor;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.es.ProductQueryBuilder;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -56,7 +52,7 @@ public class ProductSearchService {
                 .toList();
     }
 
-    public SimilarProductsResponse findSimilar(Long productId, int limit) {
+    public SimilarProductsResponse findSimilarProducts(Long productId, int limit) {
         ProductDocument sourceDoc = elasticsearchOperations.get(String.valueOf(productId), ProductDocument.class);
         if (sourceDoc == null) {
             return SimilarProductsResponse.builder()
