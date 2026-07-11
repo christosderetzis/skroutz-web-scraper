@@ -94,4 +94,16 @@ class WebActor {
                 .bodyValue(request)
                 .exchange()
     }
+
+    WebTestClient.ResponseSpec findSimilar(Long id, Integer limit = null) {
+        return webTestClient.get()
+                .uri(uriBuilder -> {
+                    def builder = uriBuilder.pathSegment("products", id.toString(), "similar")
+                    if (limit != null) {
+                        builder.queryParam("limit", limit)
+                    }
+                    builder.build()
+                })
+                .exchange()
+    }
 }

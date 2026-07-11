@@ -5,9 +5,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.search.application.service.ProductSearchService;
-import org.skroutz.scraper.skroutzwebscraper.search.ProductSuggestionDto;
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSuggestionDto;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSearchRequest;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSearchResponse;
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.SimilarProductsResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -37,5 +38,12 @@ public class ProductSearchController {
     @PostMapping("/search")
     public ResponseEntity<ProductSearchResponse> search(@Valid @RequestBody ProductSearchRequest request) {
         return ResponseEntity.ok(productSearchService.search(request));
+    }
+
+    @GetMapping("/{id}/similar")
+    public ResponseEntity<SimilarProductsResponse> findSimilar(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "10") @Min(value = 1, message = "Limit must be at least 1") int limit) {
+        return ResponseEntity.ok(productSearchService.findSimilarProducts(id, limit));
     }
 }

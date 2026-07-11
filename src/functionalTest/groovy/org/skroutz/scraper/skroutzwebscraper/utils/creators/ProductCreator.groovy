@@ -1,5 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.utils.creators
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.github.javafaker.Faker
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 
@@ -7,7 +8,7 @@ class ProductCreator {
 
     static Faker faker = new Faker(Locale.UK)
 
-    static Product createRandomProduct() {
+    static Product createRandomProduct(JsonNode specifications = null) {
         Product.builder()
                 .title(faker.commerce().productName())
                 .price(faker.number().randomDouble(2, 1, 1000).toBigDecimal())
@@ -18,6 +19,7 @@ class ProductCreator {
                 .specificationsSkipped(false)
                 .reviewsParsed(false)
                 .priceHistoryParsed(false)
+                .specifications(specifications)
                 .build()
     }
 }

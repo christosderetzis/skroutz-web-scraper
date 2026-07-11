@@ -25,6 +25,7 @@ bin/
 *.ipr
 out/
 !**/src/main/**/out/
+!**/src/main/**/generated/
 !**/src/test/**/out/
 
 ### NetBeans ###

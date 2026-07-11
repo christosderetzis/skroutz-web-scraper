@@ -4,12 +4,20 @@
       "greek_analyzer": {
         "type": "custom",
         "tokenizer": "standard",
-        "filter": ["lowercase", "greek_stemmer"]
+        "filter": [
+          "lowercase",
+          "greek_stop",
+          "greek_stemmer"
+        ]
       },
       "english_analyzer": {
         "type": "custom",
         "tokenizer": "standard",
-        "filter": ["lowercase", "english_stemmer"]
+        "filter": [
+          "lowercase",
+          "english_stop",
+          "english_stemmer"
+        ]
       },
       "autocomplete": {
         "type": "custom",
@@ -18,6 +26,14 @@
       }
     },
     "filter": {
+      "greek_stop": {
+        "type": "stop",
+        "stopwords": "_greek_"
+      },
+      "english_stop": {
+        "type": "stop",
+        "stopwords": "_english_"
+      },
       "greek_stemmer": {
         "type": "stemmer",
         "language": "greek"

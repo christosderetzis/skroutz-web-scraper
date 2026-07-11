@@ -1,17 +1,20 @@
 package org.skroutz.scraper.skroutzwebscraper.specs
 
+import com.fasterxml.jackson.databind.JsonNode
 import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.dto.ProductDetailsResponseDto
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.skroutz.scraper.skroutzwebscraper.utils.creators.ProductCreator
+import org.skroutz.scraper.skroutzwebscraper.utils.helpers.JsonFileReader
 import org.skyscreamer.jsonassert.JSONAssert
 import org.skyscreamer.jsonassert.JSONCompareMode
 
 class GetProductByIdFunctionalSpec extends BaseFunctionalSpec {
 
     def "Happy path - Get product by id"() {
-        given: "an existing product"
-            Product savedProduct = productRepository.saveAndFlush(ProductCreator.createRandomProduct())
+        given: "an existing product with specifications"
+            JsonNode specifications = JsonFileReader.readJsonFromResource("expected-specs.json")
+            Product savedProduct = productRepository.saveAndFlush(ProductCreator.createRandomProduct(specifications))
 
         when: "requesting the product by ID"
             def response = webActor.getProductById(savedProduct.id)
@@ -28,6 +31,7 @@ class GetProductByIdFunctionalSpec extends BaseFunctionalSpec {
                 imageUrl == savedProduct.imageUrl
                 price == savedProduct.price
                 description == savedProduct.description
+                specifications == savedProduct.specifications
             }
     }
 
