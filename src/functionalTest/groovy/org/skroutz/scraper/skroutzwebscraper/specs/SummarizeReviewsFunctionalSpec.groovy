@@ -185,7 +185,7 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                     "status": 404,
                     "method": "POST",
                     "errors": ["Product not found with id: ${nonExistingId}"],
-                    "path": "/reviews/${nonExistingId}/summarize"
+                    "path": "/products/${nonExistingId}/reviews/summarize"
                 }
             """, body, JSONCompareMode.LENIENT)
     }
@@ -212,7 +212,7 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                     "status": 400,
                     "method": "POST",
                     "errors": ["Cannot summarize reviews for product ID ${product.id}"],
-                    "path": "/reviews/${product.id}/summarize"
+                    "path": "/products/${product.id}/reviews/summarize"
                 }
             """, body, JSONCompareMode.LENIENT)
     }
@@ -239,7 +239,7 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                         "status": 400,
                         "method": "POST",
                         "errors": ["No reviews with text found for product ID ${product.id}"],
-                        "path": "/reviews/${product.id}/summarize"
+                        "path": "/products/${product.id}/reviews/summarize"
                     }
                 """, body, JSONCompareMode.LENIENT)
     }
