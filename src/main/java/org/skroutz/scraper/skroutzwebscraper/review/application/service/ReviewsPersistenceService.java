@@ -70,12 +70,12 @@ public class ReviewsPersistenceService {
         Sort sort;
         if (sortType == ReviewSortType.HELPFUL) {
             // Skroutz style: Priority to raw upvote count, then recency, then unique ID tie-breaker
-            sort = Sort.by(Sort.Direction.DESC, "helpful_votes")
-                    .and(Sort.by(Sort.Direction.DESC, "review_date"))
+            sort = Sort.by(Sort.Direction.DESC, "helpfulVotes")
+                    .and(Sort.by(Sort.Direction.DESC, "reviewDate"))
                     .and(Sort.by(Sort.Direction.DESC, "id"));
         } else {
             // Fall back to standard chronologically descending sequence
-            sort = Sort.by(Sort.Direction.DESC, "review_date")
+            sort = Sort.by(Sort.Direction.DESC, "reviewDate")
                     .and(Sort.by(Sort.Direction.DESC, "id"));
         }
 
@@ -83,7 +83,7 @@ public class ReviewsPersistenceService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         // 3. Fetch data via the index-friendly repository method
-        Page<Review> reviewPage = reviewRepository.findByProductIdSorted(productId, pageable);
+        Page<Review> reviewPage = reviewRepository.findByProductId(productId, pageable);
 
         return PagedResponse.from(reviewPage.map(reviewsMapper::toResponseDto));
     }
