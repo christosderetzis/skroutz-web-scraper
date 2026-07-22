@@ -38,6 +38,18 @@ class WebActor {
                 .exchange()
     }
 
+    WebTestClient.ResponseSpec getProductReviews(Long id, String sort = "helpful" , Integer page = null, Integer size = null) {
+        return webTestClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.pathSegment("products", id.toString(), "reviews")
+                            .queryParam("sort", sort)
+                            .queryParamIfPresent("page", Optional.ofNullable(page))
+                            .queryParamIfPresent("size", Optional.ofNullable(size))
+                            .build()
+                })
+                .exchange()
+    }
+
     WebTestClient.ResponseSpec scrapePriceHistory() {
         return webTestClient.post()
                 .uri("/scraper/price-history")
@@ -58,7 +70,7 @@ class WebActor {
 
     WebTestClient.ResponseSpec summarizeReviews(Long productId) {
         return webTestClient.post()
-                .uri("/reviews/{id}/summarize", productId)
+                .uri("/products/{id}/reviews/summarize", productId)
                 .exchange()
     }
 

@@ -5,6 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review;
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ReviewsApiResponseDto;
 import org.springframework.stereotype.Component;
 
@@ -118,6 +119,26 @@ public class ReviewsMapper {
             log.warn("Failed to parse helpful votes '{}': {}", helpfulText, e.getMessage());
         }
         return votes;
+    }
+
+    public ReviewResponseDto toResponseDto(Review review) {
+        if (review == null) {
+            return null;
+        }
+
+        return new ReviewResponseDto(
+                review.getId(),
+                review.getReviewerName(),
+                review.getReviewerRating(),
+                review.getReviewDate(),
+                review.getHelpfulVotes(),
+                review.getTotalVotes(),
+                review.getReviewText(),
+                review.getPros(),
+                review.getCons(),
+                review.getNeutral(),
+                review.getIsVerifiedPurchase()
+        );
     }
 
     private record HelperVotes(Integer helpfulVotes, Integer totalVotes) {
