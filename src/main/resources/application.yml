@@ -28,6 +28,9 @@ spring:
   elasticsearch:
     uris: ${ELASTICSEARCH_URL:http://localhost:9200}
 
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
 # Scraper Configuration
 scraper:
   base-url: https://www.skroutz.gr
@@ -37,10 +40,12 @@ scraper:
   delays:
     review-page-ms: 100
     specifications-ms: 150
-    reviews-ms: 150
+    reviews-ms: 100
     price-history-ms: 50
   specifications:
     batch-size: 30
+  job:
+    stale-threshold-hours: 2
 
 #LLM Configuration
 ai:
@@ -61,3 +66,4 @@ springdoc:
     operations-sorter: method
 server:
   port: 8082
+  shutdown: graceful

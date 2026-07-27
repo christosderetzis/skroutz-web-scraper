@@ -118,4 +118,25 @@ class WebActor {
                 })
                 .exchange()
     }
+
+    void waitForJobCompletion(WebTestClient.ResponseSpec response) {
+        def jobId = response
+                .expectStatus().isAccepted()
+                .expectBody(Map).returnResult()
+                .responseBody.id as String
+
+        int attempts = 0
+        while (attempts < 60) {
+            def status = webTestClient.get()
+                    .uri("/jobs/${jobId}")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody(Map).returnResult()
+                    .responseBody.status as String
+            if (status == "COMPLETED" || status == "FAILED") return
+            Thread.sleep(500)
+            attempts++
+        }
+        throw new IllegalStateException("Job ${jobId} did not complete within 30 seconds")
+    }
 }

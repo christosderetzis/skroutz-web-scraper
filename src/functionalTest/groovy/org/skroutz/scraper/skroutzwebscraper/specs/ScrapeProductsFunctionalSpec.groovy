@@ -2,7 +2,7 @@ package org.skroutz.scraper.skroutzwebscraper.specs
 
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.ScraperRequestDto
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
-import org.springframework.test.web.reactive.server.WebTestClient
+
 
 class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
 
@@ -14,10 +14,10 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
                     .build()
 
         when:
-            WebTestClient.ResponseSpec response = webActor.scrapeProducts(requestDto, false)
+            def response = webActor.scrapeProducts(requestDto, false)
+            webActor.waitForJobCompletion(response)
 
         then:
-            response.expectStatus().isOk()
             def products = productRepository.findAll()
             assert products.size() == 4
 
@@ -36,10 +36,10 @@ class ScrapeProductsFunctionalSpec extends BaseFunctionalSpec {
                     .build()
 
         when:
-            WebTestClient.ResponseSpec response = webActor.scrapeProducts(requestDto, true)
+            def response = webActor.scrapeProducts(requestDto, true)
+            webActor.waitForJobCompletion(response)
 
         then:
-            response.expectStatus().isOk()
             def products = productRepository.findAll()
             assert products.size() == 15
 

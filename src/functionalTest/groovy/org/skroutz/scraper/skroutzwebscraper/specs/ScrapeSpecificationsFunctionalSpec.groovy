@@ -35,7 +35,8 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             )
 
         when:
-            webActor.scrapeSpecifications()
+            def response = webActor.scrapeSpecifications()
+            webActor.waitForJobCompletion(response)
 
         then:
             Product savedProduct = productRepository.findById(product.id).orElse(null)
@@ -64,7 +65,8 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             product = productRepository.save(product)
 
         when:
-            webActor.scrapeSpecifications()
+            def response = webActor.scrapeSpecifications()
+            webActor.waitForJobCompletion(response)
 
         then:
             Product savedProduct = productRepository.findById(product.id).orElse(null)
