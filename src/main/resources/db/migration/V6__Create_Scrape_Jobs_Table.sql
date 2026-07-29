@@ -1,5 +1,5 @@
 CREATE TABLE scraper_schema.scrape_jobs (
-    id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    id          BIGSERIAL    PRIMARY KEY,
     job_type    VARCHAR(50)  NOT NULL,
     status      VARCHAR(20)  NOT NULL,
     started_at  TIMESTAMPTZ  NOT NULL    DEFAULT CURRENT_TIMESTAMP,

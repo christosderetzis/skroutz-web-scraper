@@ -7,14 +7,13 @@ import lombok.NoArgsConstructor;
 import org.skroutz.scraper.skroutzwebscraper.scraping.domain.entity.ScrapeJob;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ScrapeJobResponseDto {
-    private UUID id;
+    private Long id;
     private String jobType;
     private String status;
     private LocalDateTime startedAt;

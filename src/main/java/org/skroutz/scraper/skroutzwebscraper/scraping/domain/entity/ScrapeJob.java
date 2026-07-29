@@ -9,7 +9,6 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.domain.enums.ScrapeJobStat
 import org.skroutz.scraper.skroutzwebscraper.scraping.domain.enums.ScrapeJobType;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "scrape_jobs", schema = "scraper_schema")
@@ -20,8 +19,8 @@ import java.util.UUID;
 public class ScrapeJob {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "job_type", nullable = false, length = 50, updatable = false)

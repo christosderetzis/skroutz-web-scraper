@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -48,7 +47,7 @@ public class ScrapeJobService {
     }
 
     @Transactional
-    public void completeJob(UUID jobId) {
+    public void completeJob(Long jobId) {
         repository.findById(jobId).ifPresent(job -> {
             job.complete();
             repository.save(job);
@@ -57,7 +56,7 @@ public class ScrapeJobService {
     }
 
     @Transactional
-    public void failJob(UUID jobId, String error) {
+    public void failJob(Long jobId, String error) {
         repository.findById(jobId).ifPresent(job -> {
             job.fail(error);
             repository.save(job);
@@ -66,7 +65,7 @@ public class ScrapeJobService {
     }
 
     @Transactional(readOnly = true)
-    public ScrapeJobResponseDto getJob(UUID jobId) {
+    public ScrapeJobResponseDto getJob(Long jobId) {
         return ScrapeJobResponseDto.from(
             repository.findById(jobId)
                 .orElseThrow(() -> new JobNotFoundException(jobId))

@@ -6,8 +6,7 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.domain.enums.ScrapeJobType
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
-import java.util.UUID;
 
-public interface ScrapeJobRepository extends JpaRepository<ScrapeJob, UUID> {
+public interface ScrapeJobRepository extends JpaRepository<ScrapeJob, Long> {
     Optional<ScrapeJob> findByStatus(ScrapeJobStatus status);
 }

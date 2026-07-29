@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
 
 import java.time.LocalDateTime
+import java.util.UUID
 
 import static org.hamcrest.Matchers.containsInAnyOrder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -41,9 +42,10 @@ class ScraperControllerSpec extends Specification {
 
     ObjectMapper objectMapper = new ObjectMapper()
 
-    def runningJob(ScrapeJobType type) {
-        ScrapeJobResponseDto.builder()
-                .id(UUID.randomUUID())
+       def runningJob(ScrapeJobType type) {
+        def jobId = new Random().nextLong()
+        return ScrapeJobResponseDto.builder()
+                .id(jobId)
                 .jobType(type.name())
                 .status(ScrapeJobStatus.RUNNING.name())
                 .startedAt(LocalDateTime.now())
@@ -113,7 +115,7 @@ class ScraperControllerSpec extends Specification {
 
     def "should return 409 when a job of the same type is already running"() {
         given:
-            def existingJobId = UUID.randomUUID()
+            def existingJobId = new Random().nextLong()
             scrapeJobService.startJob(ScrapeJobType.SCRAPE_REVIEWS) >> {
                 throw new JobAlreadyRunningException(ScrapeJobType.SCRAPE_REVIEWS, existingJobId)
             }

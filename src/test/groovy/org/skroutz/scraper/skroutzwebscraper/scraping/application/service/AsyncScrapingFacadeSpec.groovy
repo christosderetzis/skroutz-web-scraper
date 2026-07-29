@@ -23,7 +23,7 @@ class AsyncScrapingFacadeSpec extends Specification {
             priceHistoryBatchOrchestrator
     )
 
-    def jobId = UUID.randomUUID()
+    def jobId = new Random().nextLong()
 
     def "runProductScraping fails job when scraping throws"() {
         given:

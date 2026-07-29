@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/jobs")
 @RequiredArgsConstructor
@@ -19,7 +17,7 @@ public class ScrapeJobController {
     private final ScrapeJobService scrapeJobService;
 
     @GetMapping("/{jobId}")
-    public ResponseEntity<ScrapeJobResponseDto> getJob(@PathVariable UUID jobId) {
+    public ResponseEntity<ScrapeJobResponseDto> getJob(@PathVariable Long jobId) {
         return ResponseEntity.ok(scrapeJobService.getJob(jobId));
     }
 }

@@ -24,7 +24,7 @@ class ScrapeJobServiceSpec extends Specification {
 
     def "failJob marks job as FAILED with error message"() {
         given:
-            def jobId = UUID.randomUUID()
+            def jobId = new Random().nextLong()
             def job = ScrapeJob.builder()
                     .id(jobId)
                     .status(ScrapeJobStatus.RUNNING)
@@ -41,7 +41,7 @@ class ScrapeJobServiceSpec extends Specification {
 
     def "getJob returns the DTO when found"() {
         given:
-            def jobId = UUID.randomUUID()
+            def jobId = new Random().nextLong()
             def job = ScrapeJob.builder().id(jobId).status(ScrapeJobStatus.COMPLETED).jobType(ScrapeJobType.SCRAPE_PRODUCTS).build()
             repository.findById(jobId) >> Optional.of(job)
 
@@ -59,7 +59,7 @@ class ScrapeJobServiceSpec extends Specification {
 
     def "getJob throws JobNotFoundException when job does not exist"() {
         given:
-            def jobId = UUID.randomUUID()
+            def jobId = new Random().nextLong()
             repository.findById(jobId) >> Optional.empty()
 
         when:

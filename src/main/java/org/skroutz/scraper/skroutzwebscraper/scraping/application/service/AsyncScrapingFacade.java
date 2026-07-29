@@ -10,8 +10,6 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.Scraper
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -24,7 +22,7 @@ public class AsyncScrapingFacade {
     private final PriceHistoryBatchOrchestrator priceHistoryBatchOrchestrator;
 
     @Async("scrapeTaskExecutor")
-    public void runProductScraping(UUID jobId, ScraperRequestDto request, boolean multiple) {
+    public void runProductScraping(Long jobId, ScraperRequestDto request, boolean multiple) {
         try {
             productScraperService.scrapeProducts(request, multiple);
             scrapeJobService.completeJob(jobId);
@@ -35,7 +33,7 @@ public class AsyncScrapingFacade {
     }
 
     @Async("scrapeTaskExecutor")
-    public void runReviewsScraping(UUID jobId) {
+    public void runReviewsScraping(Long jobId) {
         try {
             reviewsBatchOrchestrator.parseReviews();
             scrapeJobService.completeJob(jobId);
@@ -46,7 +44,7 @@ public class AsyncScrapingFacade {
     }
 
     @Async("scrapeTaskExecutor")
-    public void runSpecificationsScraping(UUID jobId) {
+    public void runSpecificationsScraping(Long jobId) {
         try {
             specificationsBatchOrchestrator.parseSpecifications();
             scrapeJobService.completeJob(jobId);
@@ -57,7 +55,7 @@ public class AsyncScrapingFacade {
     }
 
     @Async("scrapeTaskExecutor")
-    public void runPriceHistoryScraping(UUID jobId) {
+    public void runPriceHistoryScraping(Long jobId) {
         try {
             priceHistoryBatchOrchestrator.fetchPriceHistoryForProducts();
             scrapeJobService.completeJob(jobId);

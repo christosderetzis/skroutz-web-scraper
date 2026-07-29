@@ -6,6 +6,7 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.Scraper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import spock.util.concurrent.PollingConditions
 
 import java.time.Duration
 
@@ -125,18 +126,17 @@ class WebActor {
                 .expectBody(Map).returnResult()
                 .responseBody.id as String
 
-        int attempts = 0
-        while (attempts < 60) {
+        def conditions = new PollingConditions(timeout: 30, delay: 0.5)
+
+        conditions.eventually {
             def status = webTestClient.get()
                     .uri("/jobs/${jobId}")
                     .exchange()
                     .expectStatus().isOk()
                     .expectBody(Map).returnResult()
                     .responseBody.status as String
-            if (status == "COMPLETED" || status == "FAILED") return
-            Thread.sleep(500)
-            attempts++
+
+            assert status == "COMPLETED" || status == "FAILED"
         }
-        throw new IllegalStateException("Job ${jobId} did not complete within 30 seconds")
     }
 }
