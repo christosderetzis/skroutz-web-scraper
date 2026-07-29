@@ -43,13 +43,8 @@ class ScraperControllerSpec extends Specification {
     ObjectMapper objectMapper = new ObjectMapper()
 
        def runningJob(ScrapeJobType type) {
-        def jobId = new Random().nextLong()
-        return ScrapeJobResponseDto.builder()
-                .id(jobId)
-                .jobType(type.name())
-                .status(ScrapeJobStatus.RUNNING.name())
-                .startedAt(LocalDateTime.now())
-                .build()
+         def jobId = new Random().nextLong()
+         return new ScrapeJobResponseDto(jobId, type.name(), ScrapeJobStatus.RUNNING.name(), LocalDateTime.now(), null, null)
     }
 
     def "should start product scraping and return 202 Accepted"() {

@@ -25,21 +25,21 @@ public class ScraperController {
     @PostMapping("/specifications")
     public ResponseEntity<ScrapeJobResponseDto> scrapeSpecifications() {
         ScrapeJobResponseDto dto = scrapeJobService.startJob(ScrapeJobType.SCRAPE_SPECIFICATIONS);
-        asyncScrapingFacade.runSpecificationsScraping(dto.getId());
+        asyncScrapingFacade.runSpecificationsScraping(dto.id());
         return ResponseEntity.accepted().body(dto);
     }
 
     @PostMapping("/reviews")
     public ResponseEntity<ScrapeJobResponseDto> scrapeReviews() {
         ScrapeJobResponseDto dto = scrapeJobService.startJob(ScrapeJobType.SCRAPE_REVIEWS);
-        asyncScrapingFacade.runReviewsScraping(dto.getId());
+        asyncScrapingFacade.runReviewsScraping(dto.id());
         return ResponseEntity.accepted().body(dto);
     }
 
     @PostMapping("/price-history")
     public ResponseEntity<ScrapeJobResponseDto> scrapePriceHistory() {
         ScrapeJobResponseDto dto = scrapeJobService.startJob(ScrapeJobType.SCRAPE_PRICE_HISTORY);
-        asyncScrapingFacade.runPriceHistoryScraping(dto.getId());
+        asyncScrapingFacade.runPriceHistoryScraping(dto.id());
         return ResponseEntity.accepted().body(dto);
     }
 
@@ -47,7 +47,7 @@ public class ScraperController {
     public ResponseEntity<ScrapeJobResponseDto> scrapeProducts(@Valid @RequestBody ScraperRequestDto request,
                                                                 @RequestParam boolean multiple) {
         ScrapeJobResponseDto dto = scrapeJobService.startJob(ScrapeJobType.SCRAPE_PRODUCTS);
-        asyncScrapingFacade.runProductScraping(dto.getId(), request, multiple);
+        asyncScrapingFacade.runProductScraping(dto.id(), request, multiple);
         return ResponseEntity.accepted().body(dto);
     }
 }
