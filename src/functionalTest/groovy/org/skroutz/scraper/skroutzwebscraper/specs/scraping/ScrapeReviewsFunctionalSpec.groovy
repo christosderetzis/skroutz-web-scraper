@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.specs
+package org.skroutz.scraper.skroutzwebscraper.specs.scraping
 
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review

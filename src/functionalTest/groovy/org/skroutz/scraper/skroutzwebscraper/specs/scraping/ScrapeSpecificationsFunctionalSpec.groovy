@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.specs
+package org.skroutz.scraper.skroutzwebscraper.specs.scraping
 
 import com.fasterxml.jackson.databind.JsonNode
 import org.skroutz.scraper.skroutzwebscraper.category.domain.entity.CategorySchema

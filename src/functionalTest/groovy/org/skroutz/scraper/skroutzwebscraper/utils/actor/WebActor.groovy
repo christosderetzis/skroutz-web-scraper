@@ -120,8 +120,8 @@ class WebActor {
                 .exchange()
     }
 
-    void waitForJobCompletion(WebTestClient.ResponseSpec response) {
-        def jobId = response
+    void waitForJobCompletion(WebTestClient.ResponseSpec response, Long jobId = null) {
+        def id = jobId ?: response
                 .expectStatus().isAccepted()
                 .expectBody(Map).returnResult()
                 .responseBody.id as String
@@ -130,7 +130,7 @@ class WebActor {
 
         conditions.eventually {
             def status = webTestClient.get()
-                    .uri("/jobs/${jobId}")
+                    .uri("/jobs/${id}")
                     .exchange()
                     .expectStatus().isOk()
                     .expectBody(Map).returnResult()

@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.specs
+package org.skroutz.scraper.skroutzwebscraper.specs.search
 
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSuggestionDto
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
