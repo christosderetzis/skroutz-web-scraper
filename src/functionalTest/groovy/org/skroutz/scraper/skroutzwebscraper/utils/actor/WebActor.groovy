@@ -6,6 +6,7 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.Scraper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import spock.util.concurrent.PollingConditions
 
 import java.time.Duration
 
@@ -117,5 +118,25 @@ class WebActor {
                     builder.build()
                 })
                 .exchange()
+    }
+
+    void waitForJobCompletion(WebTestClient.ResponseSpec response, Long jobId = null) {
+        def id = jobId ?: response
+                .expectStatus().isAccepted()
+                .expectBody(Map).returnResult()
+                .responseBody.id as String
+
+        def conditions = new PollingConditions(timeout: 30, delay: 0.5)
+
+        conditions.eventually {
+            def status = webTestClient.get()
+                    .uri("/jobs/${id}")
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody(Map).returnResult()
+                    .responseBody.status as String
+
+            assert status == "COMPLETED" || status == "FAILED"
+        }
     }
 }

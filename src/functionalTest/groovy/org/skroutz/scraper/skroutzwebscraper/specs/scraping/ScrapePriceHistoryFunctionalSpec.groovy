@@ -1,10 +1,15 @@
-package org.skroutz.scraper.skroutzwebscraper.specs
+package org.skroutz.scraper.skroutzwebscraper.specs.scraping
 
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
+import org.skroutz.scraper.skroutzwebscraper.scraping.domain.entity.ScrapeJob
+import org.skroutz.scraper.skroutzwebscraper.scraping.domain.enums.ScrapeJobStatus
+import org.skroutz.scraper.skroutzwebscraper.scraping.domain.enums.ScrapeJobType
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
-import org.springframework.test.web.reactive.server.WebTestClient
+import org.skyscreamer.jsonassert.JSONAssert
+import org.skyscreamer.jsonassert.JSONCompareMode
 
 import java.sql.Timestamp
+import java.time.LocalDateTime
 
 class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
 
@@ -23,12 +28,10 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
             productRepository.save(product)
 
         when: "The price history scraping endpoint is called"
-            WebTestClient.ResponseSpec response = webActor.scrapePriceHistory()
+            def response = webActor.scrapePriceHistory()
+            webActor.waitForJobCompletion(response)
 
-        then: "The response is successful"
-            response.expectStatus().isOk()
-
-        and: "Exactly 5 price history records are saved"
+        then: "Exactly 5 price history records are saved"
             def priceHistories = priceHistoryRepository.findAll().sort { it.priceDate }
             assert priceHistories.size() == 5
 
@@ -73,6 +76,10 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
         and: "The product is marked as parsed"
             def updatedProduct = productRepository.findById(product.getId()).get()
             assert updatedProduct.priceHistoryParsed == true
+
+        and: "The job status is COMPLETED"
+            def scrapeJob = scrapeJobRepository.findAll().first()
+            assert scrapeJob.status == ScrapeJobStatus.COMPLETED
     }
 
     def "Scrape price history with minimal data"() {
@@ -90,12 +97,10 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
             productRepository.save(product)
 
         when: "The price history scraping endpoint is called"
-            WebTestClient.ResponseSpec response = webActor.scrapePriceHistory()
+            def response = webActor.scrapePriceHistory()
+            webActor.waitForJobCompletion(response)
 
-        then: "The response is successful"
-            response.expectStatus().isOk()
-
-        and: "Exactly 1 price history record is saved"
+        then: "Exactly 1 price history record is saved"
             def priceHistories = priceHistoryRepository.findAll()
             assert priceHistories.size() == 1
 
@@ -110,6 +115,10 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
         and: "The product is marked as parsed"
             def updatedProduct = productRepository.findById(product.getId()).get()
             assert updatedProduct.priceHistoryParsed == true
+
+        and: "The job status is COMPLETED"
+            def scrapeJob = scrapeJobRepository.findAll().first()
+            assert scrapeJob.status == ScrapeJobStatus.COMPLETED
     }
 
     def "Scrape price history with partial data - some time periods missing"() {
@@ -127,12 +136,10 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
             productRepository.save(product)
 
         when: "The price history scraping endpoint is called"
-            WebTestClient.ResponseSpec response = webActor.scrapePriceHistory()
+            def response = webActor.scrapePriceHistory()
+            webActor.waitForJobCompletion(response)
 
-        then: "The response is successful"
-            response.expectStatus().isOk()
-
-        and: "Exactly 2 price history records are saved"
+        then: "Exactly 2 price history records are saved"
             def priceHistories = priceHistoryRepository.findAll().sort { it.priceDate }
             assert priceHistories.size() == 2
 
@@ -156,6 +163,10 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
         and: "The product is marked as parsed"
             def updatedProduct = productRepository.findById(product.getId()).get()
             assert updatedProduct.priceHistoryParsed == true
+
+        and: "The job status is COMPLETED"
+            def scrapeJob = scrapeJobRepository.findAll().first()
+            assert scrapeJob.status == ScrapeJobStatus.COMPLETED
     }
 
     def "Scrape price history handles API errors gracefully"() {
@@ -173,19 +184,22 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
             productRepository.save(product)
 
         when: "The price history scraping endpoint is called"
-            WebTestClient.ResponseSpec response = webActor.scrapePriceHistory()
+            def response = webActor.scrapePriceHistory()
+            webActor.waitForJobCompletion(response)
 
-        then: "The response is still successful (service continues despite individual errors)"
-            response.expectStatus().isOk()
-
-        and: "No price history data is saved for this product"
+        then: "No price history data is saved for this product"
             def priceHistories = priceHistoryRepository.findAll()
             assert priceHistories.size() == 0
 
         and: "The product is not marked as parsed due to the error"
             def updatedProduct = productRepository.findById(product.getId()).get()
             assert updatedProduct.priceHistoryParsed == false
+
+        and: "The job status is COMPLETED"
+            def scrapeJob = scrapeJobRepository.findAll().first()
+            assert scrapeJob.status == ScrapeJobStatus.COMPLETED
     }
+
 
     private static Timestamp toTimestamp(long epochSeconds) {
         return new Timestamp(epochSeconds * 1000)

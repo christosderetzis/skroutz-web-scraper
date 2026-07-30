@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.specs
+package org.skroutz.scraper.skroutzwebscraper.specs.review
 
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto

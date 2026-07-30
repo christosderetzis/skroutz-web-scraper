@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.specs
+package org.skroutz.scraper.skroutzwebscraper.specs.review
 
 import org.junit.Ignore
 import org.skroutz.scraper.skroutzwebscraper.common.dto.PagedResponse

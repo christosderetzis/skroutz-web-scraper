@@ -3,6 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.utils.base
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
 import org.skroutz.scraper.skroutzwebscraper.SkroutzWebScraperApplication
+import org.skroutz.scraper.skroutzwebscraper.scraping.domain.repository.ScrapeJobRepository
 import org.skroutz.scraper.skroutzwebscraper.search.domain.repository.ProductElasticsearchRepository
 import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
@@ -35,7 +36,9 @@ import spock.lang.Specification
                 "scraper.delays.review-page-ms=5",
                 "scraper.delays.specifications-ms=5",
                 "scraper.delays.price-history-ms=5",
-                "scraper.delays.reviews-ms=5"
+                "scraper.delays.reviews-ms=5",
+                "scraper.job.stale-threshold-hours=2",
+
         ]
 )
 abstract class BaseFunctionalSpec extends Specification {
@@ -64,12 +67,16 @@ abstract class BaseFunctionalSpec extends Specification {
     @Autowired
     CategorySchemaRepository categorySchemaRepository
 
+    @Autowired
+    ScrapeJobRepository scrapeJobRepository
+
     WebActor webActor
 
     @Shared
     ObjectMapper objectMapper = new ObjectMapper()
 
     def setup() {
+        scrapeJobRepository.deleteAll()
         categorySchemaRepository.deleteAll()
         reviewSummaryRepository.deleteAll()
         priceHistoryRepository.deleteAll()
@@ -79,6 +86,7 @@ abstract class BaseFunctionalSpec extends Specification {
     }
 
     def cleanup() {
+        scrapeJobRepository.deleteAll()
         categorySchemaRepository.deleteAll()
         reviewSummaryRepository.deleteAll()
         priceHistoryRepository.deleteAll()
