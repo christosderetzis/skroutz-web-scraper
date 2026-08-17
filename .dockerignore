@@ -27,8 +27,8 @@ README.md
 *.md
 
 # Docker
-Dockerfile
-docker-compose*.yml
+infra/Dockerfile
+infra/docker-compose*.yml
 .dockerignore
 
 # Tests

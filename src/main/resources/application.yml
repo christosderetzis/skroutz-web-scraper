@@ -2,7 +2,15 @@
 spring:
   application:
     name: skroutz-web-scraper
-  
+
+  # Security / OAuth2 Configuration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/skroutz-scraper}
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8081/realms/skroutz-scraper/protocol/openid-connect/certs}
+
   # Database Configuration
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/skroutz_scraper}
@@ -56,6 +64,12 @@ ai:
     log-responses: ${LLM_LOG_RESPONSES:false}
   summarization:
     chunk-size: 10000
+
+jwt:
+  auth:
+    converter:
+      resource-id: skroutz-scraper-client
+      principle-attribute: preferred_username
 
 # Swagger/OpenAPI Configuration
 springdoc:

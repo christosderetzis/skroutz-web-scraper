@@ -6,6 +6,8 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.Scraper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.web.reactive.function.client.WebClient
+import reactor.util.retry.Retry
 import spock.util.concurrent.PollingConditions
 
 import java.time.Duration
@@ -13,8 +15,10 @@ import java.time.Duration
 class WebActor {
 
     WebTestClient webTestClient
+    private final int port
 
     WebActor(int port) {
+        this.port = port
         this.webTestClient = WebTestClient.bindToServer()
                 .baseUrl("http://localhost:${port}")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -22,8 +26,36 @@ class WebActor {
                 .build()
     }
 
-    WebTestClient.ResponseSpec scrapeProducts(ScraperRequestDto requestDto, Boolean multiple = false) {
-        return webTestClient.post()
+    private WebTestClient clientFor(String accessToken) {
+        return WebTestClient.bindToServer()
+                .baseUrl("http://localhost:${port}")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken}")
+                .responseTimeout(Duration.ofSeconds(100))
+                .build()
+    }
+
+    // Keycloak runs on 8083 via infra/docker-compose-functional-tests.yml. The realm is
+    // auto-imported on startup from src/functionalTest/resources/keycloak/realm-export.json.
+    // Here we just exchange admin/admin (role SUPER_ADMIN) for a bearer token.
+    static String getAccessToken(String username = "admin", String password = "admin") {
+        def client = WebClient.builder().baseUrl("http://localhost:8083").build()
+
+        def responseEntity = client.post()
+                .uri("/realms/skroutz-scraper/protocol/openid-connect/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("grant_type=password&client_id=skroutz-scraper-client&username=${username}&password=${password}")
+                .retrieve()
+                .toEntity(Map)
+                .retryWhen(Retry.fixedDelay(30, Duration.ofSeconds(2)))
+                .block()
+
+        def response = responseEntity?.body as Map
+        return response?.access_token as String
+    }
+
+    WebTestClient.ResponseSpec scrapeProducts(ScraperRequestDto requestDto, Boolean multiple = false, String accessToken = getAccessToken()) {
+        return clientFor(accessToken).post()
                 .uri(uriBuilder -> {
                     uriBuilder.path("/scraper/products")
                             .queryParamIfPresent("multiple", Optional.ofNullable(multiple))
@@ -51,20 +83,20 @@ class WebActor {
                 .exchange()
     }
 
-    WebTestClient.ResponseSpec scrapePriceHistory() {
-        return webTestClient.post()
+    WebTestClient.ResponseSpec scrapePriceHistory(String accessToken = getAccessToken()) {
+        return clientFor(accessToken).post()
                 .uri("/scraper/price-history")
                 .exchange()
     }
 
-    WebTestClient.ResponseSpec scrapeSpecifications() {
-        return webTestClient.post()
+    WebTestClient.ResponseSpec scrapeSpecifications(String accessToken = getAccessToken()) {
+        return clientFor(accessToken).post()
                 .uri("/scraper/specifications")
                 .exchange()
     }
 
-    WebTestClient.ResponseSpec scrapeReviews() {
-        return webTestClient.post()
+    WebTestClient.ResponseSpec scrapeReviews(String accessToken = getAccessToken()) {
+        return clientFor(accessToken).post()
                 .uri("/scraper/reviews")
                 .exchange()
     }

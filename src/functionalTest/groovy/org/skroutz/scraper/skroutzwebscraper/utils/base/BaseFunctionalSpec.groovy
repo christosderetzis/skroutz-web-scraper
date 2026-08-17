@@ -38,6 +38,8 @@ import spock.lang.Specification
                 "scraper.delays.price-history-ms=5",
                 "scraper.delays.reviews-ms=5",
                 "scraper.job.stale-threshold-hours=2",
+                "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8083/realms/skroutz-scraper",
+                "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8083/realms/skroutz-scraper/protocol/openid-connect/certs",
 
         ]
 )

@@ -27,7 +27,7 @@ Tests: Spock (Groovy 5), MockWebServer, WireMock, JaCoCo.
 ### Option A: Full Docker Stack (Recommended)
 
 ```bash
-docker-compose up -d
+docker-compose -f infra/docker-compose.yml up -d
 ```
 
 Starts the app (port 8082), PostgreSQL (5432), Elasticsearch (9200), Kibana (5601), and Ollama (11434). App waits for all services to be healthy.
@@ -35,7 +35,7 @@ Starts the app (port 8082), PostgreSQL (5432), Elasticsearch (9200), Kibana (560
 ### Option B: Local Dev
 
 ```bash
-docker-compose -f docker-compose-local.yml up -d
+docker-compose -f infra/docker-compose-local.yml up -d
 ./gradlew bootRun
 ```
 
