@@ -22,7 +22,7 @@ public class SecurityConfig{
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/scraper/**", "/jobs/**", "/category-schemas").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/scraper/**", "/jobs/**", "/category-schemas/**").hasRole("SUPER_ADMIN")
                         .anyRequest().permitAll())
                 .securityMatcher("/scraper/**", "/jobs/**", "/category-schemas")
                 .oauth2ResourceServer(
