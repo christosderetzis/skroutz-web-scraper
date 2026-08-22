@@ -1,5 +1,5 @@
 {
-  "realm": "skroutz-scraper-functional-tests",
+  "realm": "skroutz-scraper",
   "enabled": true,
   "loginWithEmailAllowed": false,
   "duplicateEmailsAllowed": false,
@@ -56,7 +56,7 @@
   "roles": {
     "realm": [],
     "client": {
-      "skroutz-scraper-client-fT": [
+      "skroutz-scraper-client": [
         {
           "name": "SUPER_ADMIN",
           "description": "Super admin role"
@@ -70,7 +70,7 @@
   },
   "clients": [
     {
-      "clientId": "skroutz-scraper-client-fT",
+      "clientId": "skroutz-scraper-client",
       "enabled": true,
       "publicClient": true,
       "directAccessGrantsEnabled": true,
@@ -98,7 +98,7 @@
         }
       ],
       "clientRoles": {
-        "skroutz-scraper-client-fT": [
+        "skroutz-scraper-client": [
           "SUPER_ADMIN"
         ]
       }
@@ -118,7 +118,7 @@
         }
       ],
       "clientRoles": {
-        "skroutz-scraper-client-fT": [
+        "skroutz-scraper-client": [
           "USER"
         ]
       }

@@ -10,7 +10,6 @@ import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.mapper.ProductDocumentMapper
 import org.skroutz.scraper.skroutzwebscraper.category.domain.repository.CategorySchemaRepository
 import org.skroutz.scraper.skroutzwebscraper.priceHistory.domain.repository.PriceHistoryRepository
-
 import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewRepository
 import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewSummaryRepository
@@ -38,9 +37,9 @@ import spock.lang.Specification
                 "scraper.delays.price-history-ms=5",
                 "scraper.delays.reviews-ms=5",
                 "scraper.job.stale-threshold-hours=2",
-                "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8083/realms/skroutz-scraper",
-                "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8083/realms/skroutz-scraper/protocol/openid-connect/certs",
-
+                "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8083/realms/skroutz-scraper-functional-tests",
+                "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8083/realms/skroutz-scraper-functional-tests/protocol/openid-connect/certs",
+                "jwt.auth.converter.resource-id=skroutz-scraper-client-fT"
         ]
 )
 abstract class BaseFunctionalSpec extends Specification {
@@ -72,6 +71,7 @@ abstract class BaseFunctionalSpec extends Specification {
     @Autowired
     ScrapeJobRepository scrapeJobRepository
 
+    @Autowired
     WebActor webActor
 
     @Shared
@@ -99,7 +99,7 @@ abstract class BaseFunctionalSpec extends Specification {
 
     @PostConstruct
     void init() {
-        webActor = new WebActor(port)
+        webActor.setup(port)
     }
 
     protected Product createAndIndexProduct(String title) {

@@ -5,6 +5,7 @@ import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSe
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.ScraperRequestDto
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.retry.Retry
@@ -12,25 +13,29 @@ import spock.util.concurrent.PollingConditions
 
 import java.time.Duration
 
+@Component
 class WebActor {
 
-    WebTestClient webTestClient
-    private final int port
+    private WebTestClient webTestClient
+    private String bearerToken
+    private Integer port
 
-    WebActor(int port) {
+    def setup(Integer port, String token = getAccessToken("admin", "admin")) {
         this.port = port
-        this.webTestClient = WebTestClient.bindToServer()
-                .baseUrl("http://localhost:${port}")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .responseTimeout(Duration.ofSeconds(100))
-                .build()
+        this.bearerToken = token
+        this.webTestClient = setupWebTestClient(port)
     }
 
-    private WebTestClient clientFor(String accessToken) {
+    def updateBearerToken(String token) {
+        this.bearerToken = token
+        this.webTestClient = setupWebTestClient(port)
+    }
+
+    private WebTestClient setupWebTestClient(Integer port) {
         return WebTestClient.bindToServer()
                 .baseUrl("http://localhost:${port}")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer ${accessToken}")
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer ${bearerToken}")
                 .responseTimeout(Duration.ofSeconds(100))
                 .build()
     }
@@ -42,9 +47,9 @@ class WebActor {
         def client = WebClient.builder().baseUrl("http://localhost:8083").build()
 
         def responseEntity = client.post()
-                .uri("/realms/skroutz-scraper/protocol/openid-connect/token")
+                .uri("/realms/skroutz-scraper-functional-tests/protocol/openid-connect/token")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .bodyValue("grant_type=password&client_id=skroutz-scraper-client&username=${username}&password=${password}")
+                .bodyValue("grant_type=password&client_id=skroutz-scraper-client-fT&username=${username}&password=${password}")
                 .retrieve()
                 .toEntity(Map)
                 .retryWhen(Retry.fixedDelay(30, Duration.ofSeconds(2)))
@@ -54,8 +59,8 @@ class WebActor {
         return response?.access_token as String
     }
 
-    WebTestClient.ResponseSpec scrapeProducts(ScraperRequestDto requestDto, Boolean multiple = false, String accessToken = getAccessToken()) {
-        return clientFor(accessToken).post()
+    WebTestClient.ResponseSpec scrapeProducts(ScraperRequestDto requestDto, Boolean multiple = false) {
+        return webTestClient.post()
                 .uri(uriBuilder -> {
                     uriBuilder.path("/scraper/products")
                             .queryParamIfPresent("multiple", Optional.ofNullable(multiple))
@@ -83,20 +88,20 @@ class WebActor {
                 .exchange()
     }
 
-    WebTestClient.ResponseSpec scrapePriceHistory(String accessToken = getAccessToken()) {
-        return clientFor(accessToken).post()
+    WebTestClient.ResponseSpec scrapePriceHistory() {
+        return webTestClient.post()
                 .uri("/scraper/price-history")
                 .exchange()
     }
 
-    WebTestClient.ResponseSpec scrapeSpecifications(String accessToken = getAccessToken()) {
-        return clientFor(accessToken).post()
+    WebTestClient.ResponseSpec scrapeSpecifications() {
+        return webTestClient.post()
                 .uri("/scraper/specifications")
                 .exchange()
     }
 
-    WebTestClient.ResponseSpec scrapeReviews(String accessToken = getAccessToken()) {
-        return clientFor(accessToken).post()
+    WebTestClient.ResponseSpec scrapeReviews() {
+        return webTestClient.post()
                 .uri("/scraper/reviews")
                 .exchange()
     }

@@ -49,7 +49,7 @@ services:
       retries: 3
 
   wiremock:
-    image: wiremock/wiremock:latest
+    image: wiremock/wiremock:3.13.2
     container_name: wiremock
     command:
       - --verbose
@@ -80,10 +80,6 @@ services:
     container_name: keycloak-functional
     environment:
       KEYCLOAK_ADMIN: admin
-
-
-
-
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres-functional:5432/skroutz_scraper
