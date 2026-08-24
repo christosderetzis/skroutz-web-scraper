@@ -65,6 +65,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
     // flyway
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
@@ -116,7 +118,7 @@ dependencies {
 apply plugin: 'docker-compose'
 apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 
-def dockerComposeFilePath = "${rootProject.projectDir}/docker-compose-functional-tests.yml"
+def dockerComposeFilePath = "${rootProject.projectDir}/infra/docker-compose-functional-tests.yml"
 
 dockerCompose {
     if (DefaultNativePlatform.currentOperatingSystem.macOsX) {

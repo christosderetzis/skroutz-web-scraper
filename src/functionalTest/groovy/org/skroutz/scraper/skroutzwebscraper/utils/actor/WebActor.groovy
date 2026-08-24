@@ -5,21 +5,58 @@ import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSe
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.ScraperRequestDto
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.web.reactive.function.client.WebClient
+import reactor.util.retry.Retry
 import spock.util.concurrent.PollingConditions
 
 import java.time.Duration
 
+@Component
 class WebActor {
 
-    WebTestClient webTestClient
+    private WebTestClient webTestClient
+    private String bearerToken
+    private Integer port
 
-    WebActor(int port) {
-        this.webTestClient = WebTestClient.bindToServer()
+    def setup(Integer port, String token = getAccessToken("admin", "admin")) {
+        this.port = port
+        this.bearerToken = token
+        this.webTestClient = setupWebTestClient(port)
+    }
+
+    def updateBearerToken(String token) {
+        this.bearerToken = token
+        this.webTestClient = setupWebTestClient(port)
+    }
+
+    private WebTestClient setupWebTestClient(Integer port) {
+        return WebTestClient.bindToServer()
                 .baseUrl("http://localhost:${port}")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer ${bearerToken}")
                 .responseTimeout(Duration.ofSeconds(100))
                 .build()
+    }
+
+    // Keycloak runs on 8083 via infra/docker-compose-functional-tests.yml. The realm is
+    // auto-imported on startup from src/functionalTest/resources/keycloak/realm-export.json.
+    // Here we just exchange admin/admin (role SUPER_ADMIN) for a bearer token.
+    static String getAccessToken(String username = "admin", String password = "admin") {
+        def client = WebClient.builder().baseUrl("http://localhost:8083").build()
+
+        def responseEntity = client.post()
+                .uri("/realms/skroutz-scraper-functional-tests/protocol/openid-connect/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue("grant_type=password&client_id=skroutz-scraper-client-fT&username=${username}&password=${password}")
+                .retrieve()
+                .toEntity(Map)
+                .retryWhen(Retry.fixedDelay(30, Duration.ofSeconds(2)))
+                .block()
+
+        def response = responseEntity?.body as Map
+        return response?.access_token as String
     }
 
     WebTestClient.ResponseSpec scrapeProducts(ScraperRequestDto requestDto, Boolean multiple = false) {

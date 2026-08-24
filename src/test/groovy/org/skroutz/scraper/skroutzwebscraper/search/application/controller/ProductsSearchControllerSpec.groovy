@@ -2,6 +2,8 @@ package org.skroutz.scraper.skroutzwebscraper.search.application.controller
 
 import org.skroutz.scraper.skroutzwebscraper.common.exception.RestResponseEntityExceptionHandler
 import org.skroutz.scraper.skroutzwebscraper.search.application.service.ProductSearchService
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration
 import org.spockframework.spring.SpringBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
@@ -17,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest
 @ContextConfiguration(classes = [ProductSearchController, RestResponseEntityExceptionHandler])
+@ImportAutoConfiguration(exclude = OAuth2ResourceServerAutoConfiguration)
 class ProductsSearchControllerSpec extends Specification {
 
     @Autowired

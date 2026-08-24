@@ -12,11 +12,11 @@ until ollama list > /dev/null 2>&1; do
 done
 
 # Check if model exists before pulling (Massive speed save on restarts)
-if ! ollama list | grep -q "qwen2.5:3b"; then
-  echo "Pulling qwen2.5:3b..."
-  ollama pull qwen2.5:3b
+if ! ollama list | grep -q "qwen2.5:1.5b"; then
+  echo "Pulling qwen2.5:1.5b..."
+  ollama pull qwen2.5:1.5b
 else
-  echo "qwen2.5:3b is already here. Ready to go!"
+  echo "qwen2.5:1.5b is already here. Ready to go!"
 fi
 
 # Keep the container alive by waiting on the serve process

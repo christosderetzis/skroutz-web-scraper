@@ -39,3 +39,7 @@ out/
 .vscode/
 
 lib/
+
+CLAUDE.md
+AGENTS.md
+filters.toml

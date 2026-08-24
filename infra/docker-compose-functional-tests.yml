@@ -1,0 +1,111 @@
+services:
+  postgres-functional:
+    image: postgres:15
+    container_name: postgres-functional
+    environment:
+      POSTGRES_DB: skroutz_scraper
+      POSTGRES_USER: skroutz_user
+      POSTGRES_PASSWORD: skroutz_password
+    networks:
+      - test-network
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skroutz_user -d skroutz_scraper"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
+    container_name: elasticsearch-functional
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    ports:
+      - "9201:9200"
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mockserver:
+    image: nginx:alpine
+    container_name: mockserver
+    volumes:
+      - ../src/functionalTest/resources/mock-html:/usr/share/nginx/html:ro
+    networks:
+      - test-network
+    ports:
+      - "8080:80"  # Changed to avoid port 80 conflicts
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "80" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  wiremock:
+    image: wiremock/wiremock:3.13.2
+    container_name: wiremock
+    command:
+      - --verbose
+    volumes:
+      - ../src/functionalTest/resources/wiremock:/home/wiremock:ro
+    networks:
+      - test-network
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/__admin/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Keycloak realm is auto-imported on startup from realm-export.json (--import-realm).
+  # What is set up there for the functional tests:
+  #   realm   : skroutz-scraper
+  #   client  : skroutz-scraper-client (public, direct access grants only -> password flow)
+  #   roles   : SUPER_ADMIN and USER (client roles of skroutz-scraper-client). They surface in the
+  #             JWT as resource_access.skroutz-scraper-client.roles and are mapped to authorities
+  #             ROLE_SUPER_ADMIN / ROLE_USER by JwtConverter.
+  #   users   : admin/admin -> SUPER_ADMIN  (used by BaseFunctionalSpec and happy-path specs)
+  #             user/user   -> USER         (used by AuthorizationFunctionalSpec for the 403 case)
+  # The app validates JWTs against this instance on port 8083 (see BaseFunctionalSpec properties).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7
+    container_name: keycloak-functional
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-functional:5432/skroutz_scraper
+      KC_DB_USERNAME: skroutz_user
+      KC_DB_PASSWORD: skroutz_password
+      # enable health and metrics endpoints
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+    volumes:
+      - ../src/functionalTest/resources/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8083:8080"
+      - "9000:9000"
+    command: start-dev --import-realm
+    depends_on:
+      postgres-functional:
+        condition: service_healthy
+    networks:
+      - test-network
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3;if [ $? -eq 0 ]; then echo 'Healthcheck Successful';exit 0;else echo 'Healthcheck Failed';exit 1;fi;" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  test-network:
+    driver: bridge

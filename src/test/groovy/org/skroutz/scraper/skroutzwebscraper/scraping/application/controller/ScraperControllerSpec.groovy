@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.skroutz.scraper.skroutzwebscraper.common.exception.RestResponseEntityExceptionHandler
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.AsyncScrapingFacade
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.ScrapeJobService
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.OAuth2ResourceServerAutoConfiguration
 import org.skroutz.scraper.skroutzwebscraper.scraping.domain.enums.ScrapeJobStatus
 import org.skroutz.scraper.skroutzwebscraper.scraping.domain.enums.ScrapeJobType
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.ScrapeJobResponseDto
@@ -29,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest
 @ContextConfiguration(classes = [ScraperController, RestResponseEntityExceptionHandler])
+@ImportAutoConfiguration(exclude = OAuth2ResourceServerAutoConfiguration)
 class ScraperControllerSpec extends Specification {
 
     @Autowired

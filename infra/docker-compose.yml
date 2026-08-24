@@ -10,6 +10,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-keycloak-schema.sql:/docker-entrypoint-initdb.d/init-keycloak-schema.sql
     restart: unless-stopped
     networks:
       - elastic
@@ -63,7 +64,7 @@ services:
     pull_policy: always
     tty: true
     restart: unless-stopped
-    entrypoint: [ "/bin/sh", "/model_files/run_ollama.sh" ]
+    entrypoint: [ "/bin/sh", "./model_files/run_ollama.sh" ]
     networks:
       - elastic
     healthcheck:
@@ -73,10 +74,42 @@ services:
       retries: 40
       start_period: 90s
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7
+    container_name: keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/skroutz_scraper?currentSchema=keycloak&rewriteBatchedStatements=true
+      KC_DB_USERNAME: skroutz_user
+      KC_DB_PASSWORD: skroutz_password
+      # enable health and metrics endpoints
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    command: start-dev --import-realm
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - elastic
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3;if [ $? -eq 0 ]; then echo 'Healthcheck Successful';exit 0;else echo 'Healthcheck Failed';exit 1;fi;" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
   skroutz-web-scraper:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: infra/Dockerfile
     container_name: skroutz-web-scraper
     ports:
       - "8082:8082"
@@ -86,14 +119,18 @@ services:
       - DB_PASSWORD=skroutz_password
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - LLM_BASE_URL=http://ollama:11434/v1
-      - LLM_MODEL=qwen2.5:3b
+      - LLM_MODEL=qwen2.5:1.5b
       - LLM_LOG_RESPONSES=false
+      - KEYCLOAK_ISSUER_URI=http://localhost:8080/realms/skroutz-scraper
+      - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/skroutz-scraper/protocol/openid-connect/certs
     depends_on:
       postgres:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
       ollama:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     networks:
       - elastic
