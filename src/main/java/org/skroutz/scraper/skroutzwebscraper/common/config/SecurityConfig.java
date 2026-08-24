@@ -11,7 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig{
+public class SecurityConfig {
 
     @Autowired
     private JwtConverter jwtConverter;
@@ -24,7 +24,7 @@ public class SecurityConfig{
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/scraper/**", "/jobs/**", "/category-schemas/**").hasRole("SUPER_ADMIN")
                         .anyRequest().permitAll())
-                .securityMatcher("/scraper/**", "/jobs/**", "/category-schemas")
+                .securityMatcher("/scraper/**", "/jobs/**", "/category-schemas/**")
                 .oauth2ResourceServer(
                         (oauth2)-> oauth2.jwt(
                                 jwt-> jwt.jwtAuthenticationConverter(jwtConverter)

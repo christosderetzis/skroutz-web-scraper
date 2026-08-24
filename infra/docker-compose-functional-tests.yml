@@ -85,16 +85,26 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres-functional:5432/skroutz_scraper
       KC_DB_USERNAME: skroutz_user
       KC_DB_PASSWORD: skroutz_password
+      # enable health and metrics endpoints
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
     volumes:
       - ../src/functionalTest/resources/keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     ports:
       - "8083:8080"
+      - "9000:9000"
     command: start-dev --import-realm
     depends_on:
       postgres-functional:
         condition: service_healthy
     networks:
       - test-network
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3;if [ $? -eq 0 ]; then echo 'Healthcheck Successful';exit 0;else echo 'Healthcheck Failed';exit 1;fi;" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 networks:
   test-network:

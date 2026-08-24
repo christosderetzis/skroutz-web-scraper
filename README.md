@@ -73,12 +73,12 @@ curl -s -X POST http://localhost:8081/realms/skroutz-scraper/protocol/openid-con
 ### Endpoints
 
 | Method | Path                             | Description                                                                      |
-| ------ | -------------------------------- | -------------------------------------------------------------------------------- |
+| ------ | -------------------------------- |----------------------------------------------------------------------------------|
 | POST   | `/scraper/products?multiple=...` | Start async scrape of products from a URL (requires `SUPER_ADMIN`)               |
 | POST   | `/scraper/specifications`        | Start async parse of specs for pending products (requires `SUPER_ADMIN`)         |
 | POST   | `/scraper/reviews`               | Start async scrape of reviews for pending products (requires `SUPER_ADMIN`)      |
 | POST   | `/scraper/price-history`         | Start async fetch of price history for pending products (requires `SUPER_ADMIN`) |
-| GET    | `/jobs/{jobId}`                  | Get the status and result of a scraping job                                      |
+| GET    | `/jobs/{jobId}`                  | Get the status and result of a scraping job (requires `SUPER_ADMIN`)             |
 | POST   | `/reviews/{id}/summarize`        | Summarize reviews for a product via LLM                                          |
 | GET    | `/products/autocomplete?q=...`   | Autocomplete suggestions                                                         |
 | POST   | `/products/search`               | Full-text search with filters                                                    |
