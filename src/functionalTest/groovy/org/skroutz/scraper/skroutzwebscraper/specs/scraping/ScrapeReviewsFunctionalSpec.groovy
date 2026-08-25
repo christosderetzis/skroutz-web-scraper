@@ -61,7 +61,6 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
                         "Screen Resolution",
                         "Battery"
                 ].sort()
-
                 cons == null
                 neutral == null
             }
@@ -84,7 +83,6 @@ class ScrapeReviewsFunctionalSpec extends BaseFunctionalSpec {
                         "Speed",
                         "Screen Resolution"
                 ].sort()
-
                 neutral == ["Value for Money"] as String[]
                 cons == ["Battery"] as String[]
             }

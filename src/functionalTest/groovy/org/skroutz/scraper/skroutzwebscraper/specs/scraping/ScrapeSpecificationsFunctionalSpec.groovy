@@ -45,6 +45,7 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             with(savedProduct) {
                 JSONAssert.assertEquals(expectedRawSpecs.toString(), specifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
                 JSONAssert.assertEquals(expectedNormalizedSpecs.toString(), elasticSearchSpecifications.toString(), JSONCompareMode.NON_EXTENSIBLE)
+                brand == "Apple"
             }
 
         and: "Product is indexed in elasticsearch"
@@ -73,6 +74,7 @@ class ScrapeSpecificationsFunctionalSpec extends BaseFunctionalSpec {
             with(savedProduct) {
                 specifications == null
                 specificationsSkipped == true
+                brand == null
             }
     }
 }

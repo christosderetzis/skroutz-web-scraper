@@ -11,6 +11,7 @@ public class ProductItemDto {
     private String url;
     private String title;
     private String category;
+    private String brand;
     private String imageUrl;
     private BigDecimal price;
     private String description;

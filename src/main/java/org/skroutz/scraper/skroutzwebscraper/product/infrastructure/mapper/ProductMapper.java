@@ -1,6 +1,8 @@
 package org.skroutz.scraper.skroutzwebscraper.product.infrastructure.mapper;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -10,11 +12,12 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.Pro
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
-    @Mapping(target = "specifications", source="specifications", qualifiedByName = "mapJsonNodeToString")
+    @Mapping(target = "specifications", source="specifications", qualifiedByName = "jsonNodeToMap")
     ProductDetailsResponseDto toProductResponseDto(Product product);
 
     @Mapping(target = "id", ignore = true)
@@ -28,6 +31,7 @@ public interface ProductMapper {
     @Mapping(target = "price", source = "dto.price", qualifiedByName = "stringToPrice")
     @Mapping(target = "rating", source = "dto.rating", qualifiedByName = "stringToBigDecimal")
     @Mapping(target = "category", source = "category")
+    @Mapping(target = "imageUrl", source = "dto.imageUrl")
     Product toProduct(ProductApiResponseDto.ProductDetailsResponseDto dto, String category, UrlBuilder urlBuilder);
 
     @Named("stringToPrice")
@@ -62,8 +66,12 @@ public interface ProductMapper {
         }
     }
 
-    @Named("mapJsonNodeToString")
-    default String mapJsonNodeToString(JsonNode value) {
-        return value != null ? value.toString() : null;
+    @Named("jsonNodeToMap")
+    default Map<String, Object> jsonNodeToMap(JsonNode jsonNode) {
+        if (jsonNode == null || jsonNode.isNull()) {
+            return null;
+        }
+        // Using Jackson's built-in conversion
+        return new ObjectMapper().convertValue(jsonNode, new TypeReference<Map<String, Object>>() {});
     }
 }

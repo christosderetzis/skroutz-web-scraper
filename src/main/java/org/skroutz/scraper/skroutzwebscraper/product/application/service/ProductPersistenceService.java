@@ -42,6 +42,7 @@ public class ProductPersistenceService {
                 if (result.isSuccess()) {
                     product.setSpecifications(result.rawSpecs());
                     product.setElasticSearchSpecifications(result.normalizedSpecs());
+                    product.setBrand(result.brand());
                     product.setSpecificationsSkipped(false);
                     productsToSync.add(product);
                 } else {

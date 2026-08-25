@@ -1,6 +1,8 @@
 package org.skroutz.scraper.skroutzwebscraper.specs.product
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.dto.ProductDetailsResponseDto
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
@@ -13,8 +15,8 @@ class GetProductByIdFunctionalSpec extends BaseFunctionalSpec {
 
     def "Happy path - Get product by id"() {
         given: "an existing product with specifications"
-            JsonNode specifications = JsonFileReader.readJsonFromResource("expected-specs.json")
-            Product savedProduct = productRepository.saveAndFlush(ProductCreator.createRandomProduct(specifications))
+            JsonNode expectedSpecs = JsonFileReader.readJsonFromResource("expected-specs.json")
+            Product savedProduct = productRepository.saveAndFlush(ProductCreator.createRandomProduct(expectedSpecs))
 
         when: "requesting the product by ID"
             def response = webActor.getProductById(savedProduct.id)
@@ -31,7 +33,9 @@ class GetProductByIdFunctionalSpec extends BaseFunctionalSpec {
                 imageUrl == savedProduct.imageUrl
                 price == savedProduct.price
                 description == savedProduct.description
-                specifications == savedProduct.specifications
+                brand == savedProduct.brand
+                category == savedProduct.category
+                specifications == jsonNodeToMap(savedProduct.specifications)
             }
     }
 
@@ -56,5 +60,13 @@ class GetProductByIdFunctionalSpec extends BaseFunctionalSpec {
                 }
                 """
             JSONAssert.assertEquals(expectedResponseBody, responseBody, JSONCompareMode.LENIENT)
+    }
+
+    private Map<String, Object> jsonNodeToMap(JsonNode jsonNode) {
+        if (jsonNode == null || jsonNode.isNull()) {
+            return null
+        }
+        ObjectMapper mapper = new ObjectMapper()
+        return mapper.convertValue(jsonNode, new TypeReference<Map<String, Object>>() {})
     }
 }

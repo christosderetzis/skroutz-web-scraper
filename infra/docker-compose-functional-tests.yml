@@ -1,6 +1,6 @@
 services:
   postgres-functional:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: postgres-functional
     environment:
       POSTGRES_DB: skroutz_scraper
