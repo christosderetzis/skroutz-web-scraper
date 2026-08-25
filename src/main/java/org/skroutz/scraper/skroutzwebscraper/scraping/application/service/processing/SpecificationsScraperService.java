@@ -2,6 +2,7 @@ package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.proce
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.events.SpecificationsScrapeResult;
@@ -36,7 +37,7 @@ public class SpecificationsScraperService {
             String url = product.getUrl();
             if (url == null || url.isBlank()) {
                 log.warn("Product URL is empty or null for product: {}", product.getId());
-                results.add(new SpecificationsScrapeResult(product.getId(), null, null, false));
+                results.add(new SpecificationsScrapeResult(product.getId(), null, null, null, false));
                 continue;
             }
 
@@ -51,18 +52,23 @@ public class SpecificationsScraperService {
                         .filter(specifications -> !specifications.isEmpty());
 
                 if (rawSpecsOpt.isPresent()) {
+                    String brand = rawSpecsOpt.get().path("brand").asText(null);
                     JsonNode rawSpecs = rawSpecsOpt.get();
+                    // remove brand from raw specs
+                    if (brand != null) {
+                        ((ObjectNode) rawSpecs).remove("brand");
+                    }
                     JsonNode normalizedSpecs = normalizeSpecs(product.getId(), product.getCategory(), rawSpecs, schemas);
-                    results.add(new SpecificationsScrapeResult(product.getId(), rawSpecs, normalizedSpecs, true));
+                    results.add(new SpecificationsScrapeResult(product.getId(), rawSpecs, normalizedSpecs, brand, true));
                     log.info("Successfully parsed specifications for product ID: {}", product.getId());
                 } else {
                     log.warn("No specifications found for product: {}", product.getId());
-                    results.add(new SpecificationsScrapeResult(product.getId(), null, null, false));
+                    results.add(new SpecificationsScrapeResult(product.getId(), null, null, null, false));
                 }
 
             } catch (Exception e) {
                 log.error("Error parsing specifications for product {}: {}", product.getId(), e.getMessage(), e);
-                results.add(new SpecificationsScrapeResult(product.getId(), null, null, false));
+                results.add(new SpecificationsScrapeResult(product.getId(), null, null, null, false));
             }
         }
         return results;

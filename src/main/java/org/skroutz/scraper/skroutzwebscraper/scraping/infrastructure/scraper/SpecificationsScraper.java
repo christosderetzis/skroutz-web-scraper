@@ -20,6 +20,7 @@ import java.util.Optional;
 public class SpecificationsScraper {
 
     public static final String SPECIFICATIONS = "#specs > div.specs-container.content.section > div.spec-groups > div.spec-details";
+    public static final String BRAND = "#description .manufacturer > div:first-of-type > a:first-of-type";
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -72,6 +73,11 @@ public class SpecificationsScraper {
                 }
             }
             rootNode.set(category, categoryNode);
+        }
+
+        Element brandElement = document.selectFirst(BRAND);
+        if (brandElement != null) {
+            rootNode.put("brand", brandElement.text().trim());
         }
         return rootNode;
     }

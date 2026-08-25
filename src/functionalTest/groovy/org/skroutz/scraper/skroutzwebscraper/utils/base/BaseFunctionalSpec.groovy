@@ -103,14 +103,15 @@ abstract class BaseFunctionalSpec extends Specification {
     }
 
     protected Product createAndIndexProduct(String title) {
-        return createAndIndexProduct(title, "electronics", 999.99.toBigDecimal())
+        return createAndIndexProduct(title, "electronics", "Apple", 999.99.toBigDecimal())
     }
 
-    protected Product createAndIndexProduct(String title, String category, BigDecimal price) {
+    protected Product createAndIndexProduct(String title, String category, String brand, BigDecimal price) {
         Product product = Product.builder()
                 .title(title)
                 .url("http://example.com/${title.replaceAll(' ', '-').toLowerCase()}")
                 .category(category)
+                .brand(brand)
                 .price(price)
                 .imageUrl("http://example.com/image.jpg")
                 .description("Test product")

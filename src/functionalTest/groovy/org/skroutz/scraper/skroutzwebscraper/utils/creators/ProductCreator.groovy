@@ -12,6 +12,7 @@ class ProductCreator {
         Product.builder()
                 .title(faker.commerce().productName())
                 .price(faker.number().randomDouble(2, 1, 1000).toBigDecimal())
+                .brand(faker.company().name())
                 .imageUrl(faker.internet().url())
                 .url(faker.internet().url())
                 .description(faker.lorem().paragraph())

@@ -41,6 +41,9 @@ public class ProductDocument {
     @Field(type = FieldType.Keyword)
     private String category;
 
+    @Field(type = FieldType.Keyword)
+    private String brand;
+
     @Field(type = FieldType.Double)
     private BigDecimal price;
 

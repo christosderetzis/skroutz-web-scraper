@@ -6,5 +6,6 @@ public record SpecificationsScrapeResult (
         Long productId,
         JsonNode rawSpecs,
         JsonNode normalizedSpecs,
+        String brand,
         boolean isSuccess
 ) { }

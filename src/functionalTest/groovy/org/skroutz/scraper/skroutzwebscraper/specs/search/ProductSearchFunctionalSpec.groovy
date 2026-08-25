@@ -44,9 +44,9 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
 
     def "Happy path - returns only products matching the requested category"() {
         given: "products indexed across two categories"
-            def laptop1 = createAndIndexProduct("MacBook Pro 16-inch", "laptops", 1999.99.toBigDecimal())
-            def laptop2 = createAndIndexProduct("Dell XPS 15", "laptops", 1499.99.toBigDecimal())
-            createAndIndexProduct("iPhone 15 Pro", "phones", 999.99.toBigDecimal())
+            def laptop1 = createAndIndexProduct("MacBook Pro 16-inch", "laptops", "Apple", 1999.99.toBigDecimal())
+            def laptop2 = createAndIndexProduct("Dell XPS 15", "laptops", "Dell", 1499.99.toBigDecimal())
+            createAndIndexProduct("iPhone 15 Pro", "phones", "Apple", 999.99.toBigDecimal())
 
         when: "searching for the laptops category"
             def request = new ProductSearchRequest(category: "laptops")
@@ -65,6 +65,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                             "title": "MacBook Pro 16-inch",
                             "url": "http://example.com/macbook-pro-16-inch",
                             "category": "laptops",
+                            "brand": "Apple",
                             "price": 1999.99,
                             "imageUrl": "http://example.com/image.jpg",
                             "description": "Test product",
@@ -74,7 +75,9 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                             "id": ${laptop2.id},
                             "title": "Dell XPS 15",
                             "url": "http://example.com/dell-xps-15",
-                            "category": "laptops","price": 1499.99,
+                            "category": "laptops",
+                            "brand": "Dell",
+                            "price": 1499.99,
                             "imageUrl": "http://example.com/image.jpg",
                             "description": "Test product",
                             "rating": 4.5 
@@ -99,7 +102,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
 
     def "Happy path - returns empty results when no products exist in the requested category"() {
         given: "a product indexed under laptops"
-            createAndIndexProduct("MacBook Pro 16-inch", "laptops", 1999.99.toBigDecimal())
+            createAndIndexProduct("MacBook Pro 16-inch", "laptops", "Apple", 1999.99.toBigDecimal())
 
         when: "searching for the phones category"
             def request = new ProductSearchRequest(category: "phones")
@@ -134,9 +137,9 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
     def "Happy path - price filtering with #scenario narrows results correctly"() {
         given: "three laptops indexed at different price points"
             def productMap = [
-                    budget : createAndIndexProduct("Budget Laptop", "laptops", 500.00.toBigDecimal()),
-                    mid    : createAndIndexProduct("Mid-Range Laptop", "laptops", 1000.00.toBigDecimal()),
-                    premium: createAndIndexProduct("Premium Laptop", "laptops", 1500.00.toBigDecimal())
+                    budget : createAndIndexProduct("Budget Laptop", "laptops", "Apple", 500.00.toBigDecimal()),
+                    mid    : createAndIndexProduct("Mid-Range Laptop", "laptops", "Apple", 1000.00.toBigDecimal()),
+                    premium: createAndIndexProduct("Premium Laptop", "laptops", "Apple", 1500.00.toBigDecimal())
             ]
 
         when: "searching with specific price filters"
@@ -160,6 +163,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     "title": "${p.title}",
                     "url": "${p.url}",
                     "category": "${p.category}",
+                    "brand": "${p.brand}",
                     "price": ${p.price},
                     "imageUrl": "${p.imageUrl}",
                     "description": "${p.description}",
@@ -201,7 +205,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
     def "Happy path - pagination for page #page with size #size returns correct subset and metadata"() {
         given: "five laptops indexed sequentially"
         def indexedProducts = (1..5).collect {
-            createAndIndexProduct("Laptop ${it}", "laptops", (500 + it * 100).toBigDecimal())
+            createAndIndexProduct("Laptop ${it}", "laptops", "BrandX", (500 + it * 100).toBigDecimal())
         }
 
         when: "requesting a specific page and size combination"
@@ -226,6 +230,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                 "id": ${p.id},
                 "title": "${p.title}",
                 "category": "${p.category}",
+                "brand": "${p.brand}",
                 "price": ${p.price}
             }
             """
@@ -265,6 +270,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     .id(10001L)
                     .title("MacBook Pro")
                     .category("laptops")
+                    .brand("Apple")
                     .price(1999.99.toBigDecimal())
                     .specifications(["brand": "Apple"])
                     .build()
@@ -272,6 +278,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     .id(10002L)
                     .title("XPS 15")
                     .category("laptops")
+                    .brand("Dell")
                     .price(1499.99.toBigDecimal())
                     .specifications(["brand": "Dell"])
                     .build()
@@ -297,6 +304,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                             "id": 10001,
                             "title": "MacBook Pro",
                             "category": "laptops",
+                            "brand": "Apple",
                             "price": 1999.99
                         }
                     ],
@@ -327,11 +335,11 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
     def "Happy path - TERM filters handle advanced scenario: #scenario"() {
         given: "a diverse set of laptops indexed in Elasticsearch"
             def laptop1 = ProductDocument.builder()
-                    .id(20001L).title("MacBook Pro").category("laptops").price(2000.00)
+                    .id(20001L).title("MacBook Pro").category("laptops").brand("Apple").price(2000.00)
                     .specifications(["brand": "Apple", "operating_system": "macOS", "ram": 16, "features": ["Touchscreen"]])
                     .build()
             def laptop2 = ProductDocument.builder()
-                    .id(20002L).title("XPS 15").category("laptops").price(1500.00)
+                    .id(20002L).title("XPS 15").category("laptops").brand("Dell").price(1500.00)
                     .specifications(["brand": "Dell", "operating_system": "Windows", "ram": 8, "features": ["Backlit Keyboard"]])
                     .build()
 
@@ -383,6 +391,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     .id(10003L)
                     .title("Basic Laptop")
                     .category("laptops")
+                    .brand("Apple")
                     .price(800.00.toBigDecimal())
                     .specifications(["ram": 8, "display": 15.5])
                     .build()
@@ -390,6 +399,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     .id(10004L)
                     .title("Mid Laptop")
                     .category("laptops")
+                    .brand("Apple")
                     .price(1200.00.toBigDecimal())
                     .specifications(["ram": 16, "display": 14.0])
                     .build()
@@ -397,6 +407,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     .id(10005L)
                     .title("Pro Laptop")
                     .category("laptops")
+                    .brand("Apple")
                     .price(2000.00.toBigDecimal())
                     .specifications(["ram": 32, "display": 16.0])
                     .build()
@@ -406,9 +417,9 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
 
             // Metadata map to dynamically construct the expected JSON text
             def productMetadata = [
-                    10003L: [title: "Basic Laptop", price: 800.00],
-                    10004L: [title: "Mid Laptop", price: 1200.00],
-                    10005L: [title: "Pro Laptop", price: 2000.00]
+                    10003L: [title: "Basic Laptop", price: 800.00, brand: "Apple"],
+                    10004L: [title: "Mid Laptop", price: 1200.00, brand: "Apple"],
+                    10005L: [title: "Pro Laptop", price: 2000.00, brand: "Apple"]
             ]
 
         when: "searching for ram between min and max thresholds"
@@ -430,7 +441,8 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     "id": ${id},
                     "title": "${info.title}",
                     "category": "laptops",
-                    "price": ${info.price}
+                    "price": ${info.price},
+                    "brand": "${info.brand}"
                 }
                 """
             }.join(",")
@@ -477,37 +489,37 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
     def "Happy path - complex multi-filter filtering with arrays and ranges for #scenario"() {
         given: "a robust inventory of 6 diverse laptops with feature arrays indexed in Elasticsearch"
             def apple16 = ProductDocument.builder()
-                    .id(50001L).title("MacBook Pro 16").category("laptops").price(2499.99)
+                    .id(50001L).title("MacBook Pro 16").category("laptops").price(2499.99).brand("Apple")
                     .specifications([
                             "brand": "Apple", "operating_system": "macOS", "ram": 16,
                             "features": ["Touch Bar", "Liquid Retina", "Thunderbolt"]
                     ]).build()
             def apple8 = ProductDocument.builder()
-                    .id(50002L).title("MacBook Air 13").category("laptops").price(999.99)
+                    .id(50002L).title("MacBook Air 13").category("laptops").price(999.99).brand("Apple")
                     .specifications([
                             "brand": "Apple", "operating_system": "macOS", "ram": 8,
                             "features": ["Liquid Retina", "Fanless", "Thunderbolt"]
                     ]).build()
             def dell16 = ProductDocument.builder()
-                    .id(50003L).title("Dell XPS 15").category("laptops").price(1899.99)
+                    .id(50003L).title("Dell XPS 15").category("laptops").price(1899.99).brand("Dell")
                     .specifications([
                             "brand": "Dell", "operating_system": "Windows", "ram": 16,
                             "features": ["Touchscreen", "OLED Screen", "Thunderbolt"]
                     ]).build()
             def dell32 = ProductDocument.builder()
-                    .id(50004L).title("Dell Precision").category("laptops").price(2999.99)
+                    .id(50004L).title("Dell Precision").category("laptops").price(2999.99).brand("Dell")
                     .specifications([
                             "brand": "Dell", "operating_system": "Windows", "ram": 32,
                             "features": ["ECC Memory", "OLED Screen", "Stylus Support"]
                     ]).build()
             def lenovo16 = ProductDocument.builder()
-                    .id(50005L).title("Lenovo ThinkPad").category("laptops").price(1299.99)
+                    .id(50005L).title("Lenovo ThinkPad").category("laptops").price(1299.99).brand("Lenovo")
                     .specifications([
                             "brand": "Lenovo", "operating_system": "Windows", "ram": 16,
                             "features": ["TrackPoint", "Privacy Shutter", "Touchscreen"]
                     ]).build()
             def lenovo8 = ProductDocument.builder()
-                    .id(50006L).title("Lenovo IdeaPad").category("laptops").price(499.99)
+                    .id(50006L).title("Lenovo IdeaPad").category("laptops").price(499.99).brand("Lenovo")
                     .specifications([
                             "brand": "Lenovo", "operating_system": "Windows", "ram": 8,
                             "features": ["Privacy Shutter", "Anodized Aluminum"]
@@ -518,12 +530,12 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
 
             // Metadata map to dynamically construct the expected JSON text
             def productMetadata = [
-                    50001L: [title: "MacBook Pro 16", price: 2499.99],
-                    50002L: [title: "MacBook Air 13", price: 999.99],
-                    50003L: [title: "Dell XPS 15", price: 1899.99],
-                    50004L: [title: "Dell Precision", price: 2999.99],
-                    50005L: [title: "Lenovo ThinkPad", price: 1299.99],
-                    50006L: [title: "Lenovo IdeaPad", price: 499.99]
+                    50001L: [title: "MacBook Pro 16", price: 2499.99, brand: "Apple"],
+                    50002L: [title: "MacBook Air 13", price: 999.99, brand: "Apple"],
+                    50003L: [title: "Dell XPS 15", price: 1899.99, brand: "Dell"],
+                    50004L: [title: "Dell Precision", price: 2999.99, brand: "Dell"],
+                    50005L: [title: "Lenovo ThinkPad", price: 1299.99, brand: "Lenovo"],
+                    50006L: [title: "Lenovo IdeaPad", price: 499.99, brand: "Lenovo"]
             ]
 
         when: "searching with complex combinations of array matching and ranges"
@@ -544,7 +556,8 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                     "id": ${id},
                     "title": "${info.title}",
                     "category": "laptops",
-                    "price": ${info.price}
+                    "price": ${info.price},
+                    "brand": "${info.brand}"
                 }
                 """
             }.join(",")

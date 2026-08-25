@@ -39,6 +39,7 @@ out/
 .vscode/
 
 lib/
+src/main/generated/**
 
 CLAUDE.md
 AGENTS.md
