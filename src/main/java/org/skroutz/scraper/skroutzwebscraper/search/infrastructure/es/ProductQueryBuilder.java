@@ -4,9 +4,9 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.json.JsonData;
+import org.apache.commons.lang3.StringUtils;
 import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.FilterRequest;
-import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.FilterType;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.ProductSearchRequest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -18,18 +18,31 @@ import java.util.*;
 @Component
 public class ProductQueryBuilder {
 
-    public NativeQuery buildSearchQuery(ProductSearchRequest request, Map<String, String> specKeyToField, int page, int size) {
+    public NativeQuery buildSearchQuery(ProductSearchRequest request, String facetCategory, Map<String, String> specKeyToField, int page, int size) {
         Query searchFilters = buildElasticsearchQuery(request);
 
         NativeQueryBuilder queryBuilder = NativeQuery.builder()
                 .withQuery(searchFilters)
-                .withPageable(PageRequest.of(page, size));
+                .withPageable(PageRequest.of(page, size))
+                .withAggregation("brand", Aggregation.of(a -> a.terms(t -> t.field("brand"))));
 
-        // Dynamically attach terms aggregations
-        specKeyToField.forEach((key, field) ->
-                queryBuilder.withAggregation(key, Aggregation.of(a -> a.terms(t -> t.field(field)))));
+        if (StringUtils.isBlank(facetCategory)) {
+            queryBuilder.withAggregation("category", Aggregation.of(a -> a.terms(t -> t.field("category"))));
+        } else {
+            // Dynamically attach terms aggregations
+            specKeyToField.forEach((key, field) ->
+                    queryBuilder.withAggregation(key, Aggregation.of(a -> a.terms(t -> t.field(field)))));
+        }
 
         return queryBuilder.build();
+    }
+
+    public NativeQuery buildCategoryDiscoveryQuery(ProductSearchRequest request) {
+        return NativeQuery.builder()
+                .withQuery(buildElasticsearchQuery(request))
+                .withMaxResults(0)
+                .withAggregation("category", Aggregation.of(a -> a.terms(t -> t.field("category"))))
+                .build();
     }
 
     public NativeQuery buildSimilarProductsQuery(Long productId, ProductDocument sourceDoc, int limit) {
@@ -54,8 +67,17 @@ public class ProductQueryBuilder {
 
     private Query buildElasticsearchQuery(ProductSearchRequest request) {
         List<Query> filters = new ArrayList<>();
+        List<Query> mustClauses = new ArrayList<>();
 
-        filters.add(Query.of(q -> q.term(t -> t.field("category").value(request.getCategory()))));
+        if (StringUtils.isNotBlank(request.getSearchTerm())) {
+            mustClauses.add(Query.of(q -> q.matchPhrase(mm -> mm
+                    .field("title")
+                    .query(request.getSearchTerm()))));
+        }
+
+        if (StringUtils.isNotBlank(request.getCategory())) {
+            filters.add(Query.of(q -> q.term(t -> t.field("category").value(request.getCategory()))));
+        }
 
         if (request.getMinPrice() != null || request.getMaxPrice() != null) {
             filters.add(Query.of(q -> q.range(r -> r.untyped(u -> {
@@ -73,7 +95,13 @@ public class ProductQueryBuilder {
             }
         }
 
-        return Query.of(q -> q.bool(b -> b.filter(filters)));
+        return Query.of(q -> q.bool(b -> {
+            if (!mustClauses.isEmpty()) {
+                b.must(mustClauses);
+            }
+            b.filter(filters);
+            return b;
+        }));
     }
 
     private boolean isInvalidFilter(FilterRequest filter) {

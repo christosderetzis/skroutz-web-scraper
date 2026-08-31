@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -33,6 +34,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 @ControllerAdvice
@@ -93,10 +95,15 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
                                                                    HttpHeaders headers,
                                                                    HttpStatusCode status,
                                                                    WebRequest request) {
-        String[] errors = ex.getBindingResult().getFieldErrors().stream()
+        List<String> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
                 .sorted(Comparator.comparing(FieldError::getField))
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .toArray(String[]::new);
+                .toList();
+        List<String> globalErrors = ex.getBindingResult().getGlobalErrors().stream()
+                .sorted(Comparator.comparing(ObjectError::getObjectName))
+                .map(error -> error.getObjectName() + ": " + error.getDefaultMessage())
+                .toList();
+        String[] errors = Stream.concat(fieldErrors.stream(), globalErrors.stream()).toArray(String[]::new);
 
         HttpServletRequest servletRequest = ((ServletWebRequest) request).getRequest();
         logException(ex);

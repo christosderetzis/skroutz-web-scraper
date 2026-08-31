@@ -3,6 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.search.application.service;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.skroutz.scraper.skroutzwebscraper.category.domain.entity.CategorySchema;
 import org.skroutz.scraper.skroutzwebscraper.category.domain.repository.CategorySchemaRepository;
 import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.FieldType;
@@ -82,9 +83,18 @@ public class ProductSearchService {
         int page = request.getPage() != null ? request.getPage() : 0;
         int size = request.getSize() != null ? request.getSize() : 20;
 
-        Map<String, String> specKeyToField = resolveSpecFieldMap(request.getCategory());
+        // if category is not specified, try to find a single matching category from the search query
+        String facetCategory = StringUtils.isNotBlank(request.getCategory())
+                ? request.getCategory()
+                : findSingleMatchingCategory(request);
 
-        NativeQuery nativeQuery = productQueryBuilder.buildSearchQuery(request, specKeyToField, page, size);
+        // if the category is still not specified, search all products
+        boolean crossCategorySearch = facetCategory == null;
+        Map<String, String> specKeyToField = crossCategorySearch
+                ? Map.of()
+                : resolveSpecFieldMap(facetCategory);
+
+        NativeQuery nativeQuery = productQueryBuilder.buildSearchQuery(request, facetCategory, specKeyToField, page, size);
 
         SearchHits<ProductDocument> searchHits =
                 elasticsearchOperations.search(nativeQuery, ProductDocument.class);
@@ -96,8 +106,16 @@ public class ProductSearchService {
                 .map(productDocumentMapper::toItemDto)
                 .toList();
 
+        Set<String> specKeys;
+        if (crossCategorySearch) {
+            specKeys = Set.of("brand", "category");
+        } else {
+            specKeys = new HashSet<>(specKeyToField.keySet());
+            specKeys.add("brand");
+        }
+
         Map<String, List<SpecFacetBucketDto>> facets =
-                productAggregationProcessor.extractFacets(searchHits, specKeyToField.keySet());
+                productAggregationProcessor.extractFacets(searchHits, specKeys);
 
         long totalElements = searchHits.getTotalHits();
         int totalPages = (int) Math.ceil((double) totalElements / size);
@@ -110,6 +128,25 @@ public class ProductSearchService {
                 .size(size)
                 .totalPages(totalPages)
                 .build();
+    }
+
+    private String findSingleMatchingCategory(ProductSearchRequest request) {
+        NativeQuery probeQuery = productQueryBuilder.buildCategoryDiscoveryQuery(request);
+        SearchHits<ProductDocument> probeHits =
+                elasticsearchOperations.search(probeQuery, ProductDocument.class);
+        Set<String> aggregationKeys = Set.of("category");
+
+        Map<String, List<SpecFacetBucketDto>> categoryFacets =
+                productAggregationProcessor.extractFacets(probeHits, aggregationKeys);
+        List<SpecFacetBucketDto> buckets = categoryFacets.get("category");
+        if (buckets == null || buckets.size() != 1) {
+            return null;
+        }
+
+        SpecFacetBucketDto singleBucket = buckets.getFirst();
+        return singleBucket.getCount() == probeHits.getTotalHits()
+                ? singleBucket.getValue()
+                : null;
     }
 
     private Map<String, String> resolveSpecFieldMap(String category) {
