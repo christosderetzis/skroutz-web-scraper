@@ -21,7 +21,6 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
     def setup() {
         def laptopsSchema = CategoryMappingSchema.builder()
                 .directFields([
-                    DirectFieldMapping.builder().path("span.brand").target("brand").type(FieldType.STRING).build(),
                     DirectFieldMapping.builder().path("span.operating_system").target("operating_system").type(null).build(),
                     DirectFieldMapping.builder().path("span.ram").target("ram").type(FieldType.NUMERIC).build(),
                     DirectFieldMapping.builder().path("span.display").target("display").type(FieldType.NUMERIC).build(),
@@ -84,7 +83,7 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                         }
                     ],
                     "filters": {
-                        "brand": [],
+                        "brand": [ {"value": "Apple", "count": 1}, {"value": "Dell", "count": 1} ],
                         "operating_system": [],
                         "ram": [],
                         "display": [],
@@ -172,12 +171,16 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                 """
             }.join(",") // Joins multiple products with a comma
 
+            def brandFacetsJsonArray = """
+                { "value": "Apple", "count": ${expectedProducts.size()} }
+            """
+
             // 3. Assemble the full expected payload
             def expectedBody = """
                 {
                     "products": [ ${productsJsonArray} ],
                     "filters": {
-                        "brand": [],
+                        "brand": [ ${brandFacetsJsonArray} ],
                         "operating_system": [],
                         "ram": [],
                         "display": [],
@@ -236,12 +239,16 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
             """
         }.join(",")
 
+        def brandFacetsJsonArray = """
+            { "value": "BrandX", "count": 5 }
+        """
+
         // 3. Assemble the full expected layout
         def expectedBody = """
             {
                 "products": [ ${productsJsonArray} ],
                 "filters": {
-                    "brand": [],
+                    "brand": [ ${brandFacetsJsonArray} ],
                     "operating_system": [],
                     "ram": [],
                     "display": [],
@@ -457,12 +464,16 @@ class ProductSearchFunctionalSpec extends BaseFunctionalSpec {
                 """{ "value": "${val}", "count": 1 }"""
             }.join(",")
 
+            def brandFacetsJsonArray = """
+                { "value": "Apple", "count": ${productIds.size()} }
+            """
+
             // 4. Assemble the full expected payload
             def expectedBody = """
                 {
                     "products": [ ${productsJsonArray} ],
                     "filters": {
-                        "brand": [],
+                        "brand": [ ${brandFacetsJsonArray} ],
                         "operating_system": [],
                         "ram": [ ${ramFacetsJsonArray} ],
                         "display": [ ${displayFacetsJsonArray} ],

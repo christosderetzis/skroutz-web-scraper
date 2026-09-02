@@ -1,16 +1,18 @@
 package org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.dto.validation.SearchQueryRequired;
 
 import java.util.List;
 
 @Data
+@SearchQueryRequired
 public class ProductSearchRequest {
 
-    @NotBlank(message = "Category must not be blank")
     private String category;
+
+    private String searchTerm;
 
     private List<FilterRequest> filters;
     private Double minPrice;
