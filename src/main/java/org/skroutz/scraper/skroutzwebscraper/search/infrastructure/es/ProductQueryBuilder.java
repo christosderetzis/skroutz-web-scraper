@@ -2,7 +2,9 @@ package org.skroutz.scraper.skroutzwebscraper.search.infrastructure.es;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.json.JsonData;
 import org.apache.commons.lang3.StringUtils;
 import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument;
@@ -70,9 +72,7 @@ public class ProductQueryBuilder {
         List<Query> mustClauses = new ArrayList<>();
 
         if (StringUtils.isNotBlank(request.getSearchTerm())) {
-            mustClauses.add(Query.of(q -> q.matchPhrase(mm -> mm
-                    .field("title")
-                    .query(request.getSearchTerm()))));
+            mustClauses.add(buildSearchTermQuery(request.getSearchTerm()));
         }
 
         if (StringUtils.isNotBlank(request.getCategory())) {
@@ -138,5 +138,18 @@ public class ProductQueryBuilder {
             if (max != null) u.lte(JsonData.of(max));
             return u;
         }))));
+    }
+
+    private Query buildSearchTermQuery(String searchTerm) {
+        if (StringUtils.isBlank(searchTerm)) {
+            return Query.of(q -> q.matchAll(m -> m));
+        }
+
+        return Query.of(q -> q.multiMatch(mm -> mm
+                .fields(List.of("title^3", "category^2", "description^1"))
+                .query(searchTerm)
+                .type(TextQueryType.CrossFields)
+                .operator(Operator.And)
+        ));
     }
 }
