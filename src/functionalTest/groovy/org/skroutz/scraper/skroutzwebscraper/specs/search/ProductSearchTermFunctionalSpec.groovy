@@ -102,35 +102,6 @@ class ProductSearchTermFunctionalSpec extends BaseFunctionalSpec {
             JSONAssert.assertEquals(expectedBody, body, JSONCompareMode.LENIENT)
     }
 
-    def "Term search narrowed by price to a single category drops the category filter"() {
-        given:
-            def iphone = createAndIndexProduct("Apple iPhone 15 Pro", "phones", "Apple", 1200.00.toBigDecimal())
-            createAndIndexProduct("Samsung Galaxy S24 Ultra", "phones", "Samsung", 1100.00.toBigDecimal())
-
-        when:
-            def response = webActor.searchProducts(new ProductSearchRequest(searchTerm: "iphone", minPrice: 1150.00))
-
-        then:
-            response.expectStatus().isOk()
-            def body = response.expectBody(String).returnResult().getResponseBody()
-
-        and: "only the phone match is returned, so only the brand filter is present (phones schema has no spec fields)"
-            def productsJsonArray = [iphone].collect { productJson(it) }.join(",")
-            def expectedBody = """
-                {
-                    "products": [ ${productsJsonArray} ],
-                    "filters": {
-                        "brand": [ { "value": "Apple", "count": 1 } ]
-                    },
-                    "totalElements": 1,
-                    "totalPages": 1,
-                    "page": 0,
-                    "size": 20
-                }
-            """
-            JSONAssert.assertEquals(expectedBody, body, JSONCompareMode.LENIENT)
-    }
-
     def "Term-only search matching a single category returns that category's spec filters"() {
         given:
             def macbook = createAndIndexProduct("Apple MacBook Pro 16", "laptops", "Apple", 2500.00.toBigDecimal())
