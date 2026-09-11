@@ -40,11 +40,6 @@
             "shop_name": "TechShop",
             "timestamp": 1701388800,
             "value": 329.99
-          },
-          {
-            "shop_name": "ElectronicsHub",
-            "timestamp": 1704067200,
-            "value": 319.99
           }
         ],
         "has_values": true,
@@ -66,11 +61,6 @@
             "shop_name": "TechShop",
             "timestamp": 1698537600,
             "value": 329.99
-          },
-          {
-            "shop_name": "ElectronicsHub",
-            "timestamp": 1704067200,
-            "value": 309.99
           }
         ],
         "has_values": true,
@@ -87,21 +77,6 @@
             "shop_name": "ElectronicsHub",
             "timestamp": 1680307200,
             "value": 339.99
-          },
-          {
-            "shop_name": "TechShop",
-            "timestamp": 1688169600,
-            "value": 329.99
-          },
-          {
-            "shop_name": "ElectronicsHub",
-            "timestamp": 1696118400,
-            "value": 319.99
-          },
-          {
-            "shop_name": "TechShop",
-            "timestamp": 1704067200,
-            "value": 299.99
           }
         ],
         "has_values": true,
