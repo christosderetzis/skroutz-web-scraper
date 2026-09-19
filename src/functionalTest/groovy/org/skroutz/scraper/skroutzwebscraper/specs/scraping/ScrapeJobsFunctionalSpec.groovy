@@ -54,9 +54,9 @@ class ScrapeJobsFunctionalSpec extends BaseFunctionalSpec {
         when: "Wait for the job to complete"
             webActor.waitForJobCompletion(response, existingJob.id + 1)
 
-        then: "Exactly 5 price history records are saved"
+        then: "Exactly 11 price history records are saved"
             def priceHistories = priceHistoryRepository.findAll().sort { it.priceDate }
-            assert priceHistories.size() == 5
+            assert priceHistories.size() == 11
 
         and: "All records belong to the product"
             assert priceHistories.every { it.productId == product.getId() }

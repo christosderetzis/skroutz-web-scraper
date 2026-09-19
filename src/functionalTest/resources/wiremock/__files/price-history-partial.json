@@ -35,11 +35,6 @@
             "shop_name": "BudgetStore",
             "timestamp": 1688169600,
             "value": 179.99
-          },
-          {
-            "shop_name": "BudgetStore",
-            "timestamp": 1704067200,
-            "value": 149.99
           }
         ],
         "has_values": true,

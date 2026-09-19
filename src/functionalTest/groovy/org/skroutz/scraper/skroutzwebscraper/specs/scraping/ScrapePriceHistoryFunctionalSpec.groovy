@@ -31,9 +31,9 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
             def response = webActor.scrapePriceHistory()
             webActor.waitForJobCompletion(response)
 
-        then: "Exactly 5 price history records are saved"
+        then: "Exactly 11 price history records are saved"
             def priceHistories = priceHistoryRepository.findAll().sort { it.priceDate }
-            assert priceHistories.size() == 5
+            assert priceHistories.size() == 11
 
         and: "All records belong to the product"
             assert priceHistories.every { it.productId == product.getId() }
@@ -54,23 +54,65 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
 
         and: "Third record has exact data"
             with(priceHistories[2]) {
-                price == 329.99
+                price == 349.99
                 storeName == "TechShop"
                 priceDate == toTimestamp(1688169600)
             }
 
         and: "Fourth record has exact data"
             with(priceHistories[3]) {
-                price == 319.99
+                price == 339.99
                 storeName == "ElectronicsHub"
-                priceDate == toTimestamp(1696118400)
+                priceDate == toTimestamp(1693353600)
             }
 
         and: "Fifth record has exact data"
             with(priceHistories[4]) {
-                price == 299.99
+                price == 349.99
+                storeName == "TechShop"
+                priceDate == toTimestamp(1696118400)
+            }
+
+        and: "Sixth record has exact data"
+            with(priceHistories[5]) {
+                price == 329.99
+                storeName == "TechShop"
+                priceDate == toTimestamp(1698537600)
+            }
+
+        and: "Seventh record has exact data"
+            with(priceHistories[6]) {
+                price == 339.99
+                storeName == "ElectronicsHub"
+                priceDate == toTimestamp(1698796800)
+            }
+
+        and: "Eighth record has exact data"
+            with(priceHistories[7]) {
+                price == 329.99
+                storeName == "TechShop"
+                priceDate == toTimestamp(1701388800)
+            }
+
+        and: "Ninth record has exact data"
+            with(priceHistories[8]) {
+                price == 329.99
                 storeName == "TechShop"
                 priceDate == toTimestamp(1704067200)
+            }
+
+        and: "Tenth record has exact data"
+            with(priceHistories[9]) {
+                price == 319.99
+                storeName == "ElectronicsHub"
+                priceDate == toTimestamp(1704153600)
+            }
+
+        and: "Eleventh record has exact data"
+            with(priceHistories[10]) {
+                price == 309.99
+                storeName == "TechShop"
+                priceDate == toTimestamp(1704240000)
             }
 
         and: "The product is marked as parsed"
@@ -141,7 +183,7 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
 
         then: "Exactly 2 price history records are saved"
             def priceHistories = priceHistoryRepository.findAll().sort { it.priceDate }
-            assert priceHistories.size() == 2
+            assert priceHistories.size() == 3
 
         and: "All records belong to the product"
             assert priceHistories.every { it.productId == product.getId() }
@@ -158,6 +200,13 @@ class ScrapePriceHistoryFunctionalSpec extends BaseFunctionalSpec {
                 price == 149.99
                 storeName == "BudgetStore"
                 priceDate == toTimestamp(1704067200)
+            }
+
+        and: "Third record has exact data"
+            with(priceHistories[2]) {
+                price == 159.99
+                storeName == "BudgetStore"
+                priceDate == toTimestamp(1704240000)
             }
 
         and: "The product is marked as parsed"
