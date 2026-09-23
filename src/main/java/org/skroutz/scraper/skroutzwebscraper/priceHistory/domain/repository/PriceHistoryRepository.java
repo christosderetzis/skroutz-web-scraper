@@ -4,8 +4,12 @@ import org.skroutz.scraper.skroutzwebscraper.priceHistory.domain.entity.PriceHis
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface PriceHistoryRepository extends JpaRepository<PriceHistory, Long> {
 
     PriceHistory findTopByProductIdOrderByPriceDateDesc(Long productId);
+
+    List<PriceHistory> findAllByProductId(Long productId);
 }
