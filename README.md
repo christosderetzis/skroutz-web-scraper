@@ -7,9 +7,10 @@ A Spring Boot application for scraping product information from Skroutz.gr.
 - Product, specifications, reviews, and price history scraping from Skroutz.gr
 - Async scraping jobs with status tracking (`RUNNING`, `COMPLETED`, `FAILED`)
 - AI-powered review summarization via Ollama + LangChain4j
+- Price trend analysis and buy-recommendation scoring
 - Elasticsearch-powered search, autocomplete, and similar product recommendations
 - PostgreSQL storage with JSONB specifications
-- OAuth2 resource-server security via Keycloak (scraping endpoints require the `SUPER_ADMIN` role)
+- OAuth2 resource-server security via Keycloak (`/scraper/**`, `/jobs/**`, `/category-schemas/**` require the `SUPER_ADMIN` role)
 - Swagger/OpenAPI docs, access logging, Docker support
 - JaCoCo coverage enforcement (80% line/method, 70% branch)
 
@@ -33,7 +34,7 @@ Tests: Spock (Groovy 5), MockWebServer, WireMock, JaCoCo.
 docker-compose -f infra/docker-compose.yml up -d
 ```
 
-Starts the app (port 8082), PostgreSQL (5432), Elasticsearch (9200), Kibana (5601), Ollama (11434), and Keycloak (8081). The app waits for all services to be healthy.
+Starts the app (port 8082), PostgreSQL (5432), Elasticsearch (9200), Kibana (5601), Ollama (11434), and Keycloak (8080). The app waits for all services to be healthy.
 
 ### Option B: Local Dev
 
@@ -46,7 +47,7 @@ Starts infrastructure only, then runs the app locally on port 8082.
 
 ### Keycloak Setup
 
-The app authenticates requests via OAuth2 JWT tokens issued by Keycloak. Scraping endpoints (`/scraper/*`) require the `SUPER_ADMIN` role; the rest are public.
+The app authenticates requests via OAuth2 JWT tokens issued by Keycloak. Protected endpoints (`/scraper/**`, `/jobs/**`, `/category-schemas/**`) require the `SUPER_ADMIN` role; everything else is public.
 
 ```bash
 ./infra/setup-keycloak.sh
@@ -54,7 +55,7 @@ The app authenticates requests via OAuth2 JWT tokens issued by Keycloak. Scrapin
 
 This creates the `skroutz-scraper` realm, the `skroutz-scraper-client` public client, and a default `admin`/`admin` user with the `SUPER_ADMIN` role. Alternatively, import `src/functionalTest/resources/keycloak/realm-export.json` into Keycloak.
 
-Obtain a token to call protected endpoints:
+Obtain a token to call protected endpoints (Keycloak runs on port `8080` for the full Docker stack and `8081` for local dev — adjust the URL accordingly; `setup-keycloak.sh` defaults to `8081`):
 
 ```bash
 curl -s -X POST http://localhost:8081/realms/skroutz-scraper/protocol/openid-connect/token \
@@ -79,7 +80,13 @@ curl -s -X POST http://localhost:8081/realms/skroutz-scraper/protocol/openid-con
 | POST   | `/scraper/reviews`               | Start async scrape of reviews for pending products (requires `SUPER_ADMIN`)      |
 | POST   | `/scraper/price-history`         | Start async fetch of price history for pending products (requires `SUPER_ADMIN`) |
 | GET    | `/jobs/{jobId}`                  | Get the status and result of a scraping job (requires `SUPER_ADMIN`)             |
-| POST   | `/reviews/{id}/summarize`        | Summarize reviews for a product via LLM                                          |
+| POST   | `/category-schemas`              | Create a category schema (requires `SUPER_ADMIN`)                                |
+| GET    | `/category-schemas/{category}`   | Get a category schema by category (requires `SUPER_ADMIN`)                      |
+| POST   | `/products/{id}/reviews/summarize` | Summarize reviews for a product via LLM                                      |
+| GET    | `/products/{id}`                 | Get product details                                                            |
+| GET    | `/products/{id}/reviews`         | Paged reviews for a product                                                    |
+| GET    | `/products/{id}/price-trend`     | Price trend analysis                                                           |
+| GET    | `/products/{id}/buy-recommendation` | Buy-recommendation scoring                                                   |
 | GET    | `/products/autocomplete?q=...`   | Autocomplete suggestions                                                         |
 | POST   | `/products/search`               | Full-text search with filters                                                    |
 | GET    | `/products/{id}/similar`         | Find similar products                                                            |
@@ -120,7 +127,7 @@ Category schemas map raw scraped specification JSON to normalized keys and types
 - **Direct field mappings**: single values with type coercion (`STRING`, `INTEGER`, `NUMERIC`)
 - **Feature field mappings**: array extraction (`VALUE`, `COMMA_SPLIT`, `YES_GROUP`, `YES_KEY`)
 
-The `SpecsNormalizerService.normalize(rawJsonNode, schema)` method applies a schema to produce normalized JSON. Schemas are persisted and loaded at runtime via `CategorySchema` entity + REST endpoints.
+The `SpecificationsNormalizerUtils.normalize(rawJsonNode, schema)` method applies a schema to produce normalized JSON. Schemas are persisted and loaded at runtime via the `CategorySchema` entity + REST endpoints.
 
 ## Notes
 
