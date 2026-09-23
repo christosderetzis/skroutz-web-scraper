@@ -76,6 +76,18 @@ class WebActor {
                 .exchange()
     }
 
+    WebTestClient.ResponseSpec getPriceTrend(Long id) {
+        return webTestClient.get()
+                .uri("/products/{id}/price-trend", id)
+                .exchange()
+    }
+
+    WebTestClient.ResponseSpec getBuyRecommendation(Long id) {
+        return webTestClient.get()
+                .uri("/products/{id}/buy-recommendation", id)
+                .exchange()
+    }
+
     WebTestClient.ResponseSpec getProductReviews(Long id, String sort = "helpful" , Integer page = null, Integer size = null) {
         return webTestClient.get()
                 .uri(uriBuilder -> {

@@ -3,6 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.utils.base
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.annotation.PostConstruct
 import org.skroutz.scraper.skroutzwebscraper.SkroutzWebScraperApplication
+import org.skroutz.scraper.skroutzwebscraper.priceHistory.domain.entity.PriceHistory
 import org.skroutz.scraper.skroutzwebscraper.scraping.domain.repository.ScrapeJobRepository
 import org.skroutz.scraper.skroutzwebscraper.search.domain.repository.ProductElasticsearchRepository
 import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument
@@ -22,6 +23,10 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.test.web.reactive.server.WebTestClient
 import spock.lang.Shared
 import spock.lang.Specification
+
+import java.sql.Timestamp
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -77,6 +82,8 @@ abstract class BaseFunctionalSpec extends Specification {
     @Shared
     ObjectMapper objectMapper = new ObjectMapper()
 
+    private static final LocalDate LATEST_DATE = LocalDate.of(2026, 9, 1)
+
     def setup() {
         scrapeJobRepository.deleteAll()
         categorySchemaRepository.deleteAll()
@@ -129,6 +136,29 @@ abstract class BaseFunctionalSpec extends Specification {
         waitForElasticsearchRefresh()
 
         return savedProduct
+    }
+
+    protected Product seedProduct(String title, String urlSlug) {
+        return productRepository.saveAndFlush(Product.builder()
+                .title(title)
+                .url("http://example.com/${urlSlug}")
+                .price(100.00)
+                .build())
+    }
+
+    protected void seedPriceHistory(Product product, List<Map<String, Object>> rows) {
+        rows.each { r ->
+            priceHistoryRepository.saveAndFlush(PriceHistory.builder()
+                    .productId(product.id)
+                    .price(r.price.toBigDecimal())
+                    .priceDate(Timestamp.from(LATEST_DATE.minusDays(r.daysAgo as int).atStartOfDay().toInstant(ZoneOffset.UTC)))
+                    .storeName("TestStore")
+                    .build())
+        }
+    }
+
+    protected static List<Map<String, Object>> rangeRows(int startDaysAgo, int endDaysAgo, BigDecimal price) {
+        (startDaysAgo..endDaysAgo).collect { [daysAgo: it, price: price] }
     }
 
     protected <T> List<T> extractResponseList(WebTestClient.ResponseSpec resp, Class<T> elementType) {
