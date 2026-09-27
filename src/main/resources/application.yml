@@ -46,7 +46,7 @@ scraper:
   retry-delay-ms: 1000
   max-retries: 3
   delays:
-    review-page-ms: 100
+    review-page-ms: 250
     specifications-ms: 150
     reviews-ms: 100
     price-history-ms: 50
