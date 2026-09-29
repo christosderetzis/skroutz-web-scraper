@@ -88,6 +88,23 @@ class WebActor {
                 .exchange()
     }
 
+    WebTestClient.ResponseSpec getPriceStats(Long id) {
+        return webTestClient.get()
+                .uri("/products/{id}/price-stats", id)
+                .exchange()
+    }
+
+    WebTestClient.ResponseSpec getPriceHistory(Long id, String from = null, String to = null) {
+        return webTestClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/products/${id}/price-history")
+                            .queryParamIfPresent("from", Optional.ofNullable(from))
+                            .queryParamIfPresent("to", Optional.ofNullable(to))
+                            .build()
+                })
+                .exchange()
+    }
+
     WebTestClient.ResponseSpec getProductReviews(Long id, String sort = "helpful" , Integer page = null, Integer size = null) {
         return webTestClient.get()
                 .uri(uriBuilder -> {
