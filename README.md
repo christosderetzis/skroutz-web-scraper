@@ -87,6 +87,8 @@ curl -s -X POST http://localhost:8081/realms/skroutz-scraper/protocol/openid-con
 | GET    | `/products/{id}/reviews`         | Paged reviews for a product                                                    |
 | GET    | `/products/{id}/price-trend`     | Price trend analysis                                                           |
 | GET    | `/products/{id}/buy-recommendation` | Buy-recommendation scoring                                                   |
+| GET    | `/products/{id}/price-stats`        | Price stats (min/max/avg/median, 30d/90d change, days at lowest)             |
+| GET    | `/products/{id}/price-history`      | Price history points, optional `?from=...&to=...` date range (inclusive)     |
 | GET    | `/products/autocomplete?q=...`   | Autocomplete suggestions                                                         |
 | POST   | `/products/search`               | Full-text search with filters                                                    |
 | GET    | `/products/{id}/similar`         | Find similar products                                                            |
