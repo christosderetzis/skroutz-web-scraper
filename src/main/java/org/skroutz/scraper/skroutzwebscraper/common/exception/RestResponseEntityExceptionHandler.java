@@ -8,12 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.skroutz.scraper.skroutzwebscraper.category.infrastructure.exception.CategorySchemaNotFoundException;
-import org.skroutz.scraper.skroutzwebscraper.category.infrastructure.exception.DuplicateCategoryException;
 import org.skroutz.scraper.skroutzwebscraper.common.utils.ServletUtils;
-import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.exception.JobAlreadyRunningException;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.exception.JobNotFoundException;
 import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -45,29 +40,14 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return logAndGetApiError(ex, request, HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
 
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ApiError> handleProductNotFoundException(ProductNotFoundException ex, HttpServletRequest request) {
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFoundException(NotFoundException ex, HttpServletRequest request) {
         return logAndGetApiError(ex, request, HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler(CategorySchemaNotFoundException.class)
-    public ResponseEntity<ApiError> handleCategorySchemaNotFoundException(CategorySchemaNotFoundException ex, HttpServletRequest request) {
-        return logAndGetApiError(ex, request, HttpStatus.NOT_FOUND, ex.getMessage());
-    }
-
-    @ExceptionHandler(DuplicateCategoryException.class)
-    public ResponseEntity<ApiError> handleDuplicateCategoryException(DuplicateCategoryException ex, HttpServletRequest request) {
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ApiError> handleConflictException(ConflictException ex, HttpServletRequest request) {
         return logAndGetApiError(ex, request, HttpStatus.CONFLICT, ex.getMessage());
-    }
-
-    @ExceptionHandler(JobAlreadyRunningException.class)
-    public ResponseEntity<ApiError> handleJobAlreadyRunningException(JobAlreadyRunningException ex, HttpServletRequest request) {
-        return logAndGetApiError(ex, request, HttpStatus.CONFLICT, ex.getMessage());
-    }
-
-    @ExceptionHandler(JobNotFoundException.class)
-    public ResponseEntity<ApiError> handleJobNotFoundException(JobNotFoundException ex, HttpServletRequest request) {
-        return logAndGetApiError(ex, request, HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(HttpStatusCodeException.class)

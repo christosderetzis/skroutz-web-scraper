@@ -2,7 +2,7 @@ package org.skroutz.scraper.skroutzwebscraper.product;
 
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository;
-import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException;
+import org.skroutz.scraper.skroutzwebscraper.common.exception.ProductNotFoundException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;

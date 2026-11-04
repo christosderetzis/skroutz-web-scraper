@@ -3,8 +3,6 @@ package org.skroutz.scraper.skroutzwebscraper.common.config;
 import dev.langchain4j.http.client.jdk.JdkHttpClientBuilder;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
-import dev.langchain4j.service.AiServices;
-import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,10 +42,5 @@ public class AiConfig {
                 .temperature(0.3)
                 .logResponses(logResponses)
                 .build();
-    }
-
-    @Bean
-    public ReviewSummarizer reviewSummarizer(ChatModel model) {
-        return AiServices.create(ReviewSummarizer.class, model);
     }
 }

@@ -15,7 +15,6 @@ public interface ReviewSummaryMapper {
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "product", ignore = true)
     @Mapping(target = "pros", source = "dto.pros", qualifiedByName = "listToArray")
     @Mapping(target = "cons", source = "dto.cons", qualifiedByName = "listToArray")
     ReviewSummary toEntity(ReviewSummaryDto dto, Long productId);

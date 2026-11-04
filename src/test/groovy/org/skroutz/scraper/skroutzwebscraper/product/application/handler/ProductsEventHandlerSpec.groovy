@@ -8,7 +8,7 @@ import org.skroutz.scraper.skroutzwebscraper.product.ProductSearchEvent
 import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductPersistenceService
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository
-import org.skroutz.scraper.skroutzwebscraper.review.ReviewsSavedEvent
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ReviewsSavedEvent
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ProductApiResponseDto
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ProductsScrapeResult
 import org.springframework.context.ApplicationEventPublisher

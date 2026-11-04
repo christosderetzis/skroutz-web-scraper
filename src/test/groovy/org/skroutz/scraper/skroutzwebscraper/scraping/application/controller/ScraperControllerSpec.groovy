@@ -21,7 +21,6 @@ import org.springframework.test.web.servlet.MockMvc
 import spock.lang.Specification
 
 import java.time.LocalDateTime
-import java.util.UUID
 
 import static org.hamcrest.Matchers.containsInAnyOrder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post

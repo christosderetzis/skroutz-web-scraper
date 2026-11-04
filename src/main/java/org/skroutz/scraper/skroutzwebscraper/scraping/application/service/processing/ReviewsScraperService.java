@@ -2,7 +2,7 @@ package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.proce
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ReviewsApiResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ReviewsApiResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ReviewsScrapeResult;
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.ReviewsScraper;
 import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder;

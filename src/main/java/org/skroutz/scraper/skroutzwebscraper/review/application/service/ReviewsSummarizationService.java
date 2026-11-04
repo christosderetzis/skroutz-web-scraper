@@ -4,7 +4,6 @@ package org.skroutz.scraper.skroutzwebscraper.review.application.service;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
-import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.chunker.ReviewChunker;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary;

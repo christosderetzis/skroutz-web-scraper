@@ -6,7 +6,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review;
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewResponseDto;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ReviewsApiResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ReviewsApiResponseDto;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;

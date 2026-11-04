@@ -9,7 +9,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;

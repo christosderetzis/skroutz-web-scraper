@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
-import org.skroutz.scraper.skroutzwebscraper.review.ReviewsSavedEvent;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ReviewsSavedEvent;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewRepository;
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.mapper.ReviewsMapper;

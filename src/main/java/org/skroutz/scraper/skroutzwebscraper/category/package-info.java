@@ -1,4 +1,4 @@
-@ApplicationModule(id="category", displayName = "Category Schema")
+@ApplicationModule(id="category", displayName = "Category Schema", allowedDependencies = {"common"})
 package org.skroutz.scraper.skroutzwebscraper.category;
 
 import org.springframework.modulith.ApplicationModule;
