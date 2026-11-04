@@ -12,8 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class
-CategoryMappingSchema {
+public class CategoryMappingSchema {
 
     @Builder.Default
     private List<DirectFieldMapping> directFields = new ArrayList<>();

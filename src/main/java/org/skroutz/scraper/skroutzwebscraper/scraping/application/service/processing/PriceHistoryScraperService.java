@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.PriceHistoryResponseApiDto;
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.PriceHistoryScraper;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.events.PriceHistoryScrapeResult;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.PriceHistoryScrapeResult;
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,8 +23,6 @@ public class PriceHistoryScraperService {
         try {
             String url = urlBuilder.buildPriceGraphApiUrl(productUrl);
             PriceHistoryResponseApiDto response = scraper.fetchPriceHistory(url);
-
-            PriceHistoryResponseApiDto.MetricDataDto minPrice = response.getMinPrice();
 
             List<PriceHistoryScrapeResult.PriceHistoryItem> items = Optional.ofNullable(response.getMinPrice())
                     .map(res -> {

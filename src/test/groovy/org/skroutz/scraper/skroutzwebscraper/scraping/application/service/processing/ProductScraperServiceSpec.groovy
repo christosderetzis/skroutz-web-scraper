@@ -2,12 +2,12 @@ package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.proce
 
 import ch.qos.logback.classic.Level
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ProductApiResponseDto
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ProductApiResponseDto
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.ScraperRequestDto
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ProductsScrapeResult
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.ProductsScraper
-import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductPersistenceService
-import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.ProductScraperService
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder
+import org.springframework.context.ApplicationEventPublisher
 import spock.lang.Subject
 
 // Standard Spock spec dependency
@@ -15,11 +15,11 @@ import spock.lang.Subject
 class ProductScraperServiceSpec extends WithLoggingBaseSpec {
 
     ProductsScraper productsScraper = Mock(ProductsScraper)
-    ProductPersistenceService productPersistenceService = Mock(ProductPersistenceService)
+    ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
     UrlBuilder urlBuilder = new UrlBuilder("https://example.com")
 
     @Subject
-    ProductScraperService service = new ProductScraperService(productsScraper, productPersistenceService, urlBuilder)
+    ProductScraperService service = new ProductScraperService(productsScraper, urlBuilder, eventPublisher)
 
     def "Happy path, scrape products from single page and delegate to persistence service"() {
         given: "a scraper request for single page"
@@ -33,7 +33,7 @@ class ProductScraperServiceSpec extends WithLoggingBaseSpec {
 
         then: "orchestration calls productsScraper and delegates the saving payload"
             1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDto
-            1 * productPersistenceService.saveOrUpdateProducts(apiResponseDto, "electronics")
+            1 * eventPublisher.publishEvent(new ProductsScrapeResult(apiResponseDto, "electronics"))
             0 * _
 
         and: "log should contain info about scraped products"
@@ -60,8 +60,8 @@ class ProductScraperServiceSpec extends WithLoggingBaseSpec {
         then: "it fetches the page count, maps URLs, and processes the persistence sequentially"
             2 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDtoPage1
             1 * productsScraper.fetchProductsPage("https://example.com/products.json?page=2") >> apiResponseDtoPage2
-            1 * productPersistenceService.saveOrUpdateProducts(apiResponseDtoPage1, "electronics")
-            1 * productPersistenceService.saveOrUpdateProducts(apiResponseDtoPage2, "electronics")
+            1 * eventPublisher.publishEvent(new ProductsScrapeResult(apiResponseDtoPage1, "electronics"))
+            1 * eventPublisher.publishEvent(new ProductsScrapeResult(apiResponseDtoPage2, "electronics"))
             0 * _
 
         and: "pagination progress is tracked in the log logs"
@@ -84,7 +84,7 @@ class ProductScraperServiceSpec extends WithLoggingBaseSpec {
 
         then: "it checks pages and stops execution safely"
             1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDto
-            0 * productPersistenceService.saveOrUpdateProducts(_, _)
+            0 * eventPublisher.publishEvent(_)
             0 * _
 
         and: "warning log is triggered"

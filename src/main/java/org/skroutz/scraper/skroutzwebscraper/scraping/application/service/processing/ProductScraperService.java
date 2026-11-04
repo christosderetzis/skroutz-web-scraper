@@ -2,11 +2,13 @@ package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.proce
 
 import java.util.stream.IntStream;
 
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ProductApiResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ProductApiResponseDto;
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.ScraperRequestDto;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ProductsScrapeResult;
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.ProductsScraper;
 import org.skroutz.scraper.skroutzwebscraper.product.application.service.ProductPersistenceService;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -18,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductScraperService {
 
     private final ProductsScraper productsScraper;
-    private final ProductPersistenceService productPersistenceService;
     private final UrlBuilder urlBuilder;
+    private final ApplicationEventPublisher eventPublisher;
 
     public void scrapeProducts(ScraperRequestDto request, boolean multiplePages) {
         log.info("Starting scrape for URL: {}, multiplePages: {}, category: {}",
@@ -55,8 +57,7 @@ public class ProductScraperService {
             ProductApiResponseDto response = productsScraper.fetchProductsPage(jsonUrl);
 
             // Delegate mapping and saving to the persistence service
-            // TODO: emit an event during modulith split and move this logic to a separate event listener
-            productPersistenceService.saveOrUpdateProducts(response, category);
+            eventPublisher.publishEvent(new ProductsScrapeResult(response, category));
 
             log.info("Finished scraping page: {}", url);
         } catch (Exception e) {

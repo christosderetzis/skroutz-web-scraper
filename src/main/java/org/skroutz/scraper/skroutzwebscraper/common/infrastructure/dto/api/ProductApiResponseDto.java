@@ -1,10 +1,11 @@
-package org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api;
+package org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.modulith.NamedInterface;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@NamedInterface(name = "ProductApiResponseDto")
 public class ProductApiResponseDto {
 
     @JsonProperty("skus")

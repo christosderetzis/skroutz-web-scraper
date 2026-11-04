@@ -3,8 +3,8 @@ package org.skroutz.scraper.skroutzwebscraper.review.infrastructure.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary;
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto;
 
 import java.util.List;
 

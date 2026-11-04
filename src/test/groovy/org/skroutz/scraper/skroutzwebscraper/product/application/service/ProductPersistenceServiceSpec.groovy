@@ -9,11 +9,11 @@ import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository
 import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.mapper.ProductMapper
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ProductApiResponseDto
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ProductApiResponseDto
 
 // Adjusted target package domain guess
 
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder
 import spock.lang.Subject
 
 class ProductPersistenceServiceSpec extends WithLoggingBaseSpec {

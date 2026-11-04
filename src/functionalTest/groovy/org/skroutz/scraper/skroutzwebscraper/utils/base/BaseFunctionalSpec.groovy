@@ -130,7 +130,17 @@ abstract class BaseFunctionalSpec extends Specification {
 
         Product savedProduct = productRepository.saveAndFlush(product)
 
-        ProductDocument document = productDocumentMapper.toDocument(savedProduct)
+        ProductDocument document = ProductDocument.builder()
+                .id(savedProduct.id)
+                .title(savedProduct.title)
+                .url(savedProduct.url)
+                .category(savedProduct.category)
+                .brand(savedProduct.brand)
+                .price(savedProduct.price)
+                .imageUrl(savedProduct.imageUrl)
+                .description(savedProduct.description)
+                .rating(savedProduct.rating)
+                .build()
         productElasticsearchRepository.save(document)
 
         waitForElasticsearchRefresh()

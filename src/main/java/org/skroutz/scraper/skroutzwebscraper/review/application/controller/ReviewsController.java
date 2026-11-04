@@ -2,10 +2,10 @@ package org.skroutz.scraper.skroutzwebscraper.review.application.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.common.dto.PagedResponse;
-import org.skroutz.scraper.skroutzwebscraper.review.application.service.ReviewsPersistenceService;
+import org.skroutz.scraper.skroutzwebscraper.review.application.service.ReviewsService;
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewResponseDto;
-import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto;
 import org.skroutz.scraper.skroutzwebscraper.review.application.service.ReviewsSummarizationService;
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto;
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.enums.ReviewSortType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewsController {
 
     private final ReviewsSummarizationService reviewsSummarizationService;
-    private final ReviewsPersistenceService reviewsService;
+    private final ReviewsService reviewsService;
 
-    public ReviewsController(ReviewsSummarizationService reviewsSummarizationService, ReviewsPersistenceService reviewsService) {
+    public ReviewsController(ReviewsSummarizationService reviewsSummarizationService, ReviewsService reviewsService) {
         this.reviewsSummarizationService = reviewsSummarizationService;
         this.reviewsService = reviewsService;
     }

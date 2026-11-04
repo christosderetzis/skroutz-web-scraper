@@ -63,10 +63,6 @@ public class Review {
     @Builder.Default
     private Boolean isVerifiedPurchase = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMPTZ")
     private Timestamp createdAt;

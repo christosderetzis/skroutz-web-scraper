@@ -2,13 +2,12 @@ package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.orche
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.events.ReviewsScrapeResult;
-import org.skroutz.scraper.skroutzwebscraper.review.application.service.ReviewsPersistenceService;
+import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
+import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ReviewsScrapeResult;
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.ReviewsScraperService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
@@ -17,31 +16,29 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ReviewsBatchOrchestrator {
 
-    private final ProductRepository productRepository;
+    private final ProductFacade productFacade;
     private final ReviewsScraperService scraperService;
-    private final ReviewsPersistenceService persistenceService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${scraper.delays.reviews-ms:2000}")
     private long productLoopDelayMs;
 
     public void parseReviews() {
         log.info("Starting reviews scraping task...");
-        Slice<Product> productSlice;
+        Slice<ProductDto> productSlice;
         int page = 0;
 
         do {
-            productSlice = productRepository.findAllByReviewsParsedAndRatingIsNotNull(false, PageRequest.of(page, 100));
+            productSlice = productFacade.getUnparsedReviewsProducts(page, 100);
 
-            for (Product product : productSlice) {
-                if (product.getUrl() == null || product.getUrl().isBlank()) continue;
+            for (ProductDto product : productSlice) {
+                if (product.url() == null || product.url().isBlank()) continue;
 
                 // Step 1: Sequential Web Scraping (Completely outside DB transactional context)
-                ReviewsScrapeResult result = scraperService.scrapeProductReviews(product.getId(), product.getUrl());
+                ReviewsScrapeResult result = scraperService.scrapeProductReviews(product.id(), product.url());
 
                 // Step 2: Instant Database Persistence (Short-lived, clean transaction)
-                // TODO: send an event when modulith split
-                persistenceService.saveReviewsResult(result);
-
+                eventPublisher.publishEvent(result);
                 takeBreather();
             }
             // Always move forward elegantly using the Slice framework features

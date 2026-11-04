@@ -5,7 +5,7 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ProductApiResponseDto
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ProductApiResponseDto
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.ProductsScraper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus

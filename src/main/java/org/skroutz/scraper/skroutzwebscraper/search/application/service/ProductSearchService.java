@@ -4,8 +4,8 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.skroutz.scraper.skroutzwebscraper.category.domain.entity.CategorySchema;
-import org.skroutz.scraper.skroutzwebscraper.category.domain.repository.CategorySchemaRepository;
+import org.skroutz.scraper.skroutzwebscraper.category.CategorySchemaFacade;
+import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.CategoryMappingSchema;
 import org.skroutz.scraper.skroutzwebscraper.category.domain.schema.FieldType;
 import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.mapper.ProductDocumentMapper;
@@ -29,7 +29,7 @@ public class ProductSearchService {
 
     private final ProductDocumentMapper productDocumentMapper;
     private final ElasticsearchOperations elasticsearchOperations;
-    private final CategorySchemaRepository categorySchemaRepository;
+    private final CategorySchemaFacade categorySchemaFacade;
     private final ProductQueryBuilder productQueryBuilder;
     private final ProductAggregationProcessor productAggregationProcessor;
 
@@ -150,23 +150,23 @@ public class ProductSearchService {
     }
 
     private Map<String, String> resolveSpecFieldMap(String category) {
-        return categorySchemaRepository.findByCategory(category)
-                .map(CategorySchema::getSchema)
-                .map(schema -> {
-                    Map<String, String> map = new LinkedHashMap<>();
+        CategoryMappingSchema schema = categorySchemaFacade.getMappingSchemaForCategory(category);
+        if (schema == null) {
+            return Map.of();
+        }
 
-                    schema.getDirectFields().forEach(f -> {
-                        String esField = (f.getType() == FieldType.STRING || f.getType() == null)
-                                ? "specifications." + f.getTarget() + ".keyword"
-                                : "specifications." + f.getTarget();
-                        map.putIfAbsent(f.getTarget(), esField);
-                    });
+        Map<String, String> map = new LinkedHashMap<>();
 
-                    schema.getArrayFields().forEach(f ->
-                            map.putIfAbsent(f.getTarget(), "specifications." + f.getTarget() + ".keyword"));
+        schema.getDirectFields().forEach(f -> {
+            String esField = (f.getType() == FieldType.STRING || f.getType() == null)
+                    ? "specifications." + f.getTarget() + ".keyword"
+                    : "specifications." + f.getTarget();
+            map.putIfAbsent(f.getTarget(), esField);
+        });
 
-                    return map;
-                })
-                .orElse(Map.of());
+        schema.getArrayFields().forEach(f ->
+                map.putIfAbsent(f.getTarget(), "specifications." + f.getTarget() + ".keyword"));
+
+        return map;
     }
 }
