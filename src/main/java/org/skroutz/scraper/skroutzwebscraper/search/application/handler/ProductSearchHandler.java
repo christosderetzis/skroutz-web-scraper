@@ -6,7 +6,7 @@ import org.skroutz.scraper.skroutzwebscraper.product.ProductSearchEvent;
 import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument;
 import org.skroutz.scraper.skroutzwebscraper.search.domain.repository.ProductElasticsearchRepository;
 import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.mapper.ProductDocumentMapper;
-import org.springframework.context.event.EventListener;
+import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class ProductSearchHandler {
     private final ProductElasticsearchRepository productElasticsearchRepository;
     private final ProductDocumentMapper productDocumentMapper;
 
-    @EventListener
+    @ApplicationModuleListener
     public void handleProductSearchEvent(ProductSearchEvent event) {
         List<ProductSearchEvent.ProductSearchEventItem> eventItems = event.items();
         try {

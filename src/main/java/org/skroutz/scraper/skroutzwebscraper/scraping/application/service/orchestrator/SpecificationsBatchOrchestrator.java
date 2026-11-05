@@ -8,8 +8,8 @@ import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.SpecificationsScraperService;
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.SpecificationsScrapeResult;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.events.TransactionalEventPublisher;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -26,7 +26,7 @@ public class SpecificationsBatchOrchestrator {
     private final ProductFacade productFacade;
     private final CategorySchemaFacade categorySchemaFacade;
     private final SpecificationsScraperService scraperService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final TransactionalEventPublisher eventPublisher;
 
     @Value("${scraper.specifications.batch-size:30}")
     private Integer batchSize;
@@ -56,7 +56,7 @@ public class SpecificationsBatchOrchestrator {
             SpecificationsScrapeResult scrapeResults = scraperService.scrapeBatch(productPage.getContent(), schemasByCategory);
 
             // Step 2: Persist Results (Database Operations)
-            eventPublisher.publishEvent(scrapeResults);
+            eventPublisher.publish(scrapeResults);
 
             totalProcessed += productPage.getNumberOfElements();
 

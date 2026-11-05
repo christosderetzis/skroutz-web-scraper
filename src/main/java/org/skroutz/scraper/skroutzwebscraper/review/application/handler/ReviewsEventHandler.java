@@ -10,7 +10,7 @@ import org.skroutz.scraper.skroutzwebscraper.review.domain.repository.ReviewRepo
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.mapper.ReviewsMapper;
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ReviewsScrapeResult;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
+import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,7 +25,7 @@ public class ReviewsEventHandler {
     private final ReviewsMapper reviewsMapper;
     private final ApplicationEventPublisher eventPublisher;
 
-    @EventListener
+    @ApplicationModuleListener
     public void saveReviewsResult(ReviewsScrapeResult result) {
         ProductDto product = productFacade.getProductById(result.productId());
 

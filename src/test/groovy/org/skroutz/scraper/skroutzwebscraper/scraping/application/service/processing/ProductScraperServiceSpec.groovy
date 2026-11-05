@@ -7,7 +7,7 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.Scraper
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ProductsScrapeResult
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.ProductsScraper
 import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder
-import org.springframework.context.ApplicationEventPublisher
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.events.TransactionalEventPublisher
 import spock.lang.Subject
 
 // Standard Spock spec dependency
@@ -15,7 +15,7 @@ import spock.lang.Subject
 class ProductScraperServiceSpec extends WithLoggingBaseSpec {
 
     ProductsScraper productsScraper = Mock(ProductsScraper)
-    ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
+    TransactionalEventPublisher eventPublisher = Mock(TransactionalEventPublisher)
     UrlBuilder urlBuilder = new UrlBuilder("https://example.com")
 
     @Subject
@@ -33,7 +33,7 @@ class ProductScraperServiceSpec extends WithLoggingBaseSpec {
 
         then: "orchestration calls productsScraper and delegates the saving payload"
             1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDto
-            1 * eventPublisher.publishEvent(new ProductsScrapeResult(apiResponseDto, "electronics"))
+            1 * eventPublisher.publish(new ProductsScrapeResult(apiResponseDto, "electronics"))
             0 * _
 
         and: "log should contain info about scraped products"
@@ -60,8 +60,8 @@ class ProductScraperServiceSpec extends WithLoggingBaseSpec {
         then: "it fetches the page count, maps URLs, and processes the persistence sequentially"
             2 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDtoPage1
             1 * productsScraper.fetchProductsPage("https://example.com/products.json?page=2") >> apiResponseDtoPage2
-            1 * eventPublisher.publishEvent(new ProductsScrapeResult(apiResponseDtoPage1, "electronics"))
-            1 * eventPublisher.publishEvent(new ProductsScrapeResult(apiResponseDtoPage2, "electronics"))
+            1 * eventPublisher.publish(new ProductsScrapeResult(apiResponseDtoPage1, "electronics"))
+            1 * eventPublisher.publish(new ProductsScrapeResult(apiResponseDtoPage2, "electronics"))
             0 * _
 
         and: "pagination progress is tracked in the log logs"
@@ -84,7 +84,7 @@ class ProductScraperServiceSpec extends WithLoggingBaseSpec {
 
         then: "it checks pages and stops execution safely"
             1 * productsScraper.fetchProductsPage("https://example.com/products.json") >> apiResponseDto
-            0 * eventPublisher.publishEvent(_)
+            0 * eventPublisher.publish(_)
             0 * _
 
         and: "warning log is triggered"

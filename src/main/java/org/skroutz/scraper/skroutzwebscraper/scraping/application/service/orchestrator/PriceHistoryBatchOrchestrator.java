@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.PriceHistoryScrapeResult;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.events.TransactionalEventPublisher;
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.PriceHistoryScraperService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ public class PriceHistoryBatchOrchestrator {
 
     private final ProductFacade productFacade;
     private final PriceHistoryScraperService scraperService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final TransactionalEventPublisher eventPublisher;
 
     @Value("${scraper.delays.price-history-ms:1000}")
     private long delayMs;
@@ -37,8 +37,8 @@ public class PriceHistoryBatchOrchestrator {
                 // Step 1: Network Scrape (Slow I/O - entirely outside DB transactions)
                 PriceHistoryScrapeResult result = scraperService.scrapeProductHistory(product.id(), product.url());
 
-                // Step 2: Event Publish (Fast I/O - outside DB transactions)
-                eventPublisher.publishEvent(result);
+                // Step 2: Event Publish (short-lived transaction around the event publication)
+                eventPublisher.publish(result);
 
                 takeBreather();
             }

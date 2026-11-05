@@ -10,7 +10,7 @@ import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.PriceHistoryScrapeResult;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
+import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
 import java.sql.Timestamp;
@@ -26,7 +26,7 @@ public class PriceHistoryEventHandler {
     private final PriceHistoryRepository historyRepo;
     private final ApplicationEventPublisher eventPublisher;
 
-    @EventListener
+    @ApplicationModuleListener
     public void saveHistoryResult(PriceHistoryScrapeResult result) {
         ProductDto product = productFacade.getProductById(result.productId());
 

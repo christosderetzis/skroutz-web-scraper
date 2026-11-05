@@ -11,7 +11,7 @@ import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.Re
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ProductsScrapeResult;
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.SpecificationsScrapeResult;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
+import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -23,7 +23,7 @@ public class ProductsEventHandler {
     private final ProductPersistenceService persistenceService;
     private final ApplicationEventPublisher eventPublisher;
 
-    @EventListener
+    @ApplicationModuleListener
     public void markReviewsProductAsScraped(ReviewsSavedEvent event) {
         Product product = productRepository.findById(event.productId())
                 .orElseThrow(() -> new IllegalArgumentException("Product target entity missing ID: " + event.productId()));
@@ -33,7 +33,7 @@ public class ProductsEventHandler {
         log.info("Marked product ID {} as reviews parsed.", event.productId());
     }
 
-    @EventListener
+    @ApplicationModuleListener
     public void markPriceHistoryProductAsScraped(PriceHistorySavedEvent event) {
         Product product = productRepository.findById(event.productId())
                 .orElseThrow(() -> new IllegalArgumentException("Product target entity missing ID: " + event.productId()));
@@ -43,7 +43,7 @@ public class ProductsEventHandler {
         log.info("Marked product ID {} as price history parsed.", event.productId());
     }
 
-    @EventListener
+    @ApplicationModuleListener
     public void parseSpecificationsEvent(SpecificationsScrapeResult results) {
         // Step 2: Persist Results (Database Operations)
         ProductSearchEvent productSearchEvent = persistenceService.saveSpecificationsResults(results);
@@ -53,7 +53,7 @@ public class ProductsEventHandler {
         eventPublisher.publishEvent(productSearchEvent);
     }
 
-    @EventListener
+    @ApplicationModuleListener
     public void handleProductsScrapeResultEvent(ProductsScrapeResult event) {
         persistenceService.saveOrUpdateProducts(event.productApiResponseDto(), event.category());
         log.info("Processed products scrape results for category: {}", event.category());

@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
 import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ReviewsScrapeResult;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.events.TransactionalEventPublisher;
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.ReviewsScraperService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ public class ReviewsBatchOrchestrator {
 
     private final ProductFacade productFacade;
     private final ReviewsScraperService scraperService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final TransactionalEventPublisher eventPublisher;
 
     @Value("${scraper.delays.reviews-ms:2000}")
     private long productLoopDelayMs;
@@ -38,7 +38,7 @@ public class ReviewsBatchOrchestrator {
                 ReviewsScrapeResult result = scraperService.scrapeProductReviews(product.id(), product.url());
 
                 // Step 2: Instant Database Persistence (Short-lived, clean transaction)
-                eventPublisher.publishEvent(result);
+                eventPublisher.publish(result);
                 takeBreather();
             }
             // Always move forward elegantly using the Slice framework features

@@ -3,7 +3,7 @@ package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.orche
 import org.skroutz.scraper.skroutzwebscraper.product.ProductDto
 import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.ReviewsScraperService
-import org.springframework.context.ApplicationEventPublisher
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.events.TransactionalEventPublisher
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.SliceImpl
 import spock.lang.Specification
@@ -14,7 +14,7 @@ class ReviewsBatchOrchestratorSpec extends Specification {
 
     ProductFacade productFacade = Mock()
     ReviewsScraperService reviewsScraperService = Mock()
-    ApplicationEventPublisher applicationEventPublisher = Mock()
+    TransactionalEventPublisher applicationEventPublisher = Mock()
 
     @Subject
     ReviewsBatchOrchestrator reviewsBatchOrchestrator

@@ -5,7 +5,7 @@ import org.skroutz.scraper.skroutzwebscraper.product.ProductDto
 import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.PriceHistoryScrapeResult
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.PriceHistoryScraperService
-import org.springframework.context.ApplicationEventPublisher
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.events.TransactionalEventPublisher
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
 import org.springframework.data.domain.SliceImpl
@@ -17,7 +17,7 @@ class PriceHistoryBatchOrchestratorSpec extends Specification {
 
     ProductFacade productFacade = Mock(ProductFacade)
     PriceHistoryScraperService scraperService = Mock(PriceHistoryScraperService)
-    ApplicationEventPublisher eventPublisher = Mock(ApplicationEventPublisher)
+    TransactionalEventPublisher eventPublisher = Mock(TransactionalEventPublisher)
 
     @Subject
     PriceHistoryBatchOrchestrator priceHistoryBatchOrchestrator
@@ -63,7 +63,7 @@ class PriceHistoryBatchOrchestratorSpec extends Specification {
         then: "The valid products are scraped and persisted"
             1 * scraperService.scrapeProductHistory(1L, "http://example.com/p1") >> Mock(PriceHistoryScrapeResult)
             1 * scraperService.scrapeProductHistory(3L, "http://example.com/p3") >> Mock(PriceHistoryScrapeResult)
-            2 * eventPublisher.publishEvent(_)
+            2 * eventPublisher.publish(_)
 
         and: "The invalid product completely skips scraping and persistence"
             0 * scraperService.scrapeProductHistory(2L, _)
