@@ -42,7 +42,6 @@ public class SpecificationsBatchOrchestrator {
         Slice<ProductDto> productPage;
         do {
             // Always query page 0 because processed items fall out of the query scope
-            Pageable pageable = PageRequest.of(0, batchSize);
             productPage = productFacade.getUnparsedSpecificationsProducts(0, 100);
 
             if (productPage.isEmpty()) {
