@@ -1,8 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing
 
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.ReviewsScraper
-import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.ReviewsScraperService
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder
 import spock.lang.Specification
 import spock.lang.Subject
 

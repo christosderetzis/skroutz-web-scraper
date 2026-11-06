@@ -3,8 +3,8 @@ package org.skroutz.scraper.skroutzwebscraper.review.infrastructure.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary;
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto;
 
 import java.util.List;
 
@@ -15,7 +15,6 @@ public interface ReviewSummaryMapper {
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "product", ignore = true)
     @Mapping(target = "pros", source = "dto.pros", qualifiedByName = "listToArray")
     @Mapping(target = "cons", source = "dto.cons", qualifiedByName = "listToArray")
     ReviewSummary toEntity(ReviewSummaryDto dto, Long productId);

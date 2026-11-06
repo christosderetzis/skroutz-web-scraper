@@ -2,10 +2,10 @@ package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.proce
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ReviewsApiResponseDto;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.events.ReviewsScrapeResult;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ReviewsApiResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.ReviewsScrapeResult;
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.ReviewsScraper;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

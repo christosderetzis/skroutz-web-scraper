@@ -58,6 +58,12 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.modulith:spring-modulith-bom:2.1.1'
+    }
+}
+
 dependencies {
 
     // spring boot
@@ -67,6 +73,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-json'
 
     // flyway
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
@@ -101,9 +108,17 @@ dependencies {
     implementation 'dev.langchain4j:langchain4j-open-ai:1.13.0'
     implementation 'dev.langchain4j:langchain4j-http-client-jdk:1.13.0'
 
+    // spring modulith
+    implementation 'org.springframework.modulith:spring-modulith-core'
+    implementation 'org.springframework.modulith:spring-modulith-events-api'
+    implementation 'org.springframework.modulith:spring-modulith-events-jpa'
+    annotationProcessor 'org.springframework.modulith:spring-modulith-apt'
+
     // testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.modulith:spring-modulith-test'
+    testImplementation 'org.springframework.modulith:spring-modulith-docs'
     testImplementation 'org.apache.groovy:groovy:5.0.3'
     testImplementation "org.spockframework:spock-core:2.4-M7-groovy-5.0"
     testImplementation "org.spockframework:spock-spring:2.4-M7-groovy-5.0"

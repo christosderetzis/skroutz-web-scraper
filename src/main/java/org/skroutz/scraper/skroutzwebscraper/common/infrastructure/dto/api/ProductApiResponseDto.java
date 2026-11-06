@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api;
+package org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

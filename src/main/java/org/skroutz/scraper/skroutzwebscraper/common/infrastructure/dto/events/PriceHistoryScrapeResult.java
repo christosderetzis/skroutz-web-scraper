@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.events;
+package org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events;
 
 import java.math.BigDecimal;
 import java.util.List;

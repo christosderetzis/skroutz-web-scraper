@@ -2,13 +2,12 @@ package org.skroutz.scraper.skroutzwebscraper.scraping.application.service.orche
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.events.PriceHistoryScrapeResult;
-import org.skroutz.scraper.skroutzwebscraper.priceHistory.application.service.PriceHistoryPersistenceService;
+import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
+import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.PriceHistoryScrapeResult;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.events.TransactionalEventPublisher;
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.PriceHistoryScraperService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
@@ -17,9 +16,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PriceHistoryBatchOrchestrator {
 
-    private final ProductRepository productRepository;
+    private final ProductFacade productFacade;
     private final PriceHistoryScraperService scraperService;
-    private final PriceHistoryPersistenceService persistenceService;
+    private final TransactionalEventPublisher eventPublisher;
 
     @Value("${scraper.delays.price-history-ms:1000}")
     private long delayMs;
@@ -27,20 +26,19 @@ public class PriceHistoryBatchOrchestrator {
     public void fetchPriceHistoryForProducts() {
         log.info("Starting price history scraping task...");
 
-        Slice<Product> productSlice;
+        Slice<ProductDto> productSlice;
         int page = 0;
 
         do {
-            productSlice = productRepository.findAllByPriceHistoryParsed(false, PageRequest.of(page, 100));
-
-            for (Product product : productSlice) {
-                if (product.getUrl() == null || product.getUrl().isBlank()) continue;
+            productSlice = productFacade.getUnparsedPriceHistoryProducts(page, 100);
+            for (ProductDto product : productSlice) {
+                if (product.url() == null || product.url().isBlank()) continue;
 
                 // Step 1: Network Scrape (Slow I/O - entirely outside DB transactions)
-                PriceHistoryScrapeResult result = scraperService.scrapeProductHistory(product.getId(), product.getUrl());
+                PriceHistoryScrapeResult result = scraperService.scrapeProductHistory(product.id(), product.url());
 
-                // Step 2: DB Persistence (Blazing fast write transaction)
-                persistenceService.saveHistoryResult(result);
+                // Step 2: Event Publish (short-lived transaction around the event publication)
+                eventPublisher.publish(result);
 
                 takeBreather();
             }

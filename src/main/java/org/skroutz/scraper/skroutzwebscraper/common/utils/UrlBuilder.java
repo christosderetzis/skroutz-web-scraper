@@ -1,4 +1,4 @@
-package org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils;
+package org.skroutz.scraper.skroutzwebscraper.common.utils;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

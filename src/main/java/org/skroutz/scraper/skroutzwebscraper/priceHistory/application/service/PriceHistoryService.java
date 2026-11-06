@@ -8,10 +8,10 @@ import org.skroutz.scraper.skroutzwebscraper.priceHistory.infrastructure.dto.Pri
 import org.skroutz.scraper.skroutzwebscraper.priceHistory.infrastructure.dto.PricePoint;
 import org.skroutz.scraper.skroutzwebscraper.priceHistory.infrastructure.dto.PriceStatsResult;
 import org.skroutz.scraper.skroutzwebscraper.priceHistory.infrastructure.dto.PriceTrendResult;
+import org.skroutz.scraper.skroutzwebscraper.common.exception.ProductNotFoundException;
 import org.skroutz.scraper.skroutzwebscraper.priceHistory.infrastructure.utils.BuyRecommendationCalculator;
 import org.skroutz.scraper.skroutzwebscraper.priceHistory.infrastructure.utils.PriceStatsCalculator;
 import org.skroutz.scraper.skroutzwebscraper.priceHistory.infrastructure.utils.PriceTrendCalculator;
-import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
