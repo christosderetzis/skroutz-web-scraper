@@ -1,5 +1,7 @@
 package org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,36 +17,34 @@ import java.util.concurrent.TimeoutException;
 public abstract class BaseScraper {
 
     protected final WebClient webClient;
+    protected final FlareSolverrClient flareSolverrClient;
+    protected final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     protected final long timeoutMillis;
     protected final long retryDelayMillis;
     protected final int maxRetries;
 
-    protected BaseScraper(WebClient webClient, long timeoutMillis, int retryDelayMillis, int maxRetries) {
+    protected BaseScraper(WebClient webClient,
+                          FlareSolverrClient flareSolverrClient,
+                          long timeoutMillis,
+                          int retryDelayMillis,
+                          int maxRetries) {
         this.webClient = webClient;
+        this.flareSolverrClient = flareSolverrClient;
         this.timeoutMillis = timeoutMillis;
         this.retryDelayMillis = retryDelayMillis;
         this.maxRetries = maxRetries;
+    }
+
+    protected BaseScraper(WebClient webClient, long timeoutMillis, int retryDelayMillis, int maxRetries) {
+        this(webClient, null, timeoutMillis, retryDelayMillis, maxRetries);
     }
 
     protected <T> T fetch(String url, Class<T> responseType, String context) {
         log.info("Fetching {} data from URL: {}", context, url);
 
         try {
-            T response = webClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .onStatus(
-                            status -> status.is4xxClientError() || status.is5xxServerError(),
-                            clientResponse -> {
-                                log.error("Error fetching {}. Status: {}", context, clientResponse.statusCode());
-                                return Mono.error(new ResponseStatusException(
-                                        clientResponse.statusCode(),
-                                        "Failed to fetch " + context
-                                ));
-                            }
-                    )
-                    .bodyToMono(responseType)
-                    .timeout(Duration.ofMillis(timeoutMillis))
+            T response = fetchResponse(url, responseType, context)
                     .retryWhen(Retry.backoff(maxRetries, Duration.ofMillis(retryDelayMillis))
                             .maxBackoff(Duration.ofSeconds(10))
                             .filter(this::shouldRetry)
@@ -82,6 +82,31 @@ public abstract class BaseScraper {
                     e
             );
         }
+    }
+
+    private <T> Mono<T> fetchResponse(String url, Class<T> responseType, String context) {
+        if (flareSolverrClient != null && flareSolverrClient.isEnabled()) {
+            return Mono.fromCallable(() -> {
+                String body = flareSolverrClient.fetchJson(url);
+                return objectMapper.readValue(body, responseType);
+            });
+        }
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .onStatus(
+                        status -> status.is4xxClientError() || status.is5xxServerError(),
+                        clientResponse -> {
+                            log.error("Error fetching {}. Status: {}", context, clientResponse.statusCode());
+                            return Mono.error(new ResponseStatusException(
+                                    clientResponse.statusCode(),
+                                    "Failed to fetch " + context
+                            ));
+                        }
+                )
+                .bodyToMono(responseType)
+                .timeout(Duration.ofMillis(timeoutMillis));
     }
 
     private boolean shouldRetry(Throwable throwable) {

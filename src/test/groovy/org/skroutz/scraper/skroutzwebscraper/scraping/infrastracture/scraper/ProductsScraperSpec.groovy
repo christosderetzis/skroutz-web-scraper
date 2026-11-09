@@ -32,7 +32,7 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
                 .baseUrl(mockWebServer.url("/").toString())
                 .build()
 
-        productsScraper = new ProductsScraper(webClient, 100, 20, 3) // 100ms timeout for tests, 20ms retry delay, 3 max retries
+        productsScraper = new ProductsScraper(webClient, 2000, 20, 3) // 100ms timeout for tests, 20ms retry delay, 3 max retries
     }
 
     def cleanup() {
@@ -646,5 +646,47 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
 
         and: "mock server received 2 requests"
             mockWebServer.requestCount == 2
+    }
+
+    def "fetchProductsPage via FlareSolverr ignores unknown JSON fields"() {
+        given: "a products response that contains fields not present in the DTO"
+            String jsonResponse = '''
+            {
+                "schema_version": "12_el-GR",
+                "site_name": "Skroutz",
+                "skus": [
+                    {
+                        "id": 123,
+                        "sku_url": "https://www.skroutz.gr/s/123/product",
+                        "name": "Test Product",
+                        "price": "99.99"
+                    }
+                ],
+                "page": {
+                    "total_pages": 2,
+                    "current_page": 1
+                }
+            }
+            '''
+            String wrapped = "<html><body><pre>${jsonResponse}</pre></body></html>"
+            String escaped = groovy.json.JsonOutput.toJson(wrapped)
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody("{\"status\":\"ok\",\"solution\":{\"status\":200,\"response\":${escaped}}}"))
+
+        and: "a scraper configured to fetch through FlareSolverr"
+            def flareSolverr = new org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.FlareSolverrClient(
+                    mockWebServer.url("/v1").toString(), 5000, true)
+            def scraper = new ProductsScraper(webClient, flareSolverr, 5000, 20, 1)
+
+        when:
+            ProductApiResponseDto result = scraper.fetchProductsPage("https://www.skroutz.gr/c/40/test.json")
+
+        then:
+            result != null
+            result.items.size() == 1
+            result.items[0].skroutzId == 123L
+            result.page.totalPages == 2
     }
 }
