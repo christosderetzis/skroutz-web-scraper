@@ -2,10 +2,13 @@ package org.skroutz.scraper.skroutzwebscraper;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.boot.persistence.autoconfigure.EntityScan;
 
 @SpringBootApplication
-@EnableScheduling
+@EntityScan(basePackages = {
+        "org.skroutz.scraper.skroutzwebscraper",
+        "org.springframework.modulith.events.jpa"
+})
 public class SkroutzWebScraperApplication {
 
     public static void main(String[] args) {

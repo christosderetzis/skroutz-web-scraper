@@ -22,10 +22,11 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: false
     properties:
       hibernate:
+        default_schema: scraper_schema
         format_sql: true
   
   # Flyway Configuration

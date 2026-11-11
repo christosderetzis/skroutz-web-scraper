@@ -23,7 +23,7 @@ Tests: Spock (Groovy 5), MockWebServer, WireMock, JaCoCo.
 ## Prerequisites
 
 - Java 25 (or `.sdkmanrc` via SDKMAN)
-- Docker and Docker Compose
+- Docker and Docker Compose, or Podman (≥ 4.1) with a compose backend (`docker-compose` or `podman-compose`)
 - Keycloak up and running (see [Getting Started](#getting-started)) — the app validates JWTs against the `skroutz-scraper` realm
 
 ## Getting Started
@@ -44,6 +44,18 @@ docker-compose -f infra/docker-compose-local.yml up -d
 ```
 
 Starts infrastructure only, then runs the app locally on port 8082.
+
+### Podman (Docker alternative)
+
+Any `docker-compose` command above maps 1:1 to `podman compose`, e.g.:
+
+```bash
+podman compose -f infra/docker-compose-local.yml up -d
+```
+
+For functional tests the runtime is auto-detected (Docker preferred); override with `-PcontainerRuntime=podman` or `CONTAINER_RUNTIME=podman`.
+
+> **Rootless Podman**: publishing ports below 1024 (5432, 9200, 8080-8083, ...) requires `sudo sysctl -w net.ipv4.ip_unprivileged_port_start=1024`.
 
 ### Keycloak Setup
 
@@ -114,7 +126,8 @@ Each module follows hexagonal architecture: application → domain → infrastru
 
 ```bash
 ./gradlew test              # Unit tests (Spock)
-./gradlew functionalTest    # Functional tests (Docker-backed: Postgres, ES, WireMock, Nginx mock)
+./gradlew functionalTest    # Functional tests (Compose-backed: Postgres, ES, WireMock, Nginx mock)
+./gradlew functionalTest -PcontainerRuntime=podman  # Same, forced to Podman (default: auto-detect Docker → Podman)
 ./gradlew functionalTestNoDeps  # Functional tests without Docker
 ./gradlew test functionalTest jacocoTestReport  # All tests + coverage report
 ./gradlew build             # Full build with coverage checks

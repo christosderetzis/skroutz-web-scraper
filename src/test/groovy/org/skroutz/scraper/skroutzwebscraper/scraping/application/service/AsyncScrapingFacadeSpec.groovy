@@ -5,6 +5,7 @@ import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.orches
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.orchestrator.SpecificationsBatchOrchestrator
 import org.skroutz.scraper.skroutzwebscraper.scraping.application.service.processing.ProductScraperService
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.ScraperRequestDto
+import org.springframework.modulith.events.core.EventPublicationRepository
 import spock.lang.Specification
 
 class AsyncScrapingFacadeSpec extends Specification {
@@ -14,13 +15,15 @@ class AsyncScrapingFacadeSpec extends Specification {
     ReviewsBatchOrchestrator reviewsBatchOrchestrator = Mock()
     SpecificationsBatchOrchestrator specificationsBatchOrchestrator = Mock()
     PriceHistoryBatchOrchestrator priceHistoryBatchOrchestrator = Mock()
+    EventPublicationRepository eventPublicationRepository = Mock()
 
     AsyncScrapingFacade facade = new AsyncScrapingFacade(
             scrapeJobService,
             productScraperService,
             reviewsBatchOrchestrator,
             specificationsBatchOrchestrator,
-            priceHistoryBatchOrchestrator
+            priceHistoryBatchOrchestrator,
+            eventPublicationRepository
     )
 
     def jobId = new Random().nextLong()

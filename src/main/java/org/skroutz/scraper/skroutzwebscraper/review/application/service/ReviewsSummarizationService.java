@@ -2,9 +2,8 @@ package org.skroutz.scraper.skroutzwebscraper.review.application.service;
 
 
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
-import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository;
+import org.skroutz.scraper.skroutzwebscraper.product.ProductDto;
+import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.chunker.ReviewChunker;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review;
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary;
@@ -29,7 +28,7 @@ import java.util.stream.Collectors;
 public class ReviewsSummarizationService {
 
     private final int chunkSize;
-    private final ProductRepository productRepository;
+    private final ProductFacade productFacade;
     private final ReviewRepository reviewRepository;
     private final ReviewSummaryRepository reviewSummaryRepository;
     private final ReviewSummarizer reviewSummarizer;
@@ -37,13 +36,13 @@ public class ReviewsSummarizationService {
 
     public ReviewsSummarizationService(
             @Value("${ai.summarization.chunk-size}") int chunkSize,
-            ProductRepository productRepository,
+            ProductFacade productFacade,
             ReviewRepository reviewRepository,
             ReviewSummaryRepository reviewSummaryRepository,
             ReviewSummarizer reviewSummarizer,
             ReviewSummaryMapper reviewSummaryMapper){
         this.chunkSize = chunkSize;
-        this.productRepository = productRepository;
+        this.productFacade = productFacade;
         this.reviewRepository = reviewRepository;
         this.reviewSummaryRepository = reviewSummaryRepository;
         this.reviewSummarizer = reviewSummarizer;
@@ -53,14 +52,7 @@ public class ReviewsSummarizationService {
     public ReviewSummaryDto summarizeReviews(Long productId) {
 
         // Fetch the product to ensure it exists and to get its title and description for better summarization context
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() ->
-                        new ProductNotFoundException(productId));
-
-        if (!Boolean.TRUE.equals(product.getReviewsParsed())) {
-            log.warn("Cannot summarize reviews for product ID {} because reviews have not been parsed yet.", productId);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot summarize reviews for product ID " + productId);
-        }
+        ProductDto product = productFacade.getProductById(productId);
 
         // Check if a summarization already exists for this product and return it if found
         Optional<ReviewSummary> existingSummary = reviewSummaryRepository.findByProductId(productId);
@@ -90,7 +82,7 @@ public class ReviewsSummarizationService {
         log.info(
                 "Summarizing product ID {} ({}): {} reviews → {} chunks",
                 productId,
-                product.getTitle(),
+                product.title(),
                 reviews.size(),
                 chunks.size()
         );
@@ -100,8 +92,8 @@ public class ReviewsSummarizationService {
             if (chunks.size() == 1) {
                 ReviewSummaryDto summary = reviewSummarizer.summarizeChunk(
                         chunks.getFirst(),
-                        safe(product.getTitle()),
-                        safe(product.getDescription())
+                        safe(product.title()),
+                        safe(product.description())
                 );
 
                 saveSummarization(productId, summary);
@@ -112,8 +104,8 @@ public class ReviewsSummarizationService {
             List<ReviewSummaryDto> chunkSummaries = chunks.stream()
                     .map(chunk -> reviewSummarizer.summarizeChunk(
                             chunk,
-                            safe(product.getTitle()),
-                            safe(product.getDescription())
+                            safe(product.title()),
+                            safe(product.description())
                     ))
                     .toList();
 
@@ -125,8 +117,8 @@ public class ReviewsSummarizationService {
             // Summarize the chunk summaries into a final review report
             ReviewSummaryDto finalSummary = reviewSummarizer.summarizeFinal(
                     finalInput,
-                    safe(product.getTitle()),
-                    safe(product.getDescription())
+                    safe(product.title()),
+                    safe(product.description())
             );
 
             saveSummarization(productId, finalSummary);

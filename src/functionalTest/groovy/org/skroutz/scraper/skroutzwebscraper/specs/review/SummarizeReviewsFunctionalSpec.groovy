@@ -1,10 +1,10 @@
 package org.skroutz.scraper.skroutzwebscraper.specs.review
 
-import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer
-import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.agent.ReviewSummarizer
+import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.dto.ReviewSummaryDto
 import org.skroutz.scraper.skroutzwebscraper.utils.base.BaseFunctionalSpec
 import org.spockframework.spring.SpringBean
 import org.skyscreamer.jsonassert.JSONAssert
@@ -186,33 +186,6 @@ class SummarizeReviewsFunctionalSpec extends BaseFunctionalSpec {
                     "method": "POST",
                     "errors": ["Product not found with id: ${nonExistingId}"],
                     "path": "/products/${nonExistingId}/reviews/summarize"
-                }
-            """, body, JSONCompareMode.LENIENT)
-    }
-
-    def "Reviews not parsed returns error"() {
-        given: "A product with reviewsParsed=false"
-            Product product = productRepository.saveAndFlush(Product.builder()
-                    .title("Unparsed Product")
-                    .url("http://example.com/unparsed")
-                    .description("Test product")
-                    .price(99.99)
-                    .rating(3.0)
-                    .reviewsParsed(false)
-                    .build())
-
-        when: "We call the summarize endpoint"
-            def response = webActor.summarizeReviews(product.id)
-
-        then: "The response is 400 with an error message"
-            response.expectStatus().isBadRequest()
-            String body = response.expectBody(String).returnResult().getResponseBody()
-            JSONAssert.assertEquals("""
-                {
-                    "status": 400,
-                    "method": "POST",
-                    "errors": ["Cannot summarize reviews for product ID ${product.id}"],
-                    "path": "/products/${product.id}/reviews/summarize"
                 }
             """, body, JSONCompareMode.LENIENT)
     }

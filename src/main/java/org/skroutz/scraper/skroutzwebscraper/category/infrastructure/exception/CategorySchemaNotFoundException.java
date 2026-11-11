@@ -1,8 +1,9 @@
 package org.skroutz.scraper.skroutzwebscraper.category.infrastructure.exception;
 
-public class CategorySchemaNotFoundException extends RuntimeException {
+import org.skroutz.scraper.skroutzwebscraper.common.exception.NotFoundException;
 
+public class CategorySchemaNotFoundException extends NotFoundException {
     public CategorySchemaNotFoundException(String category) {
-        super(String.format("Category schema not found for category: %s", category));
+        super("Category schema not found for category: " + category);
     }
 }

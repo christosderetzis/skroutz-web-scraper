@@ -2,9 +2,8 @@ package org.skroutz.scraper.skroutzwebscraper.review
 
 import org.mockito.MockedStatic
 import org.mockito.Mockito
-import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product
-import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.exception.ProductNotFoundException
-import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository
+import org.skroutz.scraper.skroutzwebscraper.product.ProductDto
+import org.skroutz.scraper.skroutzwebscraper.product.ProductFacade
 import org.skroutz.scraper.skroutzwebscraper.review.application.service.ReviewsSummarizationService
 import org.skroutz.scraper.skroutzwebscraper.review.domain.chunker.ReviewChunker
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.ReviewSummary
@@ -20,7 +19,7 @@ import spock.lang.Specification
 class ReviewsSummarizationServiceSpec extends Specification {
 
     // Mocks
-    ProductRepository productRepository = Mock()
+    ProductFacade productFacade = Mock()
     ReviewRepository reviewRepository = Mock()
     ReviewSummaryRepository reviewSummarizationRepository = Mock()
     ReviewSummarizer reviewSummarizer = Mock()
@@ -37,7 +36,7 @@ class ReviewsSummarizationServiceSpec extends Specification {
 
     def setup() {
         service = new ReviewsSummarizationService(
-                CHUNK_SIZE, productRepository, reviewRepository,
+                CHUNK_SIZE, productFacade, reviewRepository,
                 reviewSummarizationRepository, reviewSummarizer, reviewSummaryMapper
         )
         // Mocking static method using Mockito within Spock lifecycle
@@ -48,38 +47,13 @@ class ReviewsSummarizationServiceSpec extends Specification {
         mockedChunker.close()
     }
 
-    def "summarizeReviews throws ProductNotFoundException when product is not found"() {
-        given: "productRepository returns empty for given product ID"
-            productRepository.findById(PRODUCT_ID) >> Optional.empty()
-
-        when: "summarizeReviews is called with non-existent product ID"
-            service.summarizeReviews(PRODUCT_ID)
-
-        then: "ProductNotFoundException is thrown"
-            thrown(ProductNotFoundException)
-    }
-
-    def "summarizeReviews throws BadRequest when reviews have not been parsed"() {
-        given: "product exists but reviewsParsed is false"
-            def product = new Product(reviewsParsed: false)
-            productRepository.findById(PRODUCT_ID) >> Optional.of(product)
-
-        when: "summarizeReviews is called for product with unparsed reviews"
-            service.summarizeReviews(PRODUCT_ID)
-
-        then: "ResponseStatusException with BAD_REQUEST is thrown"
-            def e = thrown(ResponseStatusException)
-            e.statusCode == HttpStatus.BAD_REQUEST
-            e.reason.contains("Cannot summarize reviews for product ID 1")
-    }
-
     def "summarizeReviews returns cached DTO when summary already exists"() {
         given: "product exists with reviewsParsed true and summary already exists in repository"
-            def product = new Product(reviewsParsed: true)
+            def product = new ProductDto(1L, "http://example.com/product1", "iphone 18", "256gb ram", "MOBILE_PHONES")
             def existingSummary = new ReviewSummary()
             def expectedDto = new ReviewSummaryDto("Summary", ["P"], ["C"], "Pos")
 
-            productRepository.findById(PRODUCT_ID) >> Optional.of(product)
+            productFacade.getProductById(PRODUCT_ID) >> product
             reviewSummarizationRepository.findByProductId(PRODUCT_ID) >> Optional.of(existingSummary)
             reviewSummaryMapper.toDto(existingSummary) >> expectedDto
 
@@ -93,8 +67,8 @@ class ReviewsSummarizationServiceSpec extends Specification {
 
     def "summarizeReviews throws BadRequest when no reviews with text are found"() {
         given: "product exists with reviewsParsed true but no reviews with non-null text are found"
-            def product = new Product(reviewsParsed: true)
-            productRepository.findById(PRODUCT_ID) >> Optional.of(product)
+            def product = new ProductDto(1L, "http://example.com/product1", "iphone 18", "256gb ram", "MOBILE_PHONES")
+            productFacade.getProductById(PRODUCT_ID) >> product
             reviewSummarizationRepository.findByProductId(PRODUCT_ID) >> Optional.empty()
             reviewRepository.findAllByProductIdAndReviewTextIsNotNull(PRODUCT_ID) >> []
 

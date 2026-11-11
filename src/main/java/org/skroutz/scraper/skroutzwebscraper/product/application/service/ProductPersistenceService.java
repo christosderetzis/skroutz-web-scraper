@@ -4,12 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.skroutz.scraper.skroutzwebscraper.product.ProductSearchEvent;
 import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository;
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.mapper.ProductMapper;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.events.SpecificationsScrapeResult;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ProductApiResponseDto;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ProductApiResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.events.SpecificationsScrapeResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,11 +34,11 @@ public class ProductPersistenceService {
     }
 
     @Transactional
-    public List<Product> saveSpecificationsResults(List<SpecificationsScrapeResult> results) {
+    public ProductSearchEvent saveSpecificationsResults(SpecificationsScrapeResult results) {
         List<Product> productsToSave = new ArrayList<>();
         List<Product> productsToSync = new ArrayList<>();
 
-        for (SpecificationsScrapeResult result : results) {
+        for (SpecificationsScrapeResult.SpecificationsScrapeItem result : results.items()) {
             productRepository.findById(result.productId()).ifPresent(product -> {
                 if (result.isSuccess()) {
                     product.setSpecifications(result.rawSpecs());
@@ -58,7 +59,11 @@ public class ProductPersistenceService {
         }
 
         // Returns only the items successfully updated to allow tracking downstream
-        return productsToSync;
+        List<ProductSearchEvent.ProductSearchEventItem> items = productsToSync.stream()
+                .map(productMapper::toProductSearchEventItem)
+                .toList();
+
+        return new ProductSearchEvent(items);
     }
 
     private void saveOrUpdate(Product scrapedProduct) {

@@ -9,7 +9,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -62,10 +61,6 @@ public class Review {
     @Column(name = "is_verified_purchase")
     @Builder.Default
     private Boolean isVerifiedPurchase = false;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMPTZ")

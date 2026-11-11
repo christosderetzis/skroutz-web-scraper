@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.core.ParameterizedTypeReference
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.web.reactive.server.WebTestClient
 import spock.lang.Shared
 import spock.lang.Specification
@@ -80,12 +81,16 @@ abstract class BaseFunctionalSpec extends Specification {
     @Autowired
     WebActor webActor
 
+    @Autowired
+    JdbcTemplate jdbcTemplate
+
     @Shared
     ObjectMapper objectMapper = new ObjectMapper()
 
     private static final LocalDate LATEST_DATE = LocalDate.of(2026, 9, 1)
 
     def setup() {
+        jdbcTemplate.execute("DELETE FROM scraper_schema.event_publication")
         scrapeJobRepository.deleteAll()
         categorySchemaRepository.deleteAll()
         reviewSummaryRepository.deleteAll()
@@ -96,6 +101,7 @@ abstract class BaseFunctionalSpec extends Specification {
     }
 
     def cleanup() {
+        jdbcTemplate.execute("DELETE FROM scraper_schema.event_publication")
         scrapeJobRepository.deleteAll()
         categorySchemaRepository.deleteAll()
         reviewSummaryRepository.deleteAll()
@@ -131,7 +137,17 @@ abstract class BaseFunctionalSpec extends Specification {
 
         Product savedProduct = productRepository.saveAndFlush(product)
 
-        ProductDocument document = productDocumentMapper.toDocument(savedProduct)
+        ProductDocument document = ProductDocument.builder()
+                .id(savedProduct.id)
+                .title(savedProduct.title)
+                .url(savedProduct.url)
+                .category(savedProduct.category)
+                .brand(savedProduct.brand)
+                .price(savedProduct.price)
+                .imageUrl(savedProduct.imageUrl)
+                .description(savedProduct.description)
+                .rating(savedProduct.rating)
+                .build()
         productElasticsearchRepository.save(document)
 
         waitForElasticsearchRefresh()

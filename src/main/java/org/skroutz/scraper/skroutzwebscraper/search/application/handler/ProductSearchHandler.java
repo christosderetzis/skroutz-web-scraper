@@ -1,30 +1,33 @@
-package org.skroutz.scraper.skroutzwebscraper.search.application.service;
+package org.skroutz.scraper.skroutzwebscraper.search.application.handler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
+import org.skroutz.scraper.skroutzwebscraper.product.ProductSearchEvent;
 import org.skroutz.scraper.skroutzwebscraper.search.domain.entity.ProductDocument;
-import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.mapper.ProductDocumentMapper;
 import org.skroutz.scraper.skroutzwebscraper.search.domain.repository.ProductElasticsearchRepository;
-import org.springframework.stereotype.Service;
+import org.skroutz.scraper.skroutzwebscraper.search.infrastructure.mapper.ProductDocumentMapper;
+import org.springframework.modulith.events.ApplicationModuleListener;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 @Slf4j
-@Service
 @RequiredArgsConstructor
-public class ProductIndexingService {
+public class ProductSearchHandler {
 
     private final ProductElasticsearchRepository productElasticsearchRepository;
     private final ProductDocumentMapper productDocumentMapper;
 
-    public void indexProducts(List<Product> products) {
+    @ApplicationModuleListener
+    public void handleProductSearchEvent(ProductSearchEvent event) {
+        List<ProductSearchEvent.ProductSearchEventItem> eventItems = event.items();
         try {
-            List<ProductDocument> documents = products.stream()
+            List<ProductDocument> documents = eventItems.stream()
                     .map(productDocumentMapper::toDocument)
                     .toList();
             productElasticsearchRepository.saveAll(documents);
-            log.info("Indexed {} products to Elasticsearch", products.size());
+            log.info("Indexed {} products to Elasticsearch", eventItems.size());
         } catch (Exception e) {
             log.error("Failed to index products to Elasticsearch: {}", e.getMessage(), e);
         }

@@ -1,6 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.scraping.infrastracture.utils
 
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll

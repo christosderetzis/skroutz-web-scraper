@@ -77,7 +77,7 @@ APP_CLIENT_ID=$(echo "$APP_CLIENT_JSON" | awk -F'"' '/"id"/{print $4}')
 
 if [ -z "$APP_CLIENT_ID" ]; then
   echo "📦 Creating client: ${CLIENT_NAME}..."
-  LOCATION=$(curl -s -f -X POST "${KC_URL}/admin/realms/${REALM_NAME}/clients" \
+  curl -s -f -X POST "${KC_URL}/admin/realms/${REALM_NAME}/clients" \
     -H "Content-Type: application/json" \
     -H "Authorization: Bearer ${TOKEN}" \
     -d "{
@@ -90,8 +90,12 @@ if [ -z "$APP_CLIENT_ID" ]; then
       \"attributes\": {
         \"client.use.lightweight.access.token.enabled\": \"false\"
       }
-    }" -w '%{redirect_url}' -o /dev/null)
-  APP_CLIENT_ID=$(echo "$LOCATION" | awk -F'/' '{print $NF}')
+    }" -o /dev/null
+  APP_CLIENT_ID=$(curl -s -f -H "Authorization: Bearer ${TOKEN}" "${KC_URL}/admin/realms/${REALM_NAME}/clients?clientId=${CLIENT_NAME}" | awk -F'"' '/"id"/{print $4}')
+  if [ -z "$APP_CLIENT_ID" ]; then
+    echo "❌ Failed to resolve client ID for ${CLIENT_NAME}."
+    exit 1
+  fi
   echo "✅ Client created (ID: ${APP_CLIENT_ID})."
 else
   echo "✅ Client already exists (ID: ${APP_CLIENT_ID})."

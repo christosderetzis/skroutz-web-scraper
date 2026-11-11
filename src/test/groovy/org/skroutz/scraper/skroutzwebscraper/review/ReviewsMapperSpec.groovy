@@ -4,7 +4,7 @@ import ch.qos.logback.classic.Level
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
 import org.skroutz.scraper.skroutzwebscraper.review.domain.entity.Review
 import org.skroutz.scraper.skroutzwebscraper.review.infrastructure.mapper.ReviewsMapper
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ReviewsApiResponseDto
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ReviewsApiResponseDto
 import spock.lang.Subject
 import spock.lang.Unroll
 

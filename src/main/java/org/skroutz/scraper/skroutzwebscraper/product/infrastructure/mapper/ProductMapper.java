@@ -6,12 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.skroutz.scraper.skroutzwebscraper.product.ProductSearchEvent;
 import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
 import org.skroutz.scraper.skroutzwebscraper.product.infrastructure.dto.ProductDetailsResponseDto;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ProductApiResponseDto;
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.utils.UrlBuilder;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ProductApiResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.common.utils.UrlBuilder;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Map;
 
 @Mapper(componentModel = "spring")
@@ -33,6 +36,16 @@ public interface ProductMapper {
     @Mapping(target = "category", source = "category")
     @Mapping(target = "imageUrl", source = "dto.imageUrl")
     Product toProduct(ProductApiResponseDto.ProductDetailsResponseDto dto, String category, UrlBuilder urlBuilder);
+
+    @Mapping(target = "specifications", source = "elasticSearchSpecifications", qualifiedByName = "jsonNodeToMap")
+    @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "timestampToInstant")
+    @Mapping(target = "updatedAt", source = "updatedAt", qualifiedByName = "timestampToInstant")
+    ProductSearchEvent.ProductSearchEventItem toProductSearchEventItem(Product product);
+
+    @Named("timestampToInstant")
+    default Instant map(Timestamp timestamp) {
+        return timestamp == null ? null : timestamp.toInstant();
+    }
 
     @Named("stringToPrice")
     default BigDecimal stringToPrice(String value) {

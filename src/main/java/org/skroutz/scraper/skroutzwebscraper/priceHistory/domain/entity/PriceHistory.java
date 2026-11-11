@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.skroutz.scraper.skroutzwebscraper.product.domain.entity.Product;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -35,10 +34,6 @@ public class PriceHistory {
 
     @Column(name = "store_name")
     private String storeName;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMPTZ")
