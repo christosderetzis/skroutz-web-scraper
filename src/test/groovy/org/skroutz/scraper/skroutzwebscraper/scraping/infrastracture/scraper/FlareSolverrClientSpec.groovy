@@ -36,8 +36,8 @@ class FlareSolverrClientSpec extends Specification {
         given:
             String json = '{"skus":[],"page":{"total_pages":1}}'
             String wrapped = "<html><head></head><body><pre>${json}</pre></body></html>"
-            server.enqueue(okResponse('{"status":"ok","session":"skroutz-html-test"}'))
-            server.enqueue(okResponse(wrapped))
+            server.enqueue(solutionResponse(200, '{"status":"ok","session":"skroutz-html-test"}'))
+            server.enqueue(solutionResponse(200, wrapped))
 
         when:
             String result = client.fetchJson("https://www.skroutz.gr/c/40/test.json")
@@ -60,7 +60,7 @@ class FlareSolverrClientSpec extends Specification {
         given:
             String html = "<html><body><div id=\"specs\">ok</div></body></html>"
             server.enqueue(sessionResponse("skroutz-html-test"))
-            server.enqueue(okResponse(html))
+            server.enqueue(solutionResponse(200, html))
 
         when:
             String result = client.fetchHtml("https://www.skroutz.gr/s/1/product.html")
@@ -76,8 +76,8 @@ class FlareSolverrClientSpec extends Specification {
     def "fetchHtml reuses the same session across requests"() {
         given:
             server.enqueue(sessionResponse("skroutz-html-test"))
-            server.enqueue(okResponse("<html><body>one</body></html>"))
-            server.enqueue(okResponse("<html><body>two</body></html>"))
+            server.enqueue(solutionResponse(200, "<html><body>one</body></html>"))
+            server.enqueue(solutionResponse(200, "<html><body>two</body></html>"))
 
         when:
             String first = client.fetchHtml("https://www.skroutz.gr/s/1/product.html")
@@ -120,7 +120,7 @@ class FlareSolverrClientSpec extends Specification {
             server.enqueue(sessionResponse("skroutz-html-first"))
             server.enqueue(errorResponse("session not found"))
             server.enqueue(sessionResponse("skroutz-html-second"))
-            server.enqueue(okResponse("<html><body>retried</body></html>"))
+            server.enqueue(solutionResponse(200, "<html><body>retried</body></html>"))
 
         when:
             String result = client.fetchHtml("https://www.skroutz.gr/s/1/product.html")
@@ -194,7 +194,7 @@ class FlareSolverrClientSpec extends Specification {
         given:
             String json = '{"plain":true}'
             server.enqueue(sessionResponse("skroutz-html-test"))
-            server.enqueue(okResponse(json))
+            server.enqueue(solutionResponse(200, json))
 
         expect:
             client.fetchJson("https://www.skroutz.gr/c/40/test.json") == json
@@ -204,16 +204,19 @@ class FlareSolverrClientSpec extends Specification {
         given:
             String body = "<html><body><pre>not json</pre></body></html>"
             server.enqueue(sessionResponse("skroutz-html-test"))
-            server.enqueue(okResponse(body))
+            server.enqueue(solutionResponse(200, body))
 
-        expect:
-            client.fetchJson("https://www.skroutz.gr/c/40/test.json") == body
+        when:
+            def response = client.fetchJson("https://www.skroutz.gr/c/40/test.json")
+
+        then:
+            response == body
     }
 
     def "destroySession destroys the active session"() {
         given:
             server.enqueue(sessionResponse("skroutz-html-test"))
-            server.enqueue(okResponse("<html><body>ok</body></html>"))
+            server.enqueue(solutionResponse(200, "<html><body>ok</body></html>"))
             server.enqueue(sessionResponse("skroutz-html-test"))
             client.fetchHtml("https://www.skroutz.gr/s/1/product.html")
             server.takeRequest()
@@ -237,7 +240,7 @@ class FlareSolverrClientSpec extends Specification {
     def "destroySession swallows failures"() {
         given:
             server.enqueue(sessionResponse("skroutz-html-test"))
-            server.enqueue(okResponse("<html><body>ok</body></html>"))
+            server.enqueue(solutionResponse(200, "<html><body>ok</body></html>"))
             server.enqueue(new MockResponse().setResponseCode(500))
             client.fetchHtml("https://www.skroutz.gr/s/1/product.html")
             server.takeRequest()
@@ -270,13 +273,5 @@ class FlareSolverrClientSpec extends Specification {
                 .setResponseCode(200)
                 .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody("{\"status\":\"ok\",\"session\":\"${session}\"}")
-    }
-
-    private static MockResponse okResponse(String body) {
-        String escaped = new ObjectMapper().writeValueAsString(body)
-        return new MockResponse()
-                .setResponseCode(200)
-                .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .setBody("{\"status\":\"ok\",\"solution\":{\"status\":200,\"response\":${escaped}}}")
     }
 }
