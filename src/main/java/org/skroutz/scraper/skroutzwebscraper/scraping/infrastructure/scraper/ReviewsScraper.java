@@ -1,6 +1,6 @@
 package org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper;
 
-import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.dto.api.ReviewsApiResponseDto;
+import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ReviewsApiResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;

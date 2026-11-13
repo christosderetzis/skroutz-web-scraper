@@ -1,11 +1,13 @@
 package org.skroutz.scraper.skroutzwebscraper.scraping.infrastracture.scraper
 
 import ch.qos.logback.classic.Level
+import groovy.json.JsonOutput
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.SocketPolicy
 import org.skroutz.scraper.skroutzwebscraper.base.WithLoggingBaseSpec
 import org.skroutz.scraper.skroutzwebscraper.common.infrastructure.dto.api.ProductApiResponseDto
+import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.FlareSolverrClient
 import org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.ProductsScraper
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -662,21 +664,26 @@ class ProductsScraperSpec extends WithLoggingBaseSpec {
                         "price": "99.99"
                     }
                 ],
-                "page": {
-                    "total_pages": 2,
-                    "current_page": 1
-                }
+                "page": { "total_pages": 2, "current_page": 1 }
             }
             '''
             String wrapped = "<html><body><pre>${jsonResponse}</pre></body></html>"
-            String escaped = groovy.json.JsonOutput.toJson(wrapped)
+            String escaped = JsonOutput.toJson(wrapped)
+
+        and: "FlareSolverr answers the session-create call first"
+            mockWebServer.enqueue(new MockResponse()
+                    .setResponseCode(200)
+                    .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .setBody('{"status":"ok","session":"skroutz-html-test"}'))
+
+        and: "then the actual fetch"
             mockWebServer.enqueue(new MockResponse()
                     .setResponseCode(200)
                     .setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     .setBody("{\"status\":\"ok\",\"solution\":{\"status\":200,\"response\":${escaped}}}"))
 
         and: "a scraper configured to fetch through FlareSolverr"
-            def flareSolverr = new org.skroutz.scraper.skroutzwebscraper.scraping.infrastructure.scraper.FlareSolverrClient(
+            def flareSolverr = new FlareSolverrClient(
                     mockWebServer.url("/v1").toString(), 5000, true)
             def scraper = new ProductsScraper(webClient, flareSolverr, 5000, 20, 1)
 
