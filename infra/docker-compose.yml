@@ -106,6 +106,23 @@ services:
       retries: 3
       start_period: 60s
 
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    ports:
+      - "8191:8191"
+    environment:
+      - LOG_LEVEL=info
+    networks:
+      - elastic
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8191/health || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   skroutz-web-scraper:
     build:
       context: ..
@@ -123,6 +140,8 @@ services:
       - LLM_LOG_RESPONSES=false
       - KEYCLOAK_ISSUER_URI=http://localhost:8080/realms/skroutz-scraper
       - KEYCLOAK_JWK_SET_URI=http://keycloak:8080/realms/skroutz-scraper/protocol/openid-connect/certs
+      - SCRAPER_FLARESOLVERR_ENABLED=true
+      - SCRAPER_FLARESOLVERR_URL=http://flaresolverr:8191/v1
     depends_on:
       postgres:
         condition: service_healthy
@@ -131,6 +150,8 @@ services:
       ollama:
         condition: service_healthy
       keycloak:
+        condition: service_healthy
+      flaresolverr:
         condition: service_healthy
     networks:
       - elastic

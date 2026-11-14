@@ -53,6 +53,10 @@ scraper:
     price-history-ms: 50
   specifications:
     batch-size: 30
+  flaresolverr:
+    enabled: ${SCRAPER_FLARESOLVERR_ENABLED:true}
+    url: ${SCRAPER_FLARESOLVERR_URL:http://localhost:8191/v1}
+    max-timeout-ms: ${SCRAPER_FLARESOLVERR_MAX_TIMEOUT_MS:60000}
   job:
     stale-threshold-hours: 2
 
@@ -63,6 +67,7 @@ ai:
     model: ${LLM_MODEL:qwen2.5:1.5b}
     max-tokens: 16000
     log-responses: ${LLM_LOG_RESPONSES:false}
+    api-key: ${LLM_API_KEY:}
   summarization:
     chunk-size: 10000
 

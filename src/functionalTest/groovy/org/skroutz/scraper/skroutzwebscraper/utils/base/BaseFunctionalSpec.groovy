@@ -43,6 +43,7 @@ import java.time.ZoneOffset
                 "scraper.delays.price-history-ms=5",
                 "scraper.delays.reviews-ms=5",
                 "scraper.job.stale-threshold-hours=2",
+                "scraper.flaresolverr.enabled=false",
                 "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8083/realms/skroutz-scraper-functional-tests",
                 "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8083/realms/skroutz-scraper-functional-tests/protocol/openid-connect/certs",
                 "jwt.auth.converter.resource-id=skroutz-scraper-client-fT"
