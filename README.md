@@ -5,18 +5,20 @@ A Spring Boot application for scraping product information from Skroutz.gr.
 ## Features
 
 - Product, specifications, reviews, and price history scraping from Skroutz.gr
+- Cloudflare bypass via FlareSolverr (HTTP/JSON requests through a browser session)
 - Async scraping jobs with status tracking (`RUNNING`, `COMPLETED`, `FAILED`)
 - AI-powered review summarization via Ollama + LangChain4j
-- Price trend analysis and buy-recommendation scoring
+- Price trend analysis, price stats, and buy-recommendation scoring
 - Elasticsearch-powered search, autocomplete, and similar product recommendations
-- PostgreSQL storage with JSONB specifications
+- PostgreSQL storage with JSONB specifications and Flyway migrations
 - OAuth2 resource-server security via Keycloak (`/scraper/**`, `/jobs/**`, `/category-schemas/**` require the `SUPER_ADMIN` role)
+- Event-driven module communication with Spring Modulith
 - Swagger/OpenAPI docs, access logging, Docker support
 - JaCoCo coverage enforcement (80% line/method, 70% branch)
 
 ## Tech Stack
 
-Java 25, Spring Boot 4.0.1, PostgreSQL 15, Elasticsearch 9.3, Kibana 9.3, Ollama, Keycloak 26.7, Jsoup, LangChain4j, MapStruct, Flyway, Lombok, SpringDoc OpenAPI.
+Java 25, Spring Boot 4.0.1, Spring Modulith 2.1.1, PostgreSQL 15, Elasticsearch 9.3, Kibana 9.3, Ollama, Keycloak 26.7, FlareSolverr, Jsoup, LangChain4j, MapStruct, Flyway, Lombok, SpringDoc OpenAPI.
 
 Tests: Spock (Groovy 5), MockWebServer, WireMock, JaCoCo.
 
@@ -34,7 +36,7 @@ Tests: Spock (Groovy 5), MockWebServer, WireMock, JaCoCo.
 docker-compose -f infra/docker-compose.yml up -d
 ```
 
-Starts the app (port 8082), PostgreSQL (5432), Elasticsearch (9200), Kibana (5601), Ollama (11434), and Keycloak (8080). The app waits for all services to be healthy.
+Starts the app (port 8082), PostgreSQL (5432), Elasticsearch (9200), Kibana (5601), Ollama (11434), Keycloak (8080), and FlareSolverr (8191). The app waits for all services to be healthy. The `skroutz-scraper` realm is imported automatically on Keycloak startup, so no manual setup is required.
 
 ### Option B: Local Dev
 
@@ -44,6 +46,8 @@ docker-compose -f infra/docker-compose-local.yml up -d
 ```
 
 Starts infrastructure only, then runs the app locally on port 8082.
+
+Note: the local stack does not include Ollama — run it separately on port `11434` for review summarization.
 
 ### Podman (Docker alternative)
 
@@ -61,11 +65,13 @@ For functional tests the runtime is auto-detected (Docker preferred); override w
 
 The app authenticates requests via OAuth2 JWT tokens issued by Keycloak. Protected endpoints (`/scraper/**`, `/jobs/**`, `/category-schemas/**`) require the `SUPER_ADMIN` role; everything else is public.
 
+With the full Docker stack the realm is imported automatically. For a non-imported Keycloak (e.g. the local-dev stack), run the setup script:
+
 ```bash
 ./infra/setup-keycloak.sh
 ```
 
-This creates the `skroutz-scraper` realm, the `skroutz-scraper-client` public client, and a default `admin`/`admin` user with the `SUPER_ADMIN` role. Alternatively, import `src/functionalTest/resources/keycloak/realm-export.json` into Keycloak.
+This creates the `skroutz-scraper` realm, the `skroutz-scraper-client` public client, and a default `admin`/`admin` user with the `SUPER_ADMIN` role. Alternatively, import `infra/realm-export.json` into Keycloak.
 
 Obtain a token to call protected endpoints (Keycloak runs on port `8080` for the full Docker stack and `8081` for local dev — adjust the URL accordingly; `setup-keycloak.sh` defaults to `8081`):
 
@@ -120,16 +126,17 @@ src/main/java/org/skroutz/scraper/skroutzwebscraper/
 └── search/        # Search module (Elasticsearch indexing, query, autocomplete)
 ```
 
-Each module follows hexagonal architecture: application → domain → infrastructure layers.
+Each module follows hexagonal architecture (application → domain → infrastructure layers) and is registered as a Spring Modulith module. Modules communicate through persisted domain events (`@ApplicationModuleListener` handlers over the `event_publication` outbox) rather than direct cross-module calls. See [docs/modulith-event-communication.md](docs/modulith-event-communication.md) for the event flows and diagrams.
 
 ## Development
 
 ```bash
 ./gradlew test              # Unit tests (Spock)
-./gradlew functionalTest    # Functional tests (Compose-backed: Postgres, ES, WireMock, Nginx mock)
+./gradlew functionalTest    # Functional tests (Compose-backed: Postgres, ES, Keycloak, WireMock, Nginx mock)
 ./gradlew functionalTest -PcontainerRuntime=podman  # Same, forced to Podman (default: auto-detect Docker → Podman)
 ./gradlew functionalTestNoDeps  # Functional tests without Docker
 ./gradlew test functionalTest jacocoTestReport  # All tests + coverage report
+./gradlew clean build fT    # Full verification (build + all functional tests)
 ./gradlew build             # Full build with coverage checks
 ```
 

@@ -78,8 +78,11 @@ public class AsyncScrapingFacade {
     private void awaitEventProcessing() {
         long deadline = System.currentTimeMillis() + EVENT_DRAIN_TIMEOUT_MS;
 
+        int pendingCount = 0;
         while (System.currentTimeMillis() < deadline) {
-            if (eventPublicationRepository.countByStatus(EventPublication.Status.PROCESSING) == 0) {
+            pendingCount = eventPublicationRepository.countByStatus(EventPublication.Status.PROCESSING)
+                    + eventPublicationRepository.countByStatus(EventPublication.Status.PUBLISHED);
+            if (pendingCount == 0) {
                 return;
             }
 
@@ -91,7 +94,6 @@ public class AsyncScrapingFacade {
             }
         }
 
-        log.warn("Timed out waiting for {} pending event publications to be processed.",
-                eventPublicationRepository.countByStatus(EventPublication.Status.PROCESSING));
+        log.warn("Timed out waiting for {} pending event publications to be processed.", pendingCount);
     }
 }

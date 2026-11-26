@@ -2,7 +2,9 @@ package org.skroutz.scraper.skroutzwebscraper.product.application.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.skroutz.scraper.skroutzwebscraper.product.ProductSearchEvent;
 import org.skroutz.scraper.skroutzwebscraper.product.domain.repository.ProductRepository;
@@ -38,8 +40,17 @@ public class ProductPersistenceService {
         List<Product> productsToSave = new ArrayList<>();
         List<Product> productsToSync = new ArrayList<>();
 
+
+        List<Long> productIds = results.items().stream()
+                .map(SpecificationsScrapeResult.SpecificationsScrapeItem::productId)
+                .toList();
+
+        Map<Long, Product> existingProductsMap = productRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(Product::getId, product -> product));
+        
         for (SpecificationsScrapeResult.SpecificationsScrapeItem result : results.items()) {
-            productRepository.findById(result.productId()).ifPresent(product -> {
+            Product product = existingProductsMap.get(result.productId());
+            if (product != null) {
                 if (result.isSuccess()) {
                     product.setSpecifications(result.rawSpecs());
                     product.setElasticSearchSpecifications(result.normalizedSpecs());
@@ -50,7 +61,7 @@ public class ProductPersistenceService {
                     product.setSpecificationsSkipped(true);
                 }
                 productsToSave.add(product);
-            });
+            }
         }
 
         if (!productsToSave.isEmpty()) {

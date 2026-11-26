@@ -18,6 +18,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewsScraperService {
 
+    private static final int REVIEWS_PAGE_SIZE = 30;
+
     private final ReviewsScraper reviewsScraper;
     private final UrlBuilder urlBuilder;
 
@@ -28,7 +30,8 @@ public class ReviewsScraperService {
         log.info("Scraping reviews via API for product ID: {}", productId);
 
         int offset = 0;
-        int pageSize;
+        int pageSize = 0;
+        boolean firstPage = true;
         List<ReviewsApiResponseDto.ReviewDto> dtoList = new ArrayList<>();
 
         try {
@@ -48,6 +51,13 @@ public class ReviewsScraperService {
 
                 pageSize = pageItems.size();
                 offset += pageSize;
+
+                // If the first page has fewer items than the expected page size,
+                // it indicates there are no more reviews to fetch
+                if (firstPage && pageSize < REVIEWS_PAGE_SIZE) {
+                    break;
+                }
+                firstPage = false;
             } while (pageSize > 0);
 
             log.info("Total reviews fetched for product ID {}: {}", productId, dtoList.size());

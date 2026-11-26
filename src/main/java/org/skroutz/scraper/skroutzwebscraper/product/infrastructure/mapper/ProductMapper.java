@@ -16,6 +16,8 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
@@ -26,7 +28,8 @@ public interface ProductMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "specifications", ignore = true)
     @Mapping(target = "specificationsSkipped", ignore = true)
-    @Mapping(target = "reviewsParsed", ignore = true)
+    @Mapping(target = "numberOfReviews", source = "dto.ratingCount", qualifiedByName = "stringToInteger")
+    @Mapping(target = "reviewsParsed", expression = "java(stringToInteger(dto.getRatingCount()) == 0)")
     @Mapping(target = "priceHistoryParsed", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -47,22 +50,36 @@ public interface ProductMapper {
         return timestamp == null ? null : timestamp.toInstant();
     }
 
+    // Custom mapping method for price that picks the minimum value if multiple prices are present in the string
     @Named("stringToPrice")
     default BigDecimal stringToPrice(String value) {
         if (value == null || value.trim().isEmpty()) {
             return BigDecimal.ZERO;
         }
 
-        try {
-            String cleanValue = value
-                    .replaceAll("[€$£¥\\s]", "")    // Remove currency symbols and spaces
-                    .replaceAll("\\.", "")          // Remove thousands separator (European format)
-                    .replace(",", ".");             // Convert decimal separator
+        Matcher matcher = Pattern.compile("\\d+(?:[.,]\\d+)*").matcher(value);
 
-            return new BigDecimal(cleanValue);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid numeric string: " + value, e);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("No numeric value found in: " + value);
         }
+
+        BigDecimal first = toBigDecimal(matcher.group());
+
+        if (!matcher.find()) {
+            return first;
+        }
+
+        BigDecimal second = toBigDecimal(matcher.group());
+
+        return first.min(second);
+    }
+
+    default BigDecimal toBigDecimal(String number) {
+        String cleanValue = number
+                .replace(".", "")
+                .replace(",", ".");
+
+        return new BigDecimal(cleanValue);
     }
 
     @Named("stringToBigDecimal")
@@ -77,6 +94,18 @@ public interface ProductMapper {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Invalid rating string: " + value, e);
         }
+    }
+
+    @Named("stringToInteger")
+    default Integer stringToInteger(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return 0;
+        }
+        String digits = value.replaceAll("[^0-9]", "");
+        if (digits.isEmpty()) {
+            return 0;
+        }
+        return Integer.parseInt(digits);
     }
 
     @Named("jsonNodeToMap")
