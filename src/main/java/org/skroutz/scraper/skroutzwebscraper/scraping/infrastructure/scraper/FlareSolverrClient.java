@@ -104,7 +104,7 @@ public class FlareSolverrClient {
     // ---------- request execution ----------
 
     private String fetch(String url, boolean json, String sessionId) {
-        log.info("Fetching via FlareSolverr: {}", url);
+        log.trace("Fetching via FlareSolverr: {}", url);
 
         FlareSolverrRequestDto request = FlareSolverrRequestDto.builder()
                 .cmd("request.get")

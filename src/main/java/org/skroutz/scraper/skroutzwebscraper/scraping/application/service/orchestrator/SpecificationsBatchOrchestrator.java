@@ -31,6 +31,9 @@ public class SpecificationsBatchOrchestrator {
     @Value("${scraper.specifications.batch-size:30}")
     private Integer batchSize;
 
+    @Value("${scraper.delays.specifications-ms:2000}")
+    private long productLoopDelayMs;
+
     public void parseSpecifications() {
         int batchNumber = 0;
         int totalProcessed = 0;
@@ -42,7 +45,7 @@ public class SpecificationsBatchOrchestrator {
         Slice<ProductDto> productPage;
         do {
             // Always query page 0 because processed items fall out of the query scope
-            productPage = productFacade.getUnparsedSpecificationsProducts(0, 100);
+            productPage = productFacade.getUnparsedSpecificationsProducts(0, batchSize);
 
             if (productPage.isEmpty()) {
                 break;
@@ -59,8 +62,14 @@ public class SpecificationsBatchOrchestrator {
 
             totalProcessed += productPage.getNumberOfElements();
 
+            takeBreather();
+
         } while (!productPage.isEmpty());
 
         log.info("Completed specifications parsing. Total processed: {}", totalProcessed);
+    }
+
+    private void takeBreather() {
+        try { Thread.sleep(productLoopDelayMs); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
     }
 }

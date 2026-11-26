@@ -62,6 +62,10 @@ public class Product {
     @Builder.Default
     private Boolean specificationsSkipped = false;
 
+    @Column(name = "number_of_reviews", nullable = false)
+    @Builder.Default
+    private Integer numberOfReviews = 0;
+
     @Column(name = "reviews_parsed", nullable = false)
     @Builder.Default
     private Boolean reviewsParsed = false;

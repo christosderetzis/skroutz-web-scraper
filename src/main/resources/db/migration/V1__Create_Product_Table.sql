@@ -2,14 +2,15 @@ CREATE SCHEMA IF NOT EXISTS scraper_schema;
 
 CREATE TABLE scraper_schema.product (
     id BIGSERIAL PRIMARY KEY,
-    url VARCHAR(2048) NOT NULL,
-    title VARCHAR(500) NOT NULL,
+    url VARCHAR(2048) NOT NULL UNIQUE,
+    title VARCHAR(500) NOT NULL UNIQUE,
     category VARCHAR(255),
     brand VARCHAR(255),
     price DECIMAL(10,2),
     image_url VARCHAR(2048),
     description TEXT,
     rating DECIMAL(3,2) CHECK (rating >= 0 AND rating <= 5),
+    number_of_reviews INTEGER NOT NULL DEFAULT 0,
     specifications JSONB,
     elasticsearch_specifications JSONB,
     specifications_skipped BOOLEAN NOT NULL DEFAULT FALSE,
